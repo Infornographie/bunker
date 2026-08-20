@@ -1,13 +1,14 @@
 # STATE — Projet Bunker (nom provisoire)
 
-## État au 20/08/2026
+## État au 21/08/2026
 
-- Jalon 0 (setup) : pas encore initié
-- Jalon 1 (forêt + freecam) : prochaine étape actée
+- Jalon 0 (setup) : projet créé (Godot 4.7.2, renderer Forward+), Stylized Nature MegaKit importé (GLTF + Textures)
+- Jalon 1 (forêt + freecam) : terminé — scatter, freecam, sol, éclairage et nav bake validés visuellement
+- Jalon 2 (bunker) : prochaine étape
 
 ## Décisions verrouillées
 
-- **Moteur** : Godot — cohérence avec Degel et Knighthood Survivor
+- **Architecture projet** : organisation par feature/domaine (`entities/`, `world/`, `debug/`, `autoloads/`, `resources/`), pas de séparation par type de fichier (scenes/ vs scripts/) — scène et script d'une même feature restent côte à côte
 - **Contrôle des pawns réveillés** : le joueur reste seul personnage jouable, donne des ordres (pas de switch de personnage incarné)
 - **Assets** : écosystème Quaternius (CC0) — Stylized Nature MegaKit, Modular Sci-Fi MegaKit, Medieval Village MegaKit, Universal Animation Library 1 & 2, personnages Ultimate Modular (Patreon)
 - **Génération de forêt** : scatter procédural sur zone fixe autour du bunker ; pas de terrain généré (heightmap/bruit) au MVP
