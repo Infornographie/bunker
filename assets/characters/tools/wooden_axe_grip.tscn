@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://bmra423pn4yi8"]
+
+[ext_resource type="PackedScene" uid="uid://bf78px7l0w8so" path="res://assets/characters/tools/Wooden Axe.fbx" id="1_cc2vw"]
+
+[node name="AxeGrip" type="Node3D" unique_id=1730971179]
+
+[node name="Wooden Axe" parent="." unique_id=1322927717 instance=ExtResource("1_cc2vw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+
+[editable path="Wooden Axe"]

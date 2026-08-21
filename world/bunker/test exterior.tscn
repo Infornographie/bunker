@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ds2i632n6k3w7"]
 
 [ext_resource type="Script" uid="uid://d1euaa03t7lv1" path="res://debug/FreecamController.gd" id="2_1sie3"]
+[ext_resource type="PackedScene" uid="uid://bf78px7l0w8so" path="res://assets/characters/tools/Wooden Axe.fbx" id="2_h53bt"]
 
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_h53bt"]
 
@@ -28,3 +29,6 @@ shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=660567145]
 environment = SubResource("Environment_1sie3")
+
+[node name="Wooden Axe" parent="." unique_id=1322927717 instance=ExtResource("2_h53bt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 6)

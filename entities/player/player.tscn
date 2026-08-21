@@ -1,8 +1,10 @@
 [gd_scene format=3 uid="uid://06k6adpsbv7e"]
 
 [ext_resource type="Script" uid="uid://csfobklnkvevo" path="res://entities/player/player_controller.gd" id="1_symyc"]
+[ext_resource type="Script" uid="uid://d4jgecxaici8v" path="res://entities/player/tools/tool_controller.gd" id="2_bls4j"]
 [ext_resource type="Script" uid="uid://b8rq8e1nju4eq" path="res://debug/debug_camera_switch.gd" id="2_sglur"]
 [ext_resource type="Script" uid="uid://d1euaa03t7lv1" path="res://debug/FreecamController.gd" id="3_bls4j"]
+[ext_resource type="Resource" uid="uid://s8t1r53rbhcl" path="res://resources/tools/wooden_axe.tres" id="3_fkugw"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_abrql"]
 radius = 0.4
@@ -19,6 +21,10 @@ shape = SubResource("CapsuleShape3D_abrql")
 
 [node name="Camera3D" type="Camera3D" parent="CharacterBody3D" unique_id=445877674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5366557, 0)
+
+[node name="ToolController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=1152699764]
+script = ExtResource("2_bls4j")
+default_tool = ExtResource("3_fkugw")
 
 [node name="Node" type="Node" parent="." unique_id=1867512269]
 script = ExtResource("2_sglur")

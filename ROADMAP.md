@@ -34,12 +34,12 @@
   généralisée à toutes les plateformes posées.
 
 ## Jalon 3 — Contrôleur protagoniste + interactions
-- [x] `CharacterBody3D` + input (locomotion, caméra, franchissement de
-	  marches auto via test_move — voir player_controller.gd)
+- [x] `CharacterBody3D` + input (locomotion, caméra, franchissement de marches auto via test_move — voir player_controller.gd)
 - [ ] Système d'interaction (raycast/zone), prompts world-space
 - [ ] State machine d'actions (idle / récolte / construction)
 - [ ] Intégration Universal Animation Library 2 (animations farming)
 - [ ] Construction data-driven (.tres façon `BuildingDefs`))
+- [x] Système d'outils tenus (viewmodel 1ère personne, `ToolDef` data-driven) → hache en bois fonctionnelle et calée à l'écran (`ToolController` + `ToolDef`). Reste : brancher `swing()` sur le futur système d'interaction, refaire le protocole grip + hand_position pour les 10 autres outils du pack (lance, pelle, bouclier, pioche, couteau, marteau, massue, flèche, torche, arc)
 
 ## Jalon 4 — Réveil de pawn + ordres
 - [ ] Pawn dormant scripté (état sommeil → réveil via interaction joueur)

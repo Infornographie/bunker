@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ToolDef" format=3 uid="uid://s8t1r53rbhcl"]
+
+[ext_resource type="PackedScene" uid="uid://bmra423pn4yi8" path="res://assets/characters/tools/wooden_axe_grip.tscn" id="1_gei06"]
+[ext_resource type="Script" uid="uid://ch5bhk78mm7sm" path="res://resources/tool_def.gd" id="1_lw4og"]
+
+[resource]
+script = ExtResource("1_lw4og")
+id = &"wooden_axe"
+display_name = "Wooden Axe"
+mesh_scene = ExtResource("1_gei06")
+hand_position = Vector3(0.41, -0.565, -0.47)
+hand_rotation_degrees = Vector3(0, -96, 15)
+metadata/_custom_type_script = "uid://ch5bhk78mm7sm"
