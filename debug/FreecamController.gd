@@ -30,6 +30,14 @@ func set_active(value: bool) -> void:
 func toggle_active() -> void:
 	set_active(not _active)
 
+## Téléporte le freecam à la transform donnée (typiquement la caméra du
+## joueur) et resynchronise yaw/pitch internes dessus, sinon la prochaine
+## rotation à la souris fait un saut brutal vers l'ancienne orientation.
+func sync_transform_from(source: Node3D) -> void:
+	global_transform = source.global_transform
+	_yaw = rotation.y
+	_pitch = rotation.x
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not _active:
 		return

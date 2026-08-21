@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://ds2i632n6k3w7"]
+
+[ext_resource type="Script" uid="uid://d1euaa03t7lv1" path="res://debug/FreecamController.gd" id="2_1sie3"]
+
+[sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_h53bt"]
+
+[sub_resource type="Sky" id="Sky_nxa40"]
+sky_material = SubResource("PhysicalSkyMaterial_h53bt")
+
+[sub_resource type="Environment" id="Environment_1sie3"]
+background_mode = 2
+sky = SubResource("Sky_nxa40")
+ambient_light_source = 3
+reflected_light_source = 2
+ssao_enabled = true
+sdfgi_enabled = true
+sdfgi_use_occlusion = true
+
+[node name="TestExterior" type="Node3D" unique_id=1058130705]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1970343201]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 10)
+script = ExtResource("2_1sie3")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1197355293]
+transform = Transform3D(0.9848078, -0.12278781, 0.12278781, 0, 0.7071068, 0.7071068, -0.1736482, -0.6963643, 0.6963643, 0, 16.52005, 10)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=660567145]
+environment = SubResource("Environment_1sie3")

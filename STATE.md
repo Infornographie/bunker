@@ -2,9 +2,14 @@
 
 ## État au 21/08/2026
 
-- Jalon 0 (setup) : projet créé (Godot 4.7.2, renderer Forward+), Stylized Nature MegaKit importé (GLTF + Textures)
-- Jalon 1 (forêt + freecam) : terminé — scatter, freecam, sol, éclairage et nav bake validés visuellement
-- Jalon 2 (bunker) : prochaine étape
+- Jalon 0 (setup) : projet créé (Godot 4.7.2, renderer Forward+), Stylized
+  Nature MegaKit + Modular SciFi MegaKit importés (GLTF + Textures)
+- Jalon 1 (forêt + freecam) : terminé
+- Jalon 2 (bunker) : terminé — structure SciFi, sol troué au CSG, éclairage
+  fonctionnel (recette SpotLight + lumière de remplissage), nav mesh bakée
+- Jalon 3 (contrôleur protagoniste) : en cours — locomotion + caméra +
+  franchissement de marches automatique en place, reste interaction/state
+  machine/animations/construction
 
 ## Décisions verrouillées
 
@@ -13,6 +18,10 @@
 - **Assets** : écosystème Quaternius (CC0) — Stylized Nature MegaKit, Modular Sci-Fi MegaKit, Medieval Village MegaKit, Universal Animation Library 1 & 2, personnages Ultimate Modular (Patreon)
 - **Génération de forêt** : scatter procédural sur zone fixe autour du bunker ; pas de terrain généré (heightmap/bruit) au MVP
 - **Bunker** : scène fixe construite à la main, pas procédurale
+- **Rôle des kits pour le bunker** : Modular SciFi MegaKit couvre l'extérieur ET l'intérieur du bunker (changement par rapport au GDD d'origine). Medieval Village MegaKit n'est plus lié au bunker, réservé entièrement aux futures constructions du joueur en cours de partie.
+- **Sol/terrain** : découpe locale au CSG (CSGBox3D Subtraction) autorisée pour des besoins ponctuels comme l'accès au bunker — ne contredit pas le "hors scope" du GDD, qui vise le terrain procédural (heightmap/bruit), pas une découpe manuelle fixe.
+- **Joueur** : pas de saut au MVP, mais franchissement automatique de marches basses (step_height 0.35m, ajustable) via test_move dans player_controller.gd.
+- **Debug** : bascule caméra joueur ↔ freecam sur la touche F7 (debug_camera_switch.gd), utile pour inspecter la scène en jeu sans repasser par l'éditeur.
 
 ## Décisions en attente
 

@@ -12,17 +12,34 @@
 - [x] Bake `NavigationServer3D` **après** le scatter
 - [x] Scène de test minimale (sol + scatter + freecam)
 
-## Jalon 2 — Bunker (scène fixe) *(prochaine étape)*
-- [ ] Extérieur bois/pierre (Medieval Village MegaKit)
-- [ ] Intérieur modulaire sci-fi (Modular Sci-Fi MegaKit)
-- [ ] Scène construite à la main, pas de génération procédurale ici
+## Jalon 2 — Bunker (scène fixe) ✅
+- [x] Extérieur ET intérieur en Modular SciFi MegaKit (changement de scope :
+	  Medieval Village MegaKit n'est plus utilisé pour le bunker, réservé
+	  exclusivement aux futures constructions du joueur en jeu — voir STATE.md)
+- [x] Scène construite à la main, pas de génération procédurale
+- [x] Sol de la forêt découpé au CSG (CSGBox3D + Subtraction) pour laisser
+	  un accès réel à l'escalier intérieur, plutôt qu'un sous-sol qui
+	  traverse le plan de sol
+- [x] Nav mesh du bunker bakée (reparenté sous le NavigationRegion3D
+	  existant de la forêt)
+
+### Dette Jalon 2
+- Jointures entre pièces SciFi non scellées (pas de chevauchement appliqué
+  partout) → fuites de lumière SDFGI visibles aux angles du toit, et le
+  joueur peut se faufiler par endroits en poussant depuis l'extérieur.
+  À corriger avant toute présentation publique de la scène.
+- Plateformes du bunker sans épaisseur visuelle (le kit SciFi n'a pas de
+  pièce "Bottom" pour les sols, contrairement aux murs). Solution retenue :
+  socle réutilisable (BoxMesh + couleur unie) — définie mais pas encore
+  généralisée à toutes les plateformes posées.
 
 ## Jalon 3 — Contrôleur protagoniste + interactions
-- [ ] `CharacterBody3D` + input
+- [x] `CharacterBody3D` + input (locomotion, caméra, franchissement de
+	  marches auto via test_move — voir player_controller.gd)
 - [ ] Système d'interaction (raycast/zone), prompts world-space
 - [ ] State machine d'actions (idle / récolte / construction)
 - [ ] Intégration Universal Animation Library 2 (animations farming)
-- [ ] Construction data-driven (.tres façon `BuildingDefs`)
+- [ ] Construction data-driven (.tres façon `BuildingDefs`))
 
 ## Jalon 4 — Réveil de pawn + ordres
 - [ ] Pawn dormant scripté (état sommeil → réveil via interaction joueur)
@@ -40,3 +57,6 @@
 - Terrain procédural avancé (heightmap/bruit)
 - Cycle jour/nuit
 - Deuxième bunker / expansion de zone
+- Sous-sol du bunker (complexe cryo à grande échelle) via téléportation
+  vers une scène séparée depuis le bas de l'escalier, plutôt qu'un vrai
+  sous-sol connecté physiquement
