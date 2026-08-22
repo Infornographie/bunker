@@ -35,9 +35,9 @@
 
 ## Jalon 3 — Contrôleur protagoniste + interactions
 - [x] `CharacterBody3D` + input (locomotion, caméra, franchissement de marches auto via test_move — voir player_controller.gd)
-- [x] Système d'interaction (raycast/zone), prompts world-space → `Interactable`/`InteractionController`/`Choppable` fonctionnels, bug de prompt persistant après destruction de la cible corrigé (invalidation immédiate via `is_instance_valid`). Reste : synchroniser les dégâts sur `swing_impact` plutôt que sur `interact()` immédiat.
+- [x] Système d'interaction (raycast/zone), prompts world-space → `Interactable`/`InteractionController`/`Choppable` fonctionnels, bug de prompt persistant après destruction de la cible corrigé (invalidation immédiate via `is_instance_valid`). Dégâts désormais synchronisés sur `swing_impact` via `ActionStateMachine` (plus d'application immédiate à `interact()`).
 - [x] Sound manager de base (`autoloads/sound_manager.gd`, pool de `AudioStreamPlayer3D`) → SFX ponctuels positionnés, hook posé sur `Choppable.chop_sound` (pas encore d'asset son assigné). Pas de bus séparé ni de son UI/2D — à ajouter si besoin réel apparaît.
-- [ ] State machine d'actions (idle / récolte / construction)
+- [x] State machine d'actions (`ActionStateMachine`, états `IDLE`/`USING_TOOL`) → orchestre swing/impact/effet pour toute interaction outil-déclenchée. `BUILDING` réservé en commentaire dans l'enum, pas codé (à ajouter avec la construction data-driven). Fixe au passage la dette dégâts-immédiats du Jalon 3.
 - [ ] Intégration Universal Animation Library 2 (animations farming)
 - [ ] Construction data-driven (.tres façon `BuildingDefs`))
 - [x] Système d'outils tenus (viewmodel 1ère personne, `ToolDef` data-driven) → hache en bois fonctionnelle et calée à l'écran (`ToolController` + `ToolDef`). Reste : brancher `swing()` sur le futur système d'interaction, refaire le protocole grip + hand_position pour les 10 autres outils du pack (lance, pelle, bouclier, pioche, couteau, marteau, massue, flèche, torche, arc)

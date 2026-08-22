@@ -4,6 +4,7 @@ class_name InteractionController
 @export var interaction_range: float = 3.0
 @export var prompt_label: Label3D
 @export var tool_controller: ToolController
+@export var action_state_machine: ActionStateMachine
 
 var _current_target: Interactable
 
