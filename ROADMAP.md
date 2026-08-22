@@ -35,7 +35,8 @@
 
 ## Jalon 3 — Contrôleur protagoniste + interactions
 - [x] `CharacterBody3D` + input (locomotion, caméra, franchissement de marches auto via test_move — voir player_controller.gd)
-- [ ] Système d'interaction (raycast/zone), prompts world-space
+- [x] Système d'interaction (raycast/zone), prompts world-space → `Interactable`/`InteractionController`/`Choppable` fonctionnels, bug de prompt persistant après destruction de la cible corrigé (invalidation immédiate via `is_instance_valid`). Reste : synchroniser les dégâts sur `swing_impact` plutôt que sur `interact()` immédiat.
+- [x] Sound manager de base (`autoloads/sound_manager.gd`, pool de `AudioStreamPlayer3D`) → SFX ponctuels positionnés, hook posé sur `Choppable.chop_sound` (pas encore d'asset son assigné). Pas de bus séparé ni de son UI/2D — à ajouter si besoin réel apparaît.
 - [ ] State machine d'actions (idle / récolte / construction)
 - [ ] Intégration Universal Animation Library 2 (animations farming)
 - [ ] Construction data-driven (.tres façon `BuildingDefs`))
@@ -52,6 +53,12 @@
 - [ ] Relations par accumulation de coprésence/co-tâche dans le temps
 - [ ] Portage `EventConfig`/`EventManager` (turn-locking → pause ou mode décision)
 - [ ] Portage `Chronicle` (journal de faits) en version temps réel
+
+## Dette visuelle viewmodel (Jalon 3, à traiter plus tard)
+- [ ] La hache traverse les murs/arbres quand la caméra s'en approche (le viewmodel n'a pas de traitement de profondeur séparé du monde). Piste : caméra/layer dédié au viewmodel avec son propre near/far, technique standard en FPS.
+- [ ] Swing très statique, manque de "punch" (pas d'squash/stretch, pas d'anticipation, transform linéaire). Piste : easing sur le Tween (actuellement linéaire par défaut), ou anim dédiée si Universal Animation Library le permet pour un objet tenu.
+- [ ] FX minimal manquant à l'impact (particules/étincelles bois, écran qui vibre légèrement) — rien pour l'instant, juste le son (Choppable.chop_sound, pas encore assigné).
+- [ ] Ombre flottante de la hache (pas de corps/bras)
 
 ## Non planifié / idées à trier
 - Terrain procédural avancé (heightmap/bruit)

@@ -37,10 +37,17 @@ func swing() -> void:
 	_swinging = true
 	swing_started.emit()
 	var rest_transform := _tool_instance.transform
-	var swing_transform := rest_transform.rotated_local(Vector3.RIGHT, deg_to_rad(-70.0))
+	# Déplacement avant-bas pendant le coup, dans l'espace du ToolController
+	# (donc de la caméra) : -Z = vers l'avant, -Y = vers le bas.
+	var strike_offset := Vector3(0.0, -0.1, -0.3)
+	var swing_basis := Basis(Vector3.RIGHT, deg_to_rad(-70.0)) * rest_transform.basis
+	var swing_transform := Transform3D(swing_basis, rest_transform.origin + strike_offset)
 
 	var tween := create_tween()
 	tween.tween_property(_tool_instance, "transform", swing_transform, _current_tool.swing_duration * 0.4)
 	tween.tween_callback(func(): swing_impact.emit())
 	tween.tween_property(_tool_instance, "transform", rest_transform, _current_tool.swing_duration * 0.6)
 	tween.tween_callback(func(): _swinging = false)
+
+func get_equipped_tool() -> ToolDef:
+	return _current_tool

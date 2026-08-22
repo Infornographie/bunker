@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://bxks4paby6ggl"]
+
+[ext_resource type="Script" uid="uid://2okwhwlmi035" path="res://entities/interactable/choppable.gd" id="1_gbyqs"]
+[ext_resource type="PackedScene" uid="uid://bdb1w0i5q013e" path="res://assets/nature/Stylized Nature MegaKit/glTF/CommonTree_1.gltf" id="2_mir7k"]
+[ext_resource type="AudioStream" uid="uid://6l12h67unphm" path="res://assets/sounds/593857__igroglaz__chop2.mp3" id="2_nw3iq"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_60qbc"]
+height = 2.6230469
+
+[node name="OakChoppable" type="StaticBody3D" unique_id=655245046]
+script = ExtResource("1_gbyqs")
+chop_sound = ExtResource("2_nw3iq")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1768168731]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20950222, 1.0730921, 0.08040458)
+shape = SubResource("CylinderShape3D_60qbc")
+
+[node name="CommonTree_12" parent="." unique_id=1831634335 instance=ExtResource("2_mir7k")]

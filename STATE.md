@@ -2,14 +2,10 @@
 
 ## État au 21/08/2026
 
-- Jalon 0 (setup) : projet créé (Godot 4.7.2, renderer Forward+), Stylized
-  Nature MegaKit + Modular SciFi MegaKit importés (GLTF + Textures)
+- Jalon 0 (setup) : projet créé (Godot 4.7.2, renderer Forward+), Stylized Nature MegaKit + Modular SciFi MegaKit importés (GLTF + Textures)
 - Jalon 1 (forêt + freecam) : terminé
-- Jalon 2 (bunker) : terminé — structure SciFi, sol troué au CSG, éclairage
-  fonctionnel (recette SpotLight + lumière de remplissage), nav mesh bakée
-- Jalon 3 (contrôleur protagoniste) : en cours — locomotion + caméra +
-  franchissement de marches automatique en place, reste interaction/state
-  machine/animations/construction
+- Jalon 2 (bunker) : terminé — structure SciFi, sol troué au CSG, éclairage fonctionnel (recette SpotLight + lumière de remplissage), nav mesh bakée
+- Jalon 3 (contrôleur protagoniste) : en cours — locomotion + caméra + franchissement de marches automatique en place ; hache viewmodel fonctionnelle ; système d'interaction générique (`Interactable` + `InteractionController`) en place, reste state machine d'actions/animations/construction et la première classe fille d'Interactable (récolte d'arbre)
 
 ## Décisions verrouillées
 
@@ -23,7 +19,8 @@
 - **Joueur** : pas de saut au MVP, mais franchissement automatique de marches basses (step_height 0.35m, ajustable) via test_move dans player_controller.gd.
 - **Debug** : bascule caméra joueur ↔ freecam sur la touche F7 (debug_camera_switch.gd), utile pour inspecter la scène en jeu sans repasser par l'éditeur.
 - **Import outils FBX (pack low poly CC0)** : le pivot natif du FBX n'est pas exploitable tel quel (posé au sol / à un point arbitraire de l'artiste). Protocole retenu : wrapper `Node3D` vide en racine (ex: `AxeGrip`) contenant l'instance FBX ; on ne déplace **jamais** le `MeshInstance3D` importé (rotation -90° bakée par l'import, un drag dessus part n'importe où) — on déplace uniquement son parent direct (le root de l'instance FBX, sans rotation) jusqu'à ce que l'origine du wrapper tombe sur le point de préhension. Scène sauvegardée : `wooden_axe_grip.tscn`, offset retenu `y = -0.4` sur le node racine. Probablement réutilisable pour les outils de forme similaire (manche + tête), à revérifier un par un pour les autres.
-- **Réglage du viewmodel (position/rotation à l'écran)** : toujours régler `hand_position` / `hand_rotation_degrees` sur le `ToolDef` (.tres), jamais la Transform du `ToolController` lui-même — ce dernier doit rester à l'identité (0,0,0), c'est un composant neutre partagé par tous les outils. Méthode pratique : ajuster en live sur l'instance spawnée (onglet Remote pendant le runtime, ou directement le node du .tres en écran splitté), puis reporter les valeurs finales dans le .tres. Piège rencontré : un réglage fait par erreur sur le ToolController plutôt que sur l'instance se sauvegarde silencieusement dans la scène et s'additionne au hand_position → deux sources de vérité qui divergent. Hache en bois : hand_position = (0.41, -0.565, -0.47), hand_rotation_degrees = (0, -96, 15).
+- **Swing animation** : deux bugs identifiés et corrigés successivement. (1) `rotated_local()` tournait autour de l'axe déjà réorienté par `hand_rotation_degrees`, rendant le mouvement quasi invisible. (2) Le remplacement par `rotated()` faisait aussi tourner l'origine autour du pivot du parent (caméra), envoyant la hache derrière la caméra pendant le swing. Fix final : rotation appliquée uniquement au basis (`Basis(axis, angle) * rest_transform.basis`), origine gérée séparément avec un `strike_offset` explicite (avant-bas) pour donner l'impression d'un coup porté. Angle/offset toujours à valider/ajuster visuellement, pas figé.
+- **Prompt d'interaction persistant après destruction de la cible** : `is_instance_valid()` ne suffit pas juste après `queue_free()` (destruction différée en fin de frame). Fix : écoute du signal natif `tree_exiting` sur la cible courante, qui déclenche l'effacement du prompt au bon moment peu importe la cause de la destruction.
 
 ## Décisions en attente
 
