@@ -25,8 +25,9 @@ func get_state() -> State:
 	return _state
 
 ## Démarre un swing d'outil ; on_impact est appelé au signal swing_impact,
-## seulement si target est toujours valide à ce moment-là.
-func use_tool_on(target: Object, on_impact: Callable) -> bool:
+## seulement si target est toujours valide à ce moment-là. reach_distance
+## est transmise telle quelle à ToolController.swing() (portée réelle du coup).
+func use_tool_on(target: Object, on_impact: Callable, reach_distance: float = -1.0) -> bool:
 	if _state != State.IDLE:
 		return false
 	if tool_controller == null or not tool_controller.can_swing():
@@ -34,7 +35,7 @@ func use_tool_on(target: Object, on_impact: Callable) -> bool:
 	_pending_target = target
 	_pending_impact_callback = on_impact
 	_set_state(State.USING_TOOL)
-	tool_controller.swing()
+	tool_controller.swing(reach_distance)
 	return true
 
 func _on_swing_impact() -> void:

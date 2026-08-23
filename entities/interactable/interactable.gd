@@ -11,3 +11,14 @@ func can_interact(_interactor: Node) -> bool:
 ## Volontairement vide ici : Interactable ne connaît aucune logique de jeu.
 func interact(_interactor: Node) -> void:
 	pass
+
+## Indique si cette interaction se déclenche via l'outil en main (clic gauche,
+## action "use_tool") ou via la touche d'interaction générique (E, "interact").
+## Par défaut : générique. Choppable la surcharge (voir choppable.gd).
+func uses_tool_trigger() -> bool:
+	return false
+
+## Appelé à l'impact d'un swing d'outil pointé ici, que ce soit interactable
+## ou non. Par défaut : ne fait rien — l'obstacle a juste stoppé le swing.
+func receive_tool_hit(tool: ToolDef) -> void:
+	pass
