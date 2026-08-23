@@ -5,8 +5,14 @@ signal depleted
 
 @export var max_health: int = 3
 @export var chop_sound: AudioStream
+@export var pickup_scene: PackedScene
+@export var pickup_count: int = 3
+@export var spawn_height_offset: float = 0.3
+@export var pickup_stack_spacing: float = 1.3
+@export var pickup_spawn_rotation_degrees: Vector3 = Vector3(90.0, 0.0, 0.0)
 
 var _health: int
+var _is_depleted: bool = false
 
 func _ready() -> void:
 	_health = max_health
@@ -26,15 +32,33 @@ func can_interact(interactor: Node) -> bool:
 func uses_tool_trigger() -> bool:
 	return true
 
-func receive_tool_hit(tool: ToolDef) -> void:
-	if tool == null or tool.tool_type != ToolDef.ToolType.CHOP:
+func receive_tool_hit(tool: ToolDef, hit_origin: Vector3 = Vector3.ZERO) -> void:
+	if tool == null or tool.tool_type != ToolDef.ToolType.CHOP or _is_depleted:
 		return
 	if chop_sound:
 		SoundManager.play_sfx(chop_sound, global_position)
 	_health -= tool.damage
 	if _health <= 0:
+		_is_depleted = true
 		depleted.emit()
+		_spawn_pickup(hit_origin)
 		queue_free()
+
+func _spawn_pickup(hit_origin: Vector3) -> void:
+	if pickup_scene == null:
+		return
+	var fall_direction := Vector3.ZERO
+	if hit_origin != Vector3.ZERO:
+		fall_direction = global_position - hit_origin
+		fall_direction.y = 0.0
+		fall_direction = fall_direction.normalized()
+	for i in pickup_count:
+		var pickup := pickup_scene.instantiate()
+		pickup.global_position = global_position + Vector3(0.0, spawn_height_offset + i * pickup_stack_spacing, 0.0)
+		pickup.rotation_degrees = pickup_spawn_rotation_degrees
+		if pickup.has_method("set_fall_direction"):
+			pickup.set_fall_direction(fall_direction)
+		get_parent().add_child(pickup)
 
 func _get_tool_controller(interactor: Node) -> ToolController:
 	if interactor is InteractionController:

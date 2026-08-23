@@ -1,4 +1,4 @@
-extends StaticBody3D
+extends PhysicsBody3D
 class_name Interactable
 
 @export var prompt_text: String = "Interagir"
@@ -20,5 +20,5 @@ func uses_tool_trigger() -> bool:
 
 ## Appelé à l'impact d'un swing d'outil pointé ici, que ce soit interactable
 ## ou non. Par défaut : ne fait rien — l'obstacle a juste stoppé le swing.
-func receive_tool_hit(tool: ToolDef) -> void:
+func receive_tool_hit(_tool: ToolDef, _hit_origin: Vector3 = Vector3.ZERO) -> void:
 	pass

@@ -32,3 +32,4 @@
 
 - Projet indépendant, inspiré de Degel mais sans reprendre son contenu narratif/thématique
 - Point de vigilance personnel identifié : la lisibilité/qualité visuelle est un facteur de motivation important — d'où le choix d'un unique écosystème d'assets cohérent (Quaternius) plutôt que du mix-and-match
+- **`Interactable` (PhysicsBody3D) → accès membres RigidBody3D** : un cast/test de type direct (`as RigidBody3D` ou `is RigidBody3D` sur `self`) échoue à la compilation dans une classe fille comme `ResourcePickup`, car l'analyse statique de GDScript voit son type déclaré (héritant de `PhysicsBody3D`) comme non lié à `RigidBody3D`. Fix : repasser par une variable typée `Node` avant le test (`var node: Node = self; if node is RigidBody3D:`), qui échappe au typage statique et vérifie le vrai type à l'exécution. Accès aux membres ensuite via `set(...)`/`call(...)` en dynamique.

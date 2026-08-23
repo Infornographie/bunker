@@ -76,4 +76,6 @@ func _try_use_tool() -> void:
 	if tool == null:
 		return
 	var target := _current_target
-	action_state_machine.use_tool_on(target, func(): target.receive_tool_hit(tool), _current_target_distance)
+	var camera := get_parent() as Camera3D
+	var hit_origin := camera.global_position if camera else Vector3.ZERO
+	action_state_machine.use_tool_on(target, func(): target.receive_tool_hit(tool, hit_origin), _current_target_distance)
