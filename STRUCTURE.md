@@ -25,9 +25,9 @@ res://
 │ └── freecam_controller.gd — caméra libre noclip, conservé tout le long du projet
 ├── entities/
 │ ├── interactable/
-│ │ ├── interactable.gd — classe de base, StaticBody3D, virtual receive_tool_hit()
+│ │ ├── interactable.gd — classe de base, PhysicsBody3D (étendu depuis StaticBody3D pour supporter des interactables mobiles), virtual receive_tool_hit()
 │ │ ├── choppable.gd — hérite Interactable : HP, vérif type d'outil, anti-spam swing, signal depleted, hook chop_sound (pas d'asset assigné)
-│ │ ├── resource_pickup.gd — objet ramassable au sol
+│ │ ├── resource_pickup.gd — hérite Interactable (RigidBody3D en pratique) : objet ramassable/portable au sol, lit un ResourceDef, impulsion de chute orientée
 │ │ └── forest/
 │ │ ├── oak_choppable.tscn — instance concrète de Choppable (chêne)
 │ │ └── resource_pickup_wood.tscn — instance concrète de ResourcePickup (bois)
@@ -35,7 +35,8 @@ res://
 │ ├── player.tscn — scène joueur assemblée
 │ ├── player_controller.gd — CharacterBody3D, locomotion/caméra, franchissement marches auto (test_move, step_height 0.35m)
 │ ├── action_state_machine.gd — states IDLE/USING_TOOL, découple timing du swing des dégâts
-│ ├── interaction_controller.gd — raycast/zone vers Interactable, gère le prompt d'interaction
+│ ├── interaction_controller.gd — raycast/zone vers Interactable, gère le prompt d'interaction, arbitre outil vs portage (mains occupées = pas de swing), déclenche ramassage/dépose (E)
+│ ├── carry_controller.gd — un seul objet porté à la fois, reparenting vers HandAnchor, désactive collision + freeze pendant le portage
 │ ├── hud/
 │ │ ├── player_hud.tscn — CanvasLayer HUD
 │ │ ├── player_hud.gd — dessine crosshair + prompt d'interaction 2D screen-space
@@ -60,6 +61,7 @@ res://
 
 - `InteractionController` (player) → raycast vers `Interactable.receive_tool_hit()` — les effets se résolvent à l'impact, pas à l'input.
 - `ToolController.swing()` pilote `ActionStateMachine` (IDLE/USING_TOOL) → au moment du strike, déclenche `receive_tool_hit()` sur la cible.
-- `Choppable` (hérite `Interactable`) → vérifie le type d'outil via `ToolDef`, décrémente HP, émet `depleted`, hook `chop_sound` vers `SoundManager` (autoload) — pas encore d'asset son branché.
+- `Choppable` (hérite `Interactable`) → vérifie le type d'outil via `ToolDef`, décrémente HP, émet `depleted`, spawn 3 `ResourcePickup` physiques au sol à sa destruction, hook `chop_sound` vers `SoundManager` (autoload) — pas encore d'asset son branché.
+- `CarryController` ↔ `ResourcePickup` : `interact()` délègue le ramassage au `CarryController` de l'`InteractionController` (mains libres uniquement) ; `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` en miroir de l'état porté.
 - `PlayerHud` écoute les signaux de `InteractionController` pour afficher/masquer le prompt (fix : écoute `tree_exiting` sur la cible, pas `is_instance_valid()` seul, à cause de la destruction différée de `queue_free()`).
 - `ForestScatter` doit tourner **avant** le bake de `NavigationRegion3D` (contrainte d'ordre, revalidée au Jalon 4).

@@ -13,9 +13,6 @@ func set_fall_direction(direction: Vector3) -> void:
 	_fall_direction = direction
 
 func _ready() -> void:
-	# self est statiquement typé ResourcePickup (hérite de PhysicsBody3D),
-	# donc un "is RigidBody3D" direct est rejeté à la compilation (classe
-	# non liée). On repasse par Node pour forcer une vérification au runtime.
 	var node: Node = self
 	if not (node is RigidBody3D):
 		return
@@ -26,11 +23,19 @@ func _ready() -> void:
 	var impulse := (base_direction + Vector3(randf_range(-0.2, 0.2), 0.3, randf_range(-0.2, 0.2))).normalized() * scatter_impulse
 	call("apply_central_impulse", impulse)
 
-## Pas d'inventaire pour l'instant (dette, voir ROADMAP) : on se contente
-## de logger le ramassage et de retirer l'objet du monde.
-func interact(_interactor: Node) -> void:
-	if resource_def == null:
-		push_warning("ResourcePickup sans ResourceDef assigné : %s" % name)
+func can_interact(interactor: Node) -> bool:
+	if resource_def == null or resource_def.carry_type != ResourceDef.CarryType.HAND:
+		return false
+	var controller := _get_carry_controller(interactor)
+	return controller != null and controller.can_carry()
+
+func interact(interactor: Node) -> void:
+	var controller := _get_carry_controller(interactor)
+	if controller == null or not controller.can_carry():
 		return
-	print("Ramassé : %d x %s" % [amount, resource_def.display_name])
-	queue_free()
+	controller.carry(self)
+
+func _get_carry_controller(interactor: Node) -> CarryController:
+	if interactor is InteractionController:
+		return interactor.carry_controller
+	return null

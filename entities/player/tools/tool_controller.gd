@@ -81,3 +81,7 @@ func swing(reach_distance: float = -1.0) -> void:
 
 func get_equipped_tool() -> ToolDef:
 	return _current_tool
+
+func set_tool_visible(should_show: bool) -> void:
+	if _tool_instance:
+		_tool_instance.visible = should_show
