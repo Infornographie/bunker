@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="BuildingDef" format=3 uid="uid://bcysmn7sp7y5a"]
+
+[ext_resource type="PackedScene" uid="uid://csj3e0l1suoud" path="res://entities/interactable/buildings/campfire.tscn" id="1_6cc0j"]
+[ext_resource type="Script" uid="uid://bh06t1p88ijyk" path="res://resources/building_cost.gd" id="1_dtbqj"]
+[ext_resource type="Script" uid="uid://ci6jdp2se1pqp" path="res://resources/building_def.gd" id="2_lbtx7"]
+[ext_resource type="Shape3D" uid="uid://cglr3dliet6tf" path="res://resources/buildings/campfire_shape.tres" id="2_vpluw"]
+[ext_resource type="Resource" uid="uid://cc1jos21u05lp" path="res://resources/resources/wood.tres" id="3_vpluw"]
+
+[sub_resource type="Resource" id="Resource_6cc0j"]
+script = ExtResource("1_dtbqj")
+resource_def = ExtResource("3_vpluw")
+count = 2
+metadata/_custom_type_script = "uid://bh06t1p88ijyk"
+
+[resource]
+script = ExtResource("2_lbtx7")
+id = &"campfire"
+display_name = "Campfire"
+ghost_scene = ExtResource("1_6cc0j")
+collision_shape = ExtResource("2_vpluw")
+built_scene = ExtResource("1_6cc0j")
+collision_shape_scale = Vector3(200, 200, 200)
+costs = Array[ExtResource("1_dtbqj")]([SubResource("Resource_6cc0j")])
+metadata/_custom_type_script = "uid://ci6jdp2se1pqp"

@@ -40,15 +40,18 @@
 - [x] Sound manager de base (`autoloads/sound_manager.gd`, pool de `AudioStreamPlayer3D`) → SFX ponctuels positionnés, hook posé sur `Choppable.chop_sound` (pas encore d'asset son assigné). Pas de bus séparé ni de son UI/2D — à ajouter si besoin réel apparaît.
 - [ ] State machine d'actions (idle / récolte / construction)
 - [ ] Intégration Universal Animation Library 2 (animations farming) — à revalider une fois le chassis robot posé (J5)
-- [ ] Construction data-driven (.tres façon `BuildingDefs`))
+- [x] Construction data-driven (.tres façon `BuildingDefs`))
 - [x] Système d'outils tenus (viewmodel 1ère personne, `ToolDef` data-driven) → hache en bois fonctionnelle et calée à l'écran (`ToolController` + `ToolDef`). Reste : brancher `swing()` sur le futur système d'interaction, refaire le protocole grip + hand_position pour les 10 autres outils du pack (lance, pelle, bouclier, pioche, couteau, marteau, massue, flèche, torche, arc)
  
 > **Dette design Jalon 3** : le protagoniste est officiellement un robot (cf. GDD). L'apparence humaine implicite du viewmodel/main tenant la hache est temporaire — le chassis robot et son bras/effecteur sont traités au Jalon 5.
-### Dette Jalon 3 — ressources & physique
-- `ResourcePickup` n'a pas d'inventaire numérique (bois compté nulle part) — seul le portage physique à la main existe. `ResourceDef.CarryType.BACKPACK` réservé mais non implémenté : à faire quand le sac à dos arrivera.
-- Physique des rondins pas réglée (friction/rebond par défaut, roulis parfois excessif) — à ajuster via Physics Material sur le RigidBody3D.
-- Objet porté en main pas encore contraint en taille/collision au HandAnchor : un futur objet plus gros qu'un rondin pourrait traverser le viewmodel ou sortir du champ visuel — à surveiller au cas par cas.
- 
+### Dette Jalon 3 — construction
+- `Obstacles` (layer 3) appliqué seulement sur les pièces bunker proches des zones de test, pas toute la structure (le bunker sera refait au Jalon 4/terrain, pas prioritaire).
+- `Campfire.burn_duration` arbitraire, à ajuster au feeling en jeu.
+- VFX flamme perfectible (particules + GradientTexture2D radiale, correct mais pas top) — à retravailler une fois qu'on aura une meilleure idée de direction artistique pour les effets, potentiellement avec un vrai asset ou une texture dédiée plutôt que 100% procédural.
+- Pas de livraison par les pawns (normal, Jalon 6+).
+- Pas d'UI de progression du chantier (juste le prompt "Livrer") — à voir si besoin réel apparaît.
+- Emplacement des fichiers construction dans `resources/buildings/` plutôt que `entities/interactable/` (écart de convention assumé, voir STATE.md) — à corriger si ça devient gênant.
+
 ## Jalon 4 — Terrain procédural
 - [ ] `terrain_gen_config.gd` (Resource) : seed, taille de zone, refs `FastNoiseLite` par couche, rayon/falloff bunker partagé (flatten + exclusion scatter)
 - [ ] `heightmap_generator.gd` : bruit macro → masque relief → ridge noise (escarpement) → domain warp → flatten bunker → tracé + creusement rivière

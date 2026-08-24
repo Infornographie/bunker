@@ -82,6 +82,7 @@ navigation_mesh = SubResource("NavigationMesh_60qbc")
 [node name="GroundCSG" type="CSGBox3D" parent="Enviro/NavigationRegion3D" unique_id=868330707]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.285, 0)
 use_collision = true
+collision_layer = 3
 size = Vector3(150, 1, 150)
 material = SubResource("StandardMaterial3D_60qbc")
 

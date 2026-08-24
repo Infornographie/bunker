@@ -44,12 +44,24 @@ res://
 │ └── tools/
 │ └── tool_controller.gd — swing() en tween 3 phases (anticipation/strike/recoil), lit ToolDef
 ├── resources/
-│ ├── resource_def.gd — classe Resource : définition d'une ressource récoltable
-│ ├── tool_def.gd — classe Resource : définition data-driven d'un outil
+│ ├── resource_def.gd
+│ ├── tool_def.gd
+│ ├── building_def.gd — définition data-driven d'un bâtiment (fantôme, forme+offset de collision, scène finale, coûts)
 │ ├── resources/
-│ │ └── wood.tres — instance ResourceDef
-│ └── tools/
-│ └── wooden_axe.tres — instance ToolDef
+│ │ └── wood.tres
+│ ├── tools/
+│ │ └── wooden_axe.tres
+│ └── buildings/
+│ ├── building_cost.gd — une ligne de coût (ResourceDef + quantité)
+│ ├── construction_site.gd — chantier générique : accumule les ressources livrées, se remplace par built_scene une fois complet
+│ ├── construction_site.tscn
+│ ├── campfire.gd — bâtiment fini : cycle allumé/éteint (démarre éteint), rechargeable au E
+│ ├── campfire.tscn
+│ ├── campfire.tres — instance BuildingDef
+│ └── campfire_shape.tres — ConvexPolygonShape3D partagée (chevauchement placement + collision réelle)
+├── entities/
+│ └── player/
+│ └── build_mode_controller.gd — mode de pose (fantôme, snap grille, chevauchement), sibling de ToolController/InteractionController
 └── world/
 ├── bunker/
 │ └── bunker_exterior_test.tscn — scène bunker (SciFi MegaKit, extérieur+intérieur)
@@ -65,3 +77,5 @@ res://
 - `CarryController` ↔ `ResourcePickup` : `interact()` délègue le ramassage au `CarryController` de l'`InteractionController` (mains libres uniquement) ; `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` en miroir de l'état porté.
 - `PlayerHud` écoute les signaux de `InteractionController` pour afficher/masquer le prompt (fix : écoute `tree_exiting` sur la cible, pas `is_instance_valid()` seul, à cause de la destruction différée de `queue_free()`).
 - `ForestScatter` doit tourner **avant** le bake de `NavigationRegion3D` (contrainte d'ordre, revalidée au Jalon 4).
+- `Interactable.receive_resource()` (virtual, comme `receive_tool_hit()`) : point d'extension partagé entre `ConstructionSite` et `Campfire` pour la livraison de ressource au E — dispatché depuis `InteractionController._try_deliver_carried_item()`.
+- `BuildModeController` : `ground_mask` (layer `Ground`) pour positionner le fantôme, `overlap_mask` (layer `Obstacles`) pour le chevauchement — deux masques distincts, ne pas les confondre en configurant les nœuds du monde.

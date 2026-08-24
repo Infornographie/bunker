@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://bwfqmvhsgrabn"]
+
+[ext_resource type="Script" uid="uid://chlk38o0cm2e4" path="res://entities/interactable/construction_site.gd" id="1_xs4p5"]
+
+[node name="ConstructionSite" type="StaticBody3D" unique_id=534820906 node_paths=PackedStringArray("collision_shape_node", "visual_root")]
+script = ExtResource("1_xs4p5")
+collision_shape_node = NodePath("CollisionShape3D")
+visual_root = NodePath("VisualRoot")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1331684159]
+
+[node name="VisualRoot" type="Node3D" parent="." unique_id=1270697604]

@@ -22,3 +22,21 @@ func uses_tool_trigger() -> bool:
 ## ou non. Par défaut : ne fait rien — l'obstacle a juste stoppé le swing.
 func receive_tool_hit(_tool: ToolDef, _hit_origin: Vector3 = Vector3.ZERO) -> void:
 	pass
+
+## Reçoit une ressource livrée manuellement (E, en portant l'objet). Retourne
+## true si acceptée — l'appelant (InteractionController) consomme alors
+## l'objet porté. No-op par défaut : seuls les réceptacles (chantiers,
+## structures rechargeables...) le redéfinissent.
+func receive_resource(_resource: ResourceDef, _amount: int) -> bool:
+	return false
+
+## Utilitaire pour les sous-classes réceptrices : résout le ResourceDef
+## actuellement porté par l'interactor, ou null si rien / pas une ressource.
+func _get_carried_resource(interactor: Node) -> ResourceDef:
+	if interactor is InteractionController:
+		var controller := interactor as InteractionController
+		if controller.carry_controller:
+			var item: Node = controller.carry_controller.get_carried_item()
+			if item is ResourcePickup:
+				return item.resource_def
+	return null

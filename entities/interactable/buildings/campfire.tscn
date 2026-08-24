@@ -1,0 +1,87 @@
+[gd_scene format=3 uid="uid://csj3e0l1suoud"]
+
+[ext_resource type="Script" uid="uid://c7eaxg36bn7se" path="res://entities/interactable/buildings/campfire.gd" id="1_vaoel"]
+[ext_resource type="Resource" uid="uid://cc1jos21u05lp" path="res://resources/resources/wood.tres" id="2_rmn12"]
+[ext_resource type="PackedScene" uid="uid://clm14aspqqe5t" path="res://assets/survival/Bonfire.fbx" id="3_14ded"]
+[ext_resource type="Script" uid="uid://dv83qgt2uh0v0" path="res://entities/interactable/buildings/flame_light_flicker.gd" id="4_vaoel"]
+
+[sub_resource type="Gradient" id="Gradient_jawy5"]
+offsets = PackedFloat32Array(0, 0.15428571, 0.4, 0.7, 1)
+colors = PackedColorArray(1, 1, 0.8509804, 1, 1, 0.9019608, 0.3019608, 1, 1, 0.5019608, 0.09803922, 1, 0.6, 0.14901961, 0.050980393, 1, 0.050980393, 0.050980393, 0.050980393, 1)
+metadata/_snap_enabled = true
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_0vmg6"]
+gradient = SubResource("Gradient_jawy5")
+
+[sub_resource type="Curve" id="Curve_vaoel"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.25870645, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_70hql"]
+curve = SubResource("Curve_vaoel")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_60qbc"]
+emission_shape = 1
+emission_sphere_radius = 0.1
+direction = Vector3(0, 1, 0)
+spread = 15.0
+initial_velocity_min = 0.39999998
+initial_velocity_max = 0.79999995
+angular_velocity_min = -60.000015
+angular_velocity_max = 59.99998
+gravity = Vector3(0, 0.6, 0)
+scale_max = 100.0
+scale_curve = SubResource("CurveTexture_70hql")
+color_ramp = SubResource("GradientTexture1D_0vmg6")
+
+[sub_resource type="Gradient" id="Gradient_vaoel"]
+offsets = PackedFloat32Array(0, 0.5139665, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0.49670067, 0.49670067, 0.49670067, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_14ded"]
+gradient = SubResource("Gradient_vaoel")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cvuw1"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("GradientTexture2D_14ded")
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_3ywn7"]
+material = SubResource("StandardMaterial3D_cvuw1")
+size = Vector2(0.8, 0.8)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_vaoel"]
+points = PackedVector3Array(-0.0035086917, -0.0040659187, -1.3305689e-05, 0.0034097752, 0.0056214286, 0.002062275, 0.0034097752, 0.0056214286, 0.0015437355, 0.0046204794, -0.0021634216, 0.001370889, -0.00472048, -0.0032006025, 0.0034468253, -0.0024714093, 0.004755113, -0.00018650782, -0.002297987, 0.00510084, 0.0034468253, 0.0035831975, -0.0032006025, 0.0029275746, 0.004793902, 0.0042365226, -1.3305689e-05, 0.004793902, 0.0044083865, 0.0029275746, 0.0028905922, -0.003374465, -1.3305689e-05, -0.0055865077, -0.002336285, 0.0010251959, -0.0042012967, 0.0042365226, 0.002062275, -0.00281717, -0.0045865076, 0.0025815258, -0.004374719, -0.003374465, -0.00018650782, 0.0025448313, -0.004066918, 0.0010248404, 0.0034097752, 0.002678753, -0.00018650782, -0.0042012967, 0.0042365226, 0.00085163815, 0.005486508, 0.0035440696, 0.0018894285, -0.0038555362, -0.0040659187, 0.0034468253, -0.0016064654, 0.005447566, 0.0022351216, -0.0033363532, 0.0045822496, 0.0032732675, -0.005412001, -0.002336285, 0.0025815258, -0.005066241, -0.003027739, 0.0001595408, 0.0037566198, -0.0021634216, -1.3305689e-05, 0.0053130854, 0.0035440696, 0.0005059452, 0.004447058, -0.002336285, 0.0024083238, -0.0029905925, -0.0045865076, 0.0010251959, 0.0028905922, -0.0038930555, 0.0024083238, 0.0039289584, 0.004755113, -1.3305689e-05, -0.0033363532, 0.004409386, -1.3305689e-05, -0.0014341271, 0.00510084, 0.0001595408)
+
+[node name="Campfire" type="StaticBody3D" unique_id=1587530180 node_paths=PackedStringArray("flame_visual")]
+script = ExtResource("1_vaoel")
+refuel_resource = ExtResource("2_rmn12")
+flame_visual = NodePath("Flame")
+
+[node name="Bonfire" parent="." unique_id=1314483954 instance=ExtResource("3_14ded")]
+
+[node name="Flame" type="GPUParticles3D" parent="." unique_id=801735932]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05645454, 0.32310897, -0.0349797)
+amount = 100
+randomness = 0.3
+local_coords = true
+process_material = SubResource("ParticleProcessMaterial_60qbc")
+draw_pass_1 = SubResource("QuadMesh_3ywn7")
+
+[node name="FlameLight" type="OmniLight3D" parent="Flame" unique_id=1190601880]
+visibility_parent = NodePath("..")
+light_color = Color(1, 0.5019608, 0.09803922, 1)
+light_energy = 2.0
+omni_range = 4.0
+script = ExtResource("4_vaoel")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=272643221]
+transform = Transform3D(200, 0, 0, 0, -8.742278e-06, 200, 0, -200, -8.742278e-06, 0, 0, 0)
+shape = SubResource("ConvexPolygonShape3D_vaoel")
+
+[editable path="Bonfire"]

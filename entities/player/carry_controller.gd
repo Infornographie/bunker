@@ -13,6 +13,9 @@ func is_carrying() -> bool:
 func can_carry() -> bool:
 	return _carried_item == null
 
+func get_carried_item() -> Node:
+	return _carried_item
+
 ## item doit être un Interactable (PhysicsBody3D). Freeze/impulsion accédés
 ## en dynamique (set/call) : voir pattern noté dans STATE.md.
 func carry(item: Node3D) -> void:
@@ -40,3 +43,13 @@ func drop(world_position: Vector3, target_parent: Node) -> void:
 	item.set("freeze", false)
 	if item.has_method("apply_central_impulse"):
 		item.call("apply_central_impulse", Vector3(0.0, 0.2, 0.0))
+
+## Contrairement à drop(), l'objet porté est détruit plutôt que reposé dans
+## le monde — utilisé quand une ressource est livrée à un réceptacle
+## (chantier, structure rechargeable...).
+func consume() -> void:
+	if not is_carrying():
+		return
+	var item := _carried_item
+	_carried_item = null
+	item.queue_free()
