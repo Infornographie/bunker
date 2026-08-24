@@ -1,6 +1,6 @@
 # STATE — Projet Bunker (nom provisoire)
 
-## État au 21/08/2026
+## État au 24/08/2026
 
 - Jalon 0 (setup) : projet créé (Godot 4.7.2, renderer Forward+), Stylized Nature MegaKit + Modular SciFi MegaKit importés (GLTF + Textures)
 - Jalon 1 (forêt + freecam) : terminé
@@ -22,6 +22,7 @@
 - **Swing animation** : deux bugs identifiés et corrigés successivement. (1) `rotated_local()` tournait autour de l'axe déjà réorienté par `hand_rotation_degrees`, rendant le mouvement quasi invisible. (2) Le remplacement par `rotated()` faisait aussi tourner l'origine autour du pivot du parent (caméra), envoyant la hache derrière la caméra pendant le swing. Fix final : rotation appliquée uniquement au basis (`Basis(axis, angle) * rest_transform.basis`), origine gérée séparément avec un `strike_offset` explicite (avant-bas) pour donner l'impression d'un coup porté. Angle/offset toujours à valider/ajuster visuellement, pas figé.
 - **Prompt d'interaction persistant après destruction de la cible** : `is_instance_valid()` ne suffit pas juste après `queue_free()` (destruction différée en fin de frame). Fix : écoute du signal natif `tree_exiting` sur la cible courante, qui déclenche l'effacement du prompt au bon moment peu importe la cause de la destruction.
 - **State machine d'actions** : `ActionStateMachine`, sibling de `ToolController`/`InteractionController` sous `Camera3D`. Rôle : arbitrer si une action peut démarrer et orchestrer le timing swing→impact→effet via un `Callable` passé par l'`Interactable` cible (`use_tool_on(target, on_impact)`). `Choppable.interact()` ne fait plus l'effet direct : il délègue à la state machine, qui n'exécute l'effet qu'au signal `swing_impact` et seulement si la cible est encore valide. `BUILDING` réservé en commentaire dans l'enum, non codé.
+- **Structure de fichiers** : revue et nettoyée (24/08/2026) — fusion `entities/world/forest` dans `entities/interactable/forest/` (instances) + `world/forest/` (scène de niveau), renommage `FreecamController.gd`/`ForestScatter.gd`/`test exterior.tscn` en snake_case, suppression des dossiers vides `entities/pawn/` et `ui/` (à recréer aux Jalons 6 et 8). Carte de référence détaillée dans `STRUCTURE.md` à la racine, à tenir à jour à chaque changement d'arborescence.
 
 ## Décisions en attente
 

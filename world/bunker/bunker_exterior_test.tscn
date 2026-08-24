@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ds2i632n6k3w7"]
 
-[ext_resource type="Script" uid="uid://d1euaa03t7lv1" path="res://debug/FreecamController.gd" id="2_1sie3"]
+[ext_resource type="Script" uid="uid://d1euaa03t7lv1" path="res://debug/freecam_controller.gd" id="2_1sie3"]
 [ext_resource type="PackedScene" uid="uid://bf78px7l0w8so" path="res://assets/characters/tools/Wooden Axe.fbx" id="2_h53bt"]
 
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_h53bt"]
