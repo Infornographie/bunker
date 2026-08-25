@@ -1,81 +1,94 @@
 # STRUCTURE — Projet Bunker
-
+ 
 Carte de repérage technique : où vit quoi, et qui dépend de quoi. Pas un suivi d'avancement (→ STATE.md) ni un backlog (→ ROADMAP.md) : uniquement la structure.
-
+ 
 ## Conventions
-
+ 
 - Fichiers `.gd` : snake_case (convention officielle Godot). `class_name` interne en PascalCase si besoin.
 - Scènes `.tscn` : snake_case.
 - Organisation par feature/domaine, pas par type de fichier (scène et script d'une même feature côte à côte).
 - `entities/` = tout ce qui est instanciable individuellement (script de base + scènes concrètes qui en héritent), rangé par comportement.
 - `world/` = scènes qui assemblent des entités dans un lieu (le niveau lui-même).
-- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, futur `buildings/`, `techs/`...), à côté des scripts `*_def.gd` correspondants.
-
+- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, futur `techs/`...), à côté des scripts `*_def.gd` correspondants.
+- `assets/` = ressources brutes tierces (FBX, textures, audio) + quelques scènes wrapper Godot quand l'asset importé demande un pivot correctif (cf. `wooden_axe_grip.tscn`).
 ## Autoloads (globaux, accessibles partout sans référence)
-
-- `autoloads/sound_manager.gd` — pool de 8 `AudioStreamPlayer3D` réutilisables pour SFX ponctuels positionnés.
-
+ 
+- `autoloads/sound_manager.gd` — pool d'`AudioStreamPlayer3D` réutilisables pour SFX ponctuels positionnés.
 ## Arborescence
-
+ 
+```
 res://
 ├── autoloads/
-│ └── sound_manager.gd — pool SFX, voir Autoloads ci-dessus
+│   └── sound_manager.gd
 ├── debug/
-│ ├── debug_camera_switch.gd — bascule caméra joueur ↔ freecam (touche F7)
-│ └── freecam_controller.gd — caméra libre noclip, conservé tout le long du projet
+│   ├── debug_camera_switch.gd          — bascule cam player ↔ freecam (F7)
+│   └── freecam_controller.gd           — caméra libre noclip
 ├── entities/
-│ ├── interactable/
-│ │ ├── interactable.gd — classe de base, PhysicsBody3D (étendu depuis StaticBody3D pour supporter des interactables mobiles), virtual receive_tool_hit()
-│ │ ├── choppable.gd — hérite Interactable : HP, vérif type d'outil, anti-spam swing, signal depleted, hook chop_sound (pas d'asset assigné)
-│ │ ├── resource_pickup.gd — hérite Interactable (RigidBody3D en pratique) : objet ramassable/portable au sol, lit un ResourceDef, impulsion de chute orientée
-│ │ └── forest/
-│ │ ├── oak_choppable.tscn — instance concrète de Choppable (chêne)
-│ │ └── resource_pickup_wood.tscn — instance concrète de ResourcePickup (bois)
-│ └── player/
-│ ├── player.tscn — scène joueur assemblée
-│ ├── player_controller.gd — CharacterBody3D, locomotion/caméra, franchissement marches auto (test_move, step_height 0.35m)
-│ ├── action_state_machine.gd — states IDLE/USING_TOOL, découple timing du swing des dégâts
-│ ├── interaction_controller.gd — raycast/zone vers Interactable, gère le prompt d'interaction, arbitre outil vs portage (mains occupées = pas de swing), déclenche ramassage/dépose (E)
-│ ├── carry_controller.gd — un seul objet porté à la fois, reparenting vers HandAnchor, désactive collision + freeze pendant le portage
-│ ├── hud/
-│ │ ├── player_hud.tscn — CanvasLayer HUD
-│ │ ├── player_hud.gd — dessine crosshair + prompt d'interaction 2D screen-space
-│ │ └── crosshair.gd — crosshair dessiné en code
-│ └── tools/
-│ └── tool_controller.gd — swing() en tween 3 phases (anticipation/strike/recoil), lit ToolDef
+│   ├── interactable/
+│   │   ├── interactable.gd             — base PhysicsBody3D, receive_tool_hit()
+│   │   ├── choppable.gd                — hérite Interactable : HP, type d'outil, depleted → 3× pickup
+│   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D) : objet ramassable, lit ResourceDef
+│   │   ├── construction_site.gd        — hérite Interactable : blueprint posé, réceptionne les livraisons
+│   │   ├── construction_site.tscn
+│   │   ├── buildings/
+│   │   │   ├── campfire.gd             — bâtiment fini, allumage/entretien, combustion Timer
+│   │   │   ├── campfire.tscn
+│   │   │   └── flame_light_flicker.gd  — script d'ambiance sur le Light3D de la flamme
+│   │   └── forest/
+│   │       ├── oak_choppable.tscn      — instance concrète de Choppable (chêne)
+│   │       └── resource_pickup_wood.tscn — instance concrète de ResourcePickup (bois)
+│   └── player/
+│       ├── player.tscn                 — scène joueur assemblée
+│       ├── player_controller.gd        — CharacterBody3D, locomotion, marches auto (step_height 0.35m)
+│       ├── action_state_machine.gd     — IDLE / USING_TOOL, découple timing swing/dégâts
+│       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, E → interact/carry
+│       ├── carry_controller.gd         — point unique "en main", reparent → HandAnchor, désactive collision + freeze
+│       ├── build_mode_controller.gd    — mode construction (B), blueprint, molette (rotation), Shift (free placing), spawn ConstructionSite
+│       ├── hud/
+│       │   ├── player_hud.tscn         — CanvasLayer HUD
+│       │   ├── player_hud.gd           — crosshair + prompt d'interaction 2D
+│       │   └── crosshair.gd            — crosshair dessiné en code
+│       └── tools/
+│           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, lit ToolDef
 ├── resources/
-│ ├── resource_def.gd
-│ ├── tool_def.gd
-│ ├── building_def.gd — définition data-driven d'un bâtiment (fantôme, forme+offset de collision, scène finale, coûts)
-│ ├── resources/
-│ │ └── wood.tres
-│ ├── tools/
-│ │ └── wooden_axe.tres
-│ └── buildings/
-│ ├── building_cost.gd — une ligne de coût (ResourceDef + quantité)
-│ ├── construction_site.gd — chantier générique : accumule les ressources livrées, se remplace par built_scene une fois complet
-│ ├── construction_site.tscn
-│ ├── campfire.gd — bâtiment fini : cycle allumé/éteint (démarre éteint), rechargeable au E
-│ ├── campfire.tscn
-│ ├── campfire.tres — instance BuildingDef
-│ └── campfire_shape.tres — ConvexPolygonShape3D partagée (chevauchement placement + collision réelle)
-├── entities/
-│ └── player/
-│ └── build_mode_controller.gd — mode de pose (fantôme, snap grille, chevauchement), sibling de ToolController/InteractionController
+│   ├── resource_def.gd                 — Resource : définition d'une ressource récoltable (carry_type, visuel)
+│   ├── tool_def.gd                     — Resource : définition data-driven d'un outil
+│   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, shape, blueprint/built scene)
+│   ├── building_cost.gd                — Resource sous-type : une ligne de coût (ResourceDef × quantité), utilisé en Array[BuildingCost] dans BuildingDef
+│   ├── resources/
+│   │   └── wood.tres                   — instance ResourceDef
+│   ├── tools/
+│   │   └── wooden_axe.tres             — instance ToolDef
+│   └── buildings/
+│       ├── campfire.tres               — instance BuildingDef
+│       └── campfire_shape.tres         — Shape3D partagée (blueprint collision + collision runtime)
 └── world/
-├── bunker/
-│ └── bunker_exterior_test.tscn — scène bunker (SciFi MegaKit, extérieur+intérieur)
-└── forest/
-├── forest_test.tscn — scène de test forêt (sol + scatter + freecam)
-└── forest_scatter.gd — placement jitter/poisson-disque, zone d'exclusion autour du bunker
-
+    ├── bunker/
+    │   └── bunker_exterior_test.tscn   — scène bunker (SciFi MegaKit, ext + int)
+    └── forest/
+        ├── forest_test.tscn            — scène de test (sol + scatter + freecam + bunker)
+        └── forest_scatter.gd           — placement jitter/poisson-disque, zone d'exclusion bunker
+```
+ 
+Hors `res://` scripts, à noter :
+ 
+- `assets/characters/tools/wooden_axe_grip.tscn` — wrapper `Node3D` pour rattraper le pivot du FBX hache (protocole détaillé dans STATE §Apprentissages). Convention à répliquer pour les prochains outils.
 ## Dépendances transversales clés
-
-- `InteractionController` (player) → raycast vers `Interactable.receive_tool_hit()` — les effets se résolvent à l'impact, pas à l'input.
-- `ToolController.swing()` pilote `ActionStateMachine` (IDLE/USING_TOOL) → au moment du strike, déclenche `receive_tool_hit()` sur la cible.
-- `Choppable` (hérite `Interactable`) → vérifie le type d'outil via `ToolDef`, décrémente HP, émet `depleted`, spawn 3 `ResourcePickup` physiques au sol à sa destruction, hook `chop_sound` vers `SoundManager` (autoload) — pas encore d'asset son branché.
-- `CarryController` ↔ `ResourcePickup` : `interact()` délègue le ramassage au `CarryController` de l'`InteractionController` (mains libres uniquement) ; `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` en miroir de l'état porté.
-- `PlayerHud` écoute les signaux de `InteractionController` pour afficher/masquer le prompt (fix : écoute `tree_exiting` sur la cible, pas `is_instance_valid()` seul, à cause de la destruction différée de `queue_free()`).
-- `ForestScatter` doit tourner **avant** le bake de `NavigationRegion3D` (contrainte d'ordre, revalidée au Jalon 4).
-- `Interactable.receive_resource()` (virtual, comme `receive_tool_hit()`) : point d'extension partagé entre `ConstructionSite` et `Campfire` pour la livraison de ressource au E — dispatché depuis `InteractionController._try_deliver_carried_item()`.
-- `BuildModeController` : `ground_mask` (layer `Ground`) pour positionner le fantôme, `overlap_mask` (layer `Obstacles`) pour le chevauchement — deux masques distincts, ne pas les confondre en configurant les nœuds du monde.
+ 
+### Flux d'action (swing outil)
+- `ToolController.swing()` → pilote `ActionStateMachine` (IDLE → USING_TOOL) ; au signal `swing_impact`, déclenche `receive_tool_hit()` sur la cible verrouillée par l'`InteractionController`.
+- `Choppable.receive_tool_hit()` : vérifie le type d'outil via `ToolDef`, décrémente HP, émet `depleted` → spawn 3 `ResourcePickup` physiques, hook `chop_sound` → `SoundManager` (asset non branché).
+### Flux d'interaction / portage
+- `InteractionController` : raycast vers un `Interactable`, gère le prompt (fix `tree_exiting` sur la cible, pas `is_instance_valid()` seul).
+- Sur E : soit `Interactable.interact()`, soit délégation à `CarryController` (mains libres uniquement).
+- `CarryController` ↔ `ResourcePickup` : le pickup lit son `ResourceDef.CarryType` pour valider le portage main.
+- Miroir : `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` quand les mains sont occupées.
+### Flux de construction
+- `BuildModeController` (B) : lit la liste des `BuildingDef` disponibles, instancie le blueprint, tourne à la molette, `Shift` désactive le snap, check collision via `BuildingDef.shape`.
+- Placement validé → spawn d'un `ConstructionSite` (Interactable).
+- `ConstructionSite` : lit `BuildingDef.costs` (Array[`BuildingCost`]), réceptionne les livraisons de `ResourcePickup` (via `interact()` avec ressource en main), à complétion → `queue_free` + spawn de la `built_scene` (ex : `Campfire`).
+- `Campfire` : bâtiment fini, `Timer` de combustion, `flame_light_flicker` anime le Light3D de la flamme.
+### Contraintes d'ordre
+- `ForestScatter` doit tourner **avant** le bake de `NavigationRegion3D` (revalidé au Jalon 4 avec le terrain procédural).
+### Autoload commun
+- `SoundManager` (autoload) : appelé par tout ce qui produit un SFX positionné (aujourd'hui `Choppable`, plus tard `Campfire`, `ConstructionSite` livraison, etc.).

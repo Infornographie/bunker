@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 820" width="100%" font-family="Inter, system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/>
+    </marker>
+    <style><![CDATA[
+      :root {
+        --bg: #faf7f0;
+        --text: #2a221a;
+        --muted: #7a6858;
+        --band: #8b7355;
+        --input-bg: #efe5d3; --input-st: #b8a082;
+        --def-bg: #e6ede8;   --def-st: #6b9d7f;
+        --sys-bg: #f5e4d0;   --sys-st: #c67b47;
+        --ent-bg: #ede1cf;   --ent-st: #8b6f4e;
+        --aut-bg: #e5dfe8;   --aut-st: #7a6b91;
+        --call: #6b5c4a;
+        --read: #6b9d7f;
+        --divider: #d4c8b4;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1e1a15;
+          --text: #e8dfd0;
+          --muted: #a89685;
+          --band: #b8a68f;
+          --input-bg: #2a251d; --input-st: #b8a082;
+          --def-bg: #22302a;   --def-st: #8fb59c;
+          --sys-bg: #3a2a1e;   --sys-st: #e8a882;
+          --ent-bg: #2f271f;   --ent-st: #b39273;
+          --aut-bg: #2d2734;   --aut-st: #9587a8;
+          --call: #b8a68f;
+          --read: #8fb59c;
+          --divider: #3a3228;
+        }
+      }
+      .bg { fill: var(--bg); }
+      text { fill: var(--text); }
+      .title { font-size: 20px; font-weight: 600; }
+      .subtitle { font-size: 12px; fill: var(--muted); }
+      .band { font-size: 11px; font-weight: 700; fill: var(--band); letter-spacing: 2.5px; }
+      .box-t { font-size: 12.5px; font-weight: 600; }
+      .box-b { font-size: 10.5px; fill: var(--muted); }
+      .arr-l { font-size: 10px; fill: var(--muted); font-style: italic; }
+      .input-b { fill: var(--input-bg); stroke: var(--input-st); stroke-width: 1.4; }
+      .def-b   { fill: var(--def-bg);   stroke: var(--def-st);   stroke-width: 1.4; stroke-dasharray: 3 2; }
+      .sys-b   { fill: var(--sys-bg);   stroke: var(--sys-st);   stroke-width: 1.4; }
+      .ent-b   { fill: var(--ent-bg);   stroke: var(--ent-st);   stroke-width: 1.4; }
+      .aut-b   { fill: var(--aut-bg);   stroke: var(--aut-st);   stroke-width: 1.4; }
+      .call { stroke: var(--call); stroke-width: 1.6; fill: none; }
+      .read { stroke: var(--read); stroke-width: 1.4; fill: none; stroke-dasharray: 5 3; opacity: 0.85; }
+      .hérite { stroke: var(--call); stroke-width: 1.4; fill: none; stroke-dasharray: 1 3; opacity: 0.7; }
+      .divider { stroke: var(--divider); stroke-width: 0.7; opacity: 0.5; }
+    ]]></style>
+  </defs>
+
+  <rect class="bg" width="1300" height="820"/>
+
+  <!-- Header -->
+  <text x="40" y="35" class="title">Bunker — architecture data-driven (Jalon 3)</text>
+  <text x="40" y="55" class="subtitle">Trois familles de définitions .tres alimentent trois boucles côté joueur, qui agissent sur des entités du monde.</text>
+
+  <!-- ============ DATA BAND ============ -->
+  <text x="40" y="95" class="band">DATA (.tres)</text>
+
+  <!-- ToolDef -->
+  <rect class="def-b" x="40"  y="110" width="200" height="70" rx="6"/>
+  <text x="140" y="132" class="box-t" text-anchor="middle">ToolDef</text>
+  <text x="140" y="150" class="box-b" text-anchor="middle">type · viewmodel · swing</text>
+  <text x="140" y="166" class="box-b" text-anchor="middle">→ wooden_axe.tres</text>
+
+  <!-- ResourceDef -->
+  <rect class="def-b" x="270" y="110" width="200" height="70" rx="6"/>
+  <text x="370" y="132" class="box-t" text-anchor="middle">ResourceDef</text>
+  <text x="370" y="150" class="box-b" text-anchor="middle">carry_type · visuel</text>
+  <text x="370" y="166" class="box-b" text-anchor="middle">→ wood.tres</text>
+
+  <!-- BuildingDef -->
+  <rect class="def-b" x="500" y="110" width="290" height="70" rx="6"/>
+  <text x="645" y="132" class="box-t" text-anchor="middle">BuildingDef  ( + BuildingCost[] + Shape3D )</text>
+  <text x="645" y="150" class="box-b" text-anchor="middle">blueprint_scene · built_scene</text>
+  <text x="645" y="166" class="box-b" text-anchor="middle">→ campfire.tres  ·  campfire_shape.tres</text>
+
+  <!-- Legend (top right) -->
+  <g transform="translate(830, 100)">
+    <rect fill="var(--bg)" stroke="var(--divider)" stroke-width="0.7" x="0" y="0" width="430" height="90" rx="6"/>
+    <text x="15" y="20" class="band">LÉGENDE</text>
+
+    <rect class="def-b"   x="15"  y="32" width="70" height="18" rx="3"/>
+    <text x="50"  y="45" class="box-b" text-anchor="middle">Data</text>
+    <rect class="sys-b"   x="95"  y="32" width="70" height="18" rx="3"/>
+    <text x="130" y="45" class="box-b" text-anchor="middle">Système</text>
+    <rect class="ent-b"   x="175" y="32" width="70" height="18" rx="3"/>
+    <text x="210" y="45" class="box-b" text-anchor="middle">Entité</text>
+    <rect class="aut-b"   x="255" y="32" width="70" height="18" rx="3"/>
+    <text x="290" y="45" class="box-b" text-anchor="middle">Autoload</text>
+    <rect class="input-b" x="335" y="32" width="70" height="18" rx="3"/>
+    <text x="370" y="45" class="box-b" text-anchor="middle">Input</text>
+
+    <line class="call" x1="15" y1="65" x2="55" y2="65" marker-end="url(#ar)"/>
+    <text x="65" y="69" class="box-b">appel / spawn</text>
+    <line class="read" x1="180" y1="65" x2="220" y2="65" marker-end="url(#ar)"/>
+    <text x="230" y="69" class="box-b">lecture .tres</text>
+
+    <line class="hérite" x1="15" y1="82" x2="55" y2="82" marker-end="url(#ar)"/>
+    <text x="65" y="86" class="box-b">héritage</text>
+  </g>
+
+  <!-- ============ SYSTEMS BAND ============ -->
+  <text x="40" y="230" class="band">SYSTÈMES  (entities/player)</text>
+
+  <!-- Row 1 of systems -->
+  <rect class="sys-b" x="40"  y="250" width="200" height="70" rx="6"/>
+  <text x="140" y="272" class="box-t" text-anchor="middle">ToolController</text>
+  <text x="140" y="290" class="box-b" text-anchor="middle">viewmodel + swing()</text>
+  <text x="140" y="306" class="box-b" text-anchor="middle">tween 3 phases</text>
+
+  <rect class="sys-b" x="270" y="250" width="200" height="70" rx="6"/>
+  <text x="370" y="272" class="box-t" text-anchor="middle">InteractionController</text>
+  <text x="370" y="290" class="box-b" text-anchor="middle">raycast + prompt (E)</text>
+  <text x="370" y="306" class="box-b" text-anchor="middle">arbitre outil vs carry</text>
+
+  <rect class="sys-b" x="500" y="250" width="290" height="70" rx="6"/>
+  <text x="645" y="272" class="box-t" text-anchor="middle">BuildModeController</text>
+  <text x="645" y="290" class="box-b" text-anchor="middle">B menu · blueprint · molette (rot)</text>
+  <text x="645" y="306" class="box-b" text-anchor="middle">Shift = free placing · check shape</text>
+
+  <!-- Row 2 of systems -->
+  <rect class="sys-b" x="40"  y="340" width="200" height="60" rx="6"/>
+  <text x="140" y="362" class="box-t" text-anchor="middle">ActionStateMachine</text>
+  <text x="140" y="380" class="box-b" text-anchor="middle">IDLE / USING_TOOL</text>
+  <text x="140" y="394" class="box-b" text-anchor="middle">signal swing_impact</text>
+
+  <rect class="sys-b" x="270" y="340" width="200" height="60" rx="6"/>
+  <text x="370" y="362" class="box-t" text-anchor="middle">CarryController</text>
+  <text x="370" y="380" class="box-b" text-anchor="middle">point unique "en main"</text>
+  <text x="370" y="394" class="box-b" text-anchor="middle">reparent → HandAnchor</text>
+
+  <!-- Inputs (left column) -->
+  <rect class="input-b" x="820" y="255" width="80" height="45" rx="6"/>
+  <text x="860" y="277" class="box-t" text-anchor="middle">Clic G</text>
+  <text x="860" y="291" class="box-b" text-anchor="middle">→ ToolCtrl</text>
+
+  <rect class="input-b" x="910" y="255" width="80" height="45" rx="6"/>
+  <text x="950" y="277" class="box-t" text-anchor="middle">E</text>
+  <text x="950" y="291" class="box-b" text-anchor="middle">→ InterCtrl</text>
+
+  <rect class="input-b" x="1000" y="255" width="80" height="45" rx="6"/>
+  <text x="1040" y="277" class="box-t" text-anchor="middle">B</text>
+  <text x="1040" y="291" class="box-b" text-anchor="middle">→ BuildCtrl</text>
+
+  <rect class="input-b" x="1090" y="255" width="170" height="45" rx="6"/>
+  <text x="1175" y="277" class="box-t" text-anchor="middle">Molette / Shift</text>
+  <text x="1175" y="291" class="box-b" text-anchor="middle">→ BuildCtrl (rot / free)</text>
+
+  <!-- ============ ENTITIES BAND ============ -->
+  <text x="40" y="425" class="band">ENTITÉS DU MONDE  (entities/interactable)</text>
+
+  <rect class="ent-b" x="40"  y="445" width="180" height="70" rx="6"/>
+  <text x="130" y="467" class="box-t" text-anchor="middle">Interactable</text>
+  <text x="130" y="485" class="box-b" text-anchor="middle">base PhysicsBody3D</text>
+  <text x="130" y="501" class="box-b" text-anchor="middle">receive_tool_hit() · interact()</text>
+
+  <rect class="ent-b" x="250" y="445" width="180" height="70" rx="6"/>
+  <text x="340" y="467" class="box-t" text-anchor="middle">Choppable</text>
+  <text x="340" y="485" class="box-b" text-anchor="middle">HP · check ToolDef</text>
+  <text x="340" y="501" class="box-b" text-anchor="middle">depleted → spawn ×3</text>
+
+  <rect class="ent-b" x="460" y="445" width="180" height="70" rx="6"/>
+  <text x="550" y="467" class="box-t" text-anchor="middle">ResourcePickup</text>
+  <text x="550" y="485" class="box-b" text-anchor="middle">RigidBody3D</text>
+  <text x="550" y="501" class="box-b" text-anchor="middle">portable en main</text>
+
+  <rect class="ent-b" x="670" y="445" width="200" height="70" rx="6"/>
+  <text x="770" y="467" class="box-t" text-anchor="middle">ConstructionSite</text>
+  <text x="770" y="485" class="box-b" text-anchor="middle">réceptionne les livraisons</text>
+  <text x="770" y="501" class="box-b" text-anchor="middle">complet → spawn built_scene</text>
+
+  <rect class="ent-b" x="900" y="445" width="200" height="70" rx="6"/>
+  <text x="1000" y="467" class="box-t" text-anchor="middle">Campfire (built)</text>
+  <text x="1000" y="485" class="box-b" text-anchor="middle">Timer combustion</text>
+  <text x="1000" y="501" class="box-b" text-anchor="middle">+ flame_light_flicker</text>
+
+  <!-- ============ AUTOLOAD BAND ============ -->
+  <text x="40" y="565" class="band">AUTOLOAD</text>
+
+  <rect class="aut-b" x="40" y="580" width="220" height="55" rx="6"/>
+  <text x="150" y="602" class="box-t" text-anchor="middle">SoundManager</text>
+  <text x="150" y="620" class="box-b" text-anchor="middle">pool AudioStreamPlayer3D · play_at()</text>
+
+  <text x="290" y="600" class="box-b">← Choppable.chop_sound (hook posé, asset non branché)</text>
+  <text x="290" y="618" class="box-b">← à venir : combustion feu, livraison, allumage…</text>
+  <text x="290" y="636" class="box-b">Pas de bus séparé, pas de son 2D/UI aujourd'hui.</text>
+
+  <!-- ============ ARROWS ============ -->
+
+  <!-- Data reads (dashed green) -->
+  <!-- ToolDef → ToolController -->
+  <path class="read" d="M 140 180 L 140 250" marker-end="url(#ar)"/>
+  <!-- ToolDef → Choppable (type check, read only) — long curve -->
+  <path class="read" d="M 200 180 Q 260 220 340 445" marker-end="url(#ar)"/>
+  <!-- ResourceDef → ResourcePickup -->
+  <path class="read" d="M 370 180 Q 400 300 550 445" marker-end="url(#ar)"/>
+  <!-- BuildingDef → BuildModeController -->
+  <path class="read" d="M 645 180 L 645 250" marker-end="url(#ar)"/>
+  <!-- BuildingDef → ConstructionSite -->
+  <path class="read" d="M 730 180 Q 780 320 770 445" marker-end="url(#ar)"/>
+
+  <!-- Calls (solid dark) -->
+  <!-- ToolController → ActionStateMachine -->
+  <path class="call" d="M 140 320 L 140 340" marker-end="url(#ar)"/>
+  <text x="150" y="335" class="arr-l">swing()</text>
+
+  <!-- ActionStateMachine → Interactable.receive_tool_hit -->
+  <path class="call" d="M 140 400 L 130 445" marker-end="url(#ar)"/>
+  <text x="150" y="428" class="arr-l">swing_impact → hit</text>
+
+  <!-- InteractionController → CarryController (delegate) -->
+  <path class="call" d="M 370 320 L 370 340" marker-end="url(#ar)"/>
+  <text x="380" y="335" class="arr-l">carry()</text>
+
+  <!-- InteractionController → Interactable.interact (alt path, non-portables) -->
+  <path class="call" d="M 300 320 Q 200 400 155 445" marker-end="url(#ar)" opacity="0.55"/>
+  <text x="205" y="365" class="arr-l">interact() (non-portable)</text>
+
+  <!-- CarryController → ResourcePickup (reparent) -->
+  <path class="call" d="M 430 385 Q 480 420 530 445" marker-end="url(#ar)"/>
+  <text x="465" y="415" class="arr-l">reparent</text>
+
+  <!-- Interactable → Choppable (héritage) -->
+  <path class="hérite" d="M 220 480 L 250 480" marker-end="url(#ar)"/>
+
+  <!-- Choppable → ResourcePickup (spawn on depleted) -->
+  <path class="call" d="M 430 480 L 460 480" marker-end="url(#ar)"/>
+  <text x="425" y="472" class="arr-l">×3</text>
+
+  <!-- BuildModeController → ConstructionSite (spawn on valid placement) -->
+  <path class="call" d="M 700 320 Q 770 380 770 445" marker-end="url(#ar)"/>
+  <text x="720" y="380" class="arr-l">placement valide</text>
+
+  <!-- ConstructionSite → Campfire (spawn built_scene) -->
+  <path class="call" d="M 870 480 L 900 480" marker-end="url(#ar)"/>
+  <text x="855" y="472" class="arr-l">complet</text>
+
+  <!-- ResourcePickup → ConstructionSite (delivery via carry) -->
+  <path class="call" d="M 640 500 Q 680 530 720 515" marker-end="url(#ar)" opacity="0.55" stroke-dasharray="4 3"/>
+  <text x="655" y="540" class="arr-l">livraison (via main)</text>
+
+  <!-- Choppable → SoundManager (via hook) -->
+  <path class="call" d="M 300 515 Q 200 550 150 580" marker-end="url(#ar)" opacity="0.55"/>
+
+</svg>
