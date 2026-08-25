@@ -8,6 +8,7 @@ class_name InteractionController
 @export var carry_controller: CarryController
 @export var drop_distance: float = 1.5
 @export var build_mode_controller: BuildModeController
+@export var equipment_controller: EquipmentController
 
 var _current_target: Interactable
 var _current_target_distance: float = -1.0
@@ -85,6 +86,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_current_target.interact(self)
 			if carry_controller and carry_controller.is_carrying() and tool_controller:
 				tool_controller.set_tool_visible(false)
+			if hud:
+				hud.set_hotbar_dimmed(true)
 
 ## Livre l'objet porté à la cible visée si elle l'accepte (chantier,
 ## structure rechargeable...). Retourne true si la livraison a eu lieu —
@@ -102,6 +105,8 @@ func _try_deliver_carried_item() -> bool:
 	carry_controller.consume()
 	if tool_controller:
 		tool_controller.set_tool_visible(true)
+	if hud:
+		hud.set_hotbar_dimmed(false)
 	return true
 
 ## Empêche de démarrer une interaction (ramassage...) pendant un swing en
@@ -136,3 +141,5 @@ func _drop_carried_item() -> void:
 	carry_controller.drop(drop_position, get_tree().current_scene)
 	if tool_controller:
 		tool_controller.set_tool_visible(true)
+	if hud:
+		hud.set_hotbar_dimmed(false)

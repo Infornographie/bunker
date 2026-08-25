@@ -1,6 +1,6 @@
 # STATE — Projet Bunker (nom provisoire)
  
-## État au 24/08/2026
+## État au 25/08/2026
  
 - Jalon 0 (setup) : projet créé (Godot 4.7.2, renderer Forward+), Stylized Nature MegaKit + Modular SciFi MegaKit importés (GLTF + Textures)
 - Jalon 1 (forêt + freecam) : terminé
@@ -23,6 +23,7 @@ Choix retenus actuellement pour guider le développement — pas gravés dans le
 - **Portage protagoniste** : cf. GDD §Portage & inventaire du protagoniste — aucune divergence en cours. Note d'implémentation : `CarryController` = point de logique unique pour tout ce qui est "en main" (objet lourd, transfert depuis le sac posé, débordement), pas une classe séparée par contexte.
 - **Constructions de transformation** : décidé — passer par un `RecipeDef` générique (.tres : inputs/output/durée) plutôt qu'un comportement codé par bâtiment. Première recette prévue : cuisson au feu de camp (champi cru → grillé), réutilisera le pattern `Timer` déjà en place pour la combustion. Implémentation restante au Jalon 3.
 - **Localisation** : dev en **anglais** (langue source, clés stables si le texte évolue) ; **français** ajouté dès le Jalon 3.5 pour permettre les playtests du fils. Format `.csv` (Godot compile en `.translation` à l'import, plus léger que `.po` pour un dev solo avec peu de strings). Convention de clés : `namespace.section.key` (ex : `interact.prompt.chop`, `ui.build.menu_title`). Autoload `Locale` wrappe `TranslationServer` (fallback `en`). Bascule debug FR ↔ EN sur F8 (analogue F7 caméra). Les noms affichés vivent dans les `.tres` sous forme de clé (`ResourceDef.name_key` etc.), pas de texte brut — sinon on oublie `tr()` à l'affichage.
+- **Équipement protagoniste** : `EquipmentController` (sous Camera3D) = point unique. Ceinture toujours disponible (2 ToolDef), poches/stockage débloqués par l'objet sac à dos (`BackpackData`). `ToolController` n'a plus de `default_tool`, piloté par `EquipmentController`. Routage ramassage : TOOL → ceinture → main, SMALL → poches → sac → main, HAND → main directe (inchangé). GDD mis à jour : les petits objets vont d'abord en poches (pas directement au sac comme écrit initialement).
 ## Apprentissages techniques (Godot/GDScript)
  
 Bugs rencontrés et leur fix — pas des décisions de conception, des gotchas techniques à ne pas retomber dedans.

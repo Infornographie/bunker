@@ -30,6 +30,7 @@ res://
 │   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D) : objet ramassable, lit ResourceDef
 │   │   ├── construction_site.gd        — hérite Interactable : blueprint posé, réceptionne les livraisons
 │   │   ├── construction_site.tscn
+│   │   ├── tool_pickup.gd             — outil posé au sol (Interactable, créé dynamiquement par EquipmentController)
 │   │   ├── buildings/
 │   │   │   ├── campfire.gd             — bâtiment fini, allumage/entretien, combustion Timer
 │   │   │   ├── campfire.tscn
@@ -44,30 +45,33 @@ res://
 │       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, E → interact/carry
 │       ├── carry_controller.gd         — point unique "en main", reparent → HandAnchor, désactive collision + freeze
 │       ├── build_mode_controller.gd    — mode construction (B), blueprint, molette (rotation), Shift (free placing), spawn ConstructionSite
+│       ├── equipment_controller.gd     — ceinture (2 outils) + sac à dos (BackpackData), hotbar actif, routage ramassage, drop (G → ToolPickup dynamique)
 │       ├── hud/
 │       │   ├── player_hud.tscn         — CanvasLayer HUD
-│       │   ├── player_hud.gd           — crosshair + prompt d'interaction 2D
-│       │   └── crosshair.gd            — crosshair dessiné en code
+│       │   ├── player_hud.gd           — crosshair + prompt + hotbar
+│       │   ├── crosshair.gd            — crosshair dessiné en code
+│       │   └── hotbar.gd              — hotbar dessiné en code (2 belt + 3 poches si sac équipé), dimming quand mains occupées
 │       └── tools/
-│           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, lit ToolDef
+│           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, piloté par EquipmentController (plus de default_tool)
 ├── resources/
-│   ├── resource_def.gd                 — Resource : définition d'une ressource récoltable (carry_type, visuel)
+│   ├── resource_def.gd                 — Resource : définition d'item (CarryType: HAND/SMALL/TOOL)
 │   ├── tool_def.gd                     — Resource : définition data-driven d'un outil
+│   ├── backpack_data.gd                — Resource : contenu d'un sac à dos (3 poches + 10 stockage), vit sur l'objet sac
 │   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, shape, blueprint/built scene)
-│   ├── building_cost.gd                — Resource sous-type : une ligne de coût (ResourceDef × quantité), utilisé en Array[BuildingCost] dans BuildingDef
+│   ├── building_cost.gd                — Resource sous-type : une ligne de coût (ResourceDef × quantité)
 │   ├── resources/
 │   │   └── wood.tres                   — instance ResourceDef
 │   ├── tools/
 │   │   └── wooden_axe.tres             — instance ToolDef
 │   └── buildings/
 │       ├── campfire.tres               — instance BuildingDef
-│       └── campfire_shape.tres         — Shape3D partagée (blueprint collision + collision runtime)
+│       └── campfire_shape.tres         — Shape3D partagée
 └── world/
-    ├── bunker/
-    │   └── bunker_exterior_test.tscn   — scène bunker (SciFi MegaKit, ext + int)
-    └── forest/
-        ├── forest_test.tscn            — scène de test (sol + scatter + freecam + bunker)
-        └── forest_scatter.gd           — placement jitter/poisson-disque, zone d'exclusion bunker
+	├── bunker/
+	│   └── bunker_exterior_test.tscn   — scène bunker (SciFi MegaKit, ext + int)
+	└── forest/
+		├── forest_test.tscn            — scène de test (sol + scatter + freecam + bunker)
+		└── forest_scatter.gd           — placement jitter/poisson-disque, zone d'exclusion bunker
 ```
  
 Hors `res://` scripts, à noter :
@@ -92,3 +96,8 @@ Hors `res://` scripts, à noter :
 - `ForestScatter` doit tourner **avant** le bake de `NavigationRegion3D` (revalidé au Jalon 4 avec le terrain procédural).
 ### Autoload commun
 - `SoundManager` (autoload) : appelé par tout ce qui produit un SFX positionné (aujourd'hui `Choppable`, plus tard `Campfire`, `ConstructionSite` livraison, etc.).
+### Flux d'équipement
+- `EquipmentController` : ceinture 2 slots (`ToolDef`) + ref `BackpackData` (poches + stockage). Pilote `ToolController.equip()`/`unequip()` selon le slot actif. Sélection via molette/1-5.
+- Drop (G) : retire du slot, spawn un `ToolPickup` dynamique (StaticBody3D + mesh + BoxShape3D, raycast sol). `ToolPickup.interact()` → retour en ceinture via `EquipmentController.try_store_tool()`.
+- Priorité affichage : Main (CarryController) > Hotbar actif. Hotbar dimmed quand mains occupées.
+- `BackpackData` vit sur l'objet sac (pas sur le joueur) — prêt pour pawns avec leur propre sac.

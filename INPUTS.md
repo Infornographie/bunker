@@ -12,6 +12,11 @@ Source unique des bindings clavier/souris du jeu. À mettre à jour à chaque aj
 ## Interaction / portage
  
 - **E** — interagir avec la cible visée : ramasser, déposer, activer
+## Équipement (hotbar)
+
+- **1-5** — sélection directe du slot (Physical Keycode)
+- **Molette haut/bas** — cycler les slots (gauche/droite)
+- **G** — déposer au sol l'item du slot actif
 ## Mode construction
  
 - **B** — ouvrir / fermer le mode construction

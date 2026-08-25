@@ -38,7 +38,7 @@
 - [x] Sound manager de base (`autoloads/sound_manager.gd`, pool de `AudioStreamPlayer3D`) → SFX ponctuels positionnés, hook posé sur `Choppable.chop_sound` (pas encore d'asset son assigné). Pas de bus séparé ni de son UI/2D — à ajouter si besoin réel apparaît.
 - [x] Système d'outils tenus (viewmodel 1ère personne, `ToolDef` data-driven) → hache en bois fonctionnelle et calée à l'écran (`ToolController` + `ToolDef`).
 - [x] Construction data-driven (.tres façon `BuildingDefs`) — menu construction, blueprint au sol, détection de collision, livraison physique des matériaux, premier bâtiment fonctionnel (feu de camp).
-- [ ] Ceinture d'outils (2 slots, hanche G/D, barre 1-2, accès direct)
+- [x] Ceinture d'outils (2 slots, hanche G/D, barre 1-2, accès direct)
 - [ ] Poches (3 slots, G/D/avant, barre 3-5, accès direct)
 - [ ] Sac à dos (10 slots, remplissage auto au ramassage, accès uniquement posé au sol façon Peak)
 - [ ] Extension de `CarryController` en mécanisme main transversal (objet lourd / transfert depuis le sac posé / débordement quand ceinture+poches+sac sont pleins)
@@ -57,6 +57,8 @@
 - FX minimal manquant à l'impact (particules bois, léger shake caméra) — rien pour l'instant, juste le son non assigné.
 - Ombre flottante de la hache (pas de bras) — résolue par le chassis robot au Jalon 6.
 - Course/saut gratuits pour l'instant (pas de coût) alors que le GDD prévoit que toute action du robot passe par l'énergie — à rattacher au pool d'énergie local du Jalon 6.
+- ToolPickup posé au sol : collision BoxShape3D générique (pas calée au mesh réel), pas de rotation couchée au drop (la hache se plante debout). À ajuster quand on aura plus d'outils à tester.
+- Poches et sac à dos : `BackpackData` et routage SMALL/TOOL prêts dans le code, mais pas testables faute d'objets petits et de sac physique — à valider avec le premier petit objet (champignon, Passe B).
 ## Jalon 3.5 — Localisation (infrastructure L10N)
 > Petit jalon transverse posé avant J4 : mettre en place la l10n maintenant coûte 30 min, l'ajouter après 6 mois de strings hardcodées coûte des heures. Décision : dev en **anglais** (langue source, garantit des clés stables si le texte évolue) et **français** disponible dès maintenant pour permettre les playtests du fils d'Anthony.
  
