@@ -172,4 +172,3 @@
 - **Avant Jalon 9** — Règles précises du sauvetage dégressif (distances, probabilités, cooldown de récidive)
 - **Avant Jalon 12** — Modalités exactes de la transition d'autonomie politique (seuils, déclencheurs, réversibilité)
 - **Avant Jalon 12** — Système de vote / gouvernance : détail à travailler en session dédiée
- 	
