@@ -5,6 +5,8 @@ Source unique des bindings clavier/souris du jeu. À mettre à jour à chaque aj
 ## Déplacement / caméra
  
 - **ZQSD** — locomotion (avant/gauche/arrière/droite)
+- **Shift (maintenu)** — course (sprint), bloquée quand les mains portent un objet lourd
+- **Espace** — saut, bloqué quand les mains portent un objet lourd
 - **Souris** — orientation caméra première personne
 ## Outil en main
  
@@ -13,7 +15,7 @@ Source unique des bindings clavier/souris du jeu. À mettre à jour à chaque aj
  
 - **E** — interagir avec la cible visée : ramasser, déposer, activer
 ## Équipement (hotbar)
-
+ 
 - **1-5** — sélection directe du slot (Physical Keycode)
 - **Molette haut/bas** — cycler les slots (gauche/droite)
 - **G** — déposer au sol l'item du slot actif
@@ -28,3 +30,6 @@ Source unique des bindings clavier/souris du jeu. À mettre à jour à chaque aj
 ## Debug
  
 - **F7** — bascule caméra joueur ↔ freecam noclip
+## Collisions de touches assumées
+ 
+- **Shift** : sprint en locomotion, free placing en mode construction. Contextes exclusifs (on ne pose pas un blueprint en courant), pas de conflit réel.
