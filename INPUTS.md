@@ -17,6 +17,9 @@ Source unique des bindings clavier/souris du jeu. À mettre à jour à chaque aj
 - **1-5** — sélection directe du slot (Physical Keycode)
 - **Molette haut/bas** — cycler les slots (gauche/droite)
 - **G** — déposer au sol l'item du slot actif
+- **A** — sac à dos : dos ↔ main, ou ramasser un sac au sol
+- **E** (sur sac posé) — ouvrir l'interface du sac
+- **Échap / E** (UI ouverte) — fermer
 ## Mode construction
  
 - **B** — ouvrir / fermer le mode construction

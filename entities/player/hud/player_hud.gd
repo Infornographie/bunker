@@ -4,6 +4,11 @@ class_name PlayerHud
 @onready var _crosshair: Crosshair = $Crosshair
 @onready var _prompt_label: Label = $PromptLabel
 @onready var _hotbar: Hotbar = $Hotbar
+@onready var _backpack_ui: BackpackUI = $BackpackUI
+
+
+func get_backpack_ui() -> BackpackUI:
+	return _backpack_ui
 
 
 func set_targeting(active: bool) -> void:

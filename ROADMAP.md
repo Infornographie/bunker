@@ -39,9 +39,9 @@
 - [x] Système d'outils tenus (viewmodel 1ère personne, `ToolDef` data-driven) → hache en bois fonctionnelle et calée à l'écran (`ToolController` + `ToolDef`).
 - [x] Construction data-driven (.tres façon `BuildingDefs`) — menu construction, blueprint au sol, détection de collision, livraison physique des matériaux, premier bâtiment fonctionnel (feu de camp).
 - [x] Ceinture d'outils (2 slots, hanche G/D, barre 1-2, accès direct)
-- [ ] Poches (3 slots, G/D/avant, barre 3-5, accès direct)
-- [ ] Sac à dos (10 slots, remplissage auto au ramassage, accès uniquement posé au sol façon Peak)
-- [ ] Extension de `CarryController` en mécanisme main transversal (objet lourd / transfert depuis le sac posé / débordement quand ceinture+poches+sac sont pleins)
+- [x] Poches (3 slots, G/D/avant, barre 3-5, accès direct)
+- [x] Sac à dos (9 slots, remplissage auto au ramassage, accès uniquement posé au sol façon Peak)
+- [x] Extension de `CarryController` en mécanisme main transversal
 - [ ] Recette de cuisson (champi cru → grillé) via un `RecipeDef` générique (.tres — inputs/output/durée) branché sur le feu de camp existant
 - [ ] Course (sprint) et saut
 > **Repoussé, non bloquant pour la clôture J3** (à reprendre sans urgence) :
@@ -59,6 +59,9 @@
 - Course/saut gratuits pour l'instant (pas de coût) alors que le GDD prévoit que toute action du robot passe par l'énergie — à rattacher au pool d'énergie local du Jalon 6.
 - ToolPickup posé au sol : collision BoxShape3D générique (pas calée au mesh réel), pas de rotation couchée au drop (la hache se plante debout). À ajuster quand on aura plus d'outils à tester.
 - Poches et sac à dos : `BackpackData` et routage SMALL/TOOL prêts dans le code, mais pas testables faute d'objets petits et de sac physique — à valider avec le premier petit objet (champignon, Passe B).
+- Icônes générées au premier affichage : léger hoquet possible à la première ouverture d'un sac contenant des objets jamais vus. Acceptable pour l'instant ; si ça devient visible, pré-générer au chargement de la partie.
+- UI du sac : polish restant (position du panneau parfois haute selon l'angle, pas de feedback sonore au transfert, pas d'animation d'ouverture).
+- Grille 3x3 = 9 slots au lieu des 10 annoncés au GDD — GDD à mettre à jour (9 + 3 poches = 12, plus cohérent).
 ## Jalon 3.5 — Localisation (infrastructure L10N)
 > Petit jalon transverse posé avant J4 : mettre en place la l10n maintenant coûte 30 min, l'ajouter après 6 mois de strings hardcodées coûte des heures. Décision : dev en **anglais** (langue source, garantit des clés stables si le texte évolue) et **français** disponible dès maintenant pour permettre les playtests du fils d'Anthony.
  

@@ -13,6 +13,7 @@
 [ext_resource type="Resource" uid="uid://bcysmn7sp7y5a" path="res://resources/buildings/campfire.tres" id="7_a1qjk"]
 [ext_resource type="PackedScene" uid="uid://bwdnti672a2j7" path="res://entities/player/hud/player_hud.tscn" id="7_qiwj3"]
 [ext_resource type="Script" uid="uid://ch5bhk78mm7sm" path="res://resources/tool_def.gd" id="8_j3ovn"]
+[ext_resource type="PackedScene" uid="uid://ddwvl4p2drvne" path="res://entities/interactable/backpack_pickup.tscn" id="10_afbqv"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_abrql"]
 radius = 0.4
@@ -40,10 +41,12 @@ max_reach = 1.0
 
 [node name="InteractionController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=718804829 node_paths=PackedStringArray("tool_controller", "action_state_machine", "hud", "carry_controller", "build_mode_controller", "equipment_controller")]
 script = ExtResource("4_8fjmc")
+interaction_range = null
 tool_controller = NodePath("../ToolController")
 action_state_machine = NodePath("../ActionStateMachine")
 hud = NodePath("../../../PlayerHud")
 carry_controller = NodePath("../CarryController")
+drop_distance = null
 build_mode_controller = NodePath("../BuildModeController")
 equipment_controller = NodePath("../EquipmentController")
 
@@ -55,13 +58,15 @@ action_state_machine = NodePath("../ActionStateMachine")
 ground_mask = 4294901762
 overlap_mask = 4294901764
 
-[node name="EquipmentController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=1505790904 node_paths=PackedStringArray("tool_controller", "carry_controller", "build_mode_controller", "hud")]
+[node name="EquipmentController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=1505790904 node_paths=PackedStringArray("tool_controller", "carry_controller", "build_mode_controller", "hud", "hand_anchor")]
 script = ExtResource("7_7thud")
 tool_controller = NodePath("../ToolController")
 carry_controller = NodePath("../CarryController")
 build_mode_controller = NodePath("../BuildModeController")
 hud = NodePath("../../../PlayerHud")
 starting_tools = Array[ExtResource("8_j3ovn")]([ExtResource("3_fkugw")])
+backpack_pickup_scene = ExtResource("10_afbqv")
+hand_anchor = NodePath("../CarryController/HandAnchor")
 
 [node name="CarryController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=1987434561 node_paths=PackedStringArray("hand_anchor")]
 script = ExtResource("6_bectd")

@@ -1,0 +1,171 @@
+extends Node
+class_name IconGenerator
+
+## Génère une icône 2D à partir d'un modèle 3D, à la demande, avec cache.
+##
+## Principe : un SubViewport hors écran, caméra orthographique en 3/4,
+## éclairage neutre. On y instancie le mesh, on cadre automatiquement sur
+## sa bounding box, on capture une frame, on garde la texture.
+##
+## Utilisé par ResourceRegistry — pas appelé directement.
+
+const ICON_SIZE: int = 128
+## Angle 3/4 classique d'icône d'inventaire (yaw, pitch en degrés).
+const CAMERA_YAW: float = -35.0
+const CAMERA_PITCH: float = -25.0
+## Marge autour de l'objet dans le cadre (1.0 = objet pile dans le cadre).
+const FRAMING_MARGIN: float = 1.25
+
+var _viewport: SubViewport
+var _camera: Camera3D
+var _model_root: Node3D
+var _cache: Dictionary = {}
+
+
+## Retourne l'icône de cette scène, en la générant au premier appel.
+## cache_key : identifiant stable (l'id du ResourceDef en général).
+func get_icon(cache_key: String, scene: PackedScene) -> Texture2D:
+	if cache_key.is_empty() or scene == null:
+		return null
+	if _cache.has(cache_key):
+		return _cache[cache_key]
+	if _viewport == null:
+		_build_viewport()
+	var icon := await _render(scene)
+	if icon:
+		_cache[cache_key] = icon
+	return icon
+
+
+## Vide le cache (utile en debug si un modèle change à chaud).
+func clear_cache() -> void:
+	_cache.clear()
+
+
+## --- Rendu ---------------------------------------------------------------
+
+func _build_viewport() -> void:
+	_viewport = SubViewport.new()
+	_viewport.size = Vector2i(ICON_SIZE, ICON_SIZE)
+	_viewport.transparent_bg = true
+	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	_viewport.own_world_3d = true
+	add_child(_viewport)
+
+	_camera = Camera3D.new()
+	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	_viewport.add_child(_camera)
+
+	# Éclairage neutre : une clé en 3/4, un fill doux à l'opposé pour que
+	# les faces sombres ne soient pas noires.
+	var key := DirectionalLight3D.new()
+	key.rotation_degrees = Vector3(-40.0, -40.0, 0.0)
+	key.light_energy = 1.2
+	_viewport.add_child(key)
+
+	var fill := DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(-10.0, 140.0, 0.0)
+	fill.light_energy = 0.4
+	_viewport.add_child(fill)
+
+	var env := Environment.new()
+	env.background_mode = Environment.BG_CANVAS
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.6, 0.62, 0.68)
+	env.ambient_light_energy = 0.5
+	var cam_attributes := CameraAttributesPractical.new()
+	_camera.environment = env
+	_camera.attributes = cam_attributes
+
+	_model_root = Node3D.new()
+	_viewport.add_child(_model_root)
+
+
+func _render(scene: PackedScene) -> Texture2D:
+	# Nettoyer le modèle précédent.
+	for child in _model_root.get_children():
+		child.free()
+
+	var instance := scene.instantiate()
+	_model_root.add_child(instance)
+	_strip_non_visual(instance)
+
+	var bounds := _compute_visual_bounds(instance)
+	if bounds.size == Vector3.ZERO:
+		instance.free()
+		return null
+
+	_frame_camera(bounds)
+
+	# Une seule frame suffit : on force le rendu puis on lit la texture.
+	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	await RenderingServer.frame_post_draw
+
+	var image := _viewport.get_texture().get_image()
+	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+
+	for child in _model_root.get_children():
+		child.free()
+
+	if image == null:
+		return null
+	return ImageTexture.create_from_image(image)
+
+
+## Place la caméra en 3/4 et cadre sur la bounding box du modèle.
+func _frame_camera(bounds: AABB) -> void:
+	var center := bounds.get_center()
+	var radius := bounds.size.length() * 0.5
+
+	var basis := Basis.from_euler(Vector3(
+		deg_to_rad(CAMERA_PITCH),
+		deg_to_rad(CAMERA_YAW),
+		0.0
+	))
+	var direction := basis * Vector3.BACK
+	_camera.global_position = center + direction * (radius * 4.0 + 1.0)
+	_camera.look_at(center, Vector3.UP)
+	_camera.size = radius * 2.0 * FRAMING_MARGIN
+	_camera.near = 0.01
+	_camera.far = radius * 10.0 + 10.0
+
+
+## Union des AABB de tous les MeshInstance3D, en espace local du modèle.
+func _compute_visual_bounds(node: Node) -> AABB:
+	var result := AABB()
+	var found := false
+	for mesh_node in _collect_meshes(node):
+		var mesh_aabb: AABB = mesh_node.get_aabb()
+		# Repasser en espace du model_root.
+		var xform: Transform3D = _model_root.global_transform.affine_inverse() * mesh_node.global_transform
+		mesh_aabb = xform * mesh_aabb
+		if not found:
+			result = mesh_aabb
+			found = true
+		else:
+			result = result.merge(mesh_aabb)
+	return result
+
+
+func _collect_meshes(node: Node) -> Array[MeshInstance3D]:
+	var meshes: Array[MeshInstance3D] = []
+	if node is MeshInstance3D:
+		meshes.append(node)
+	for child in node.get_children():
+		meshes.append_array(_collect_meshes(child))
+	return meshes
+
+
+## Retire tout ce qui n'est pas visuel : collision, physique, scripts qui
+## pourraient tourner (le pickup instancié ici n'est pas dans le jeu).
+func _strip_non_visual(node: Node) -> void:
+	if node is CollisionObject3D:
+		node.set("collision_layer", 0)
+		node.set("collision_mask", 0)
+	if node.get_script() != null:
+		node.set_script(null)
+	if node is Light3D or node is Camera3D:
+		node.queue_free()
+		return
+	for child in node.get_children():
+		_strip_non_visual(child)

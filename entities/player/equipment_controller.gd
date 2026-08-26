@@ -27,16 +27,37 @@ const HOTBAR_SIZE: int = 5  # 2 belt + 3 pockets
 @export var starting_tools: Array[ToolDef] = []
 ## Distance devant le joueur pour poser un item au sol.
 @export var drop_distance: float = 1.5
+## Scène complète du sac à dos posé (backpack_pickup.tscn — porte le mesh,
+## la collision ET le scale correct). Instanciée quand le sac quitte le dos.
+@export var backpack_pickup_scene: PackedScene
+## Ancre d'affichage du petit objet sélectionné en poche. Même point que le
+## HandAnchor du CarryController : un petit objet actif s'affiche à la même
+## place à l'écran qu'un objet lourd porté.
+@export var hand_anchor: Node3D
 
 var _belt: Array[ToolDef] = []
 var _backpack_data: BackpackData
 var _active_slot: int = 0
+var _was_carrying: bool = false
+var _pocket_view_instance: Node3D = null
+
+
+func _process(_delta: float) -> void:
+	# Le grisage suit l'état des mains sans que chaque site d'appel ait à
+	# le notifier (drop, livraison, portage du sac...).
+	var carrying: bool = carry_controller != null and carry_controller.is_carrying()
+	if carrying != _was_carrying:
+		_was_carrying = carrying
+		_apply_active_slot()
 
 
 func _ready() -> void:
 	_belt.resize(BELT_COUNT)
 	for i in mini(starting_tools.size(), BELT_COUNT):
 		_belt[i] = starting_tools[i]
+	# Le HUD n'a pas forcément fini son _ready() : on pousse l'état initial
+	# à la frame suivante, sinon le premier update part dans le vide.
+	await get_tree().process_frame
 	_apply_active_slot()
 
 
@@ -58,6 +79,13 @@ func get_backpack_data() -> BackpackData:
 
 func has_backpack() -> bool:
 	return _backpack_data != null
+
+
+## Appelé quand le contenu du sac a été modifié de l'extérieur (UI du sac
+## ouvert). Resynchronise hotbar et viewmodel.
+func notify_backpack_changed() -> void:
+	_notify_all_pockets()
+	_apply_active_slot()
 
 
 ## Retourne le ToolDef actif si le slot courant est un slot ceinture occupé,
@@ -126,6 +154,10 @@ func try_store_small(resource: ResourceDef) -> bool:
 		var new_pocket_0: int = _backpack_data.first_free_pocket()
 		if old_pocket_0 != new_pocket_0 and old_pocket_0 >= 0:
 			pocket_changed.emit(old_pocket_0, _backpack_data.pocket_slots[old_pocket_0])
+			# Si c'est la poche affichée en main, rafraîchir le viewmodel.
+			if old_pocket_0 + BELT_COUNT == _active_slot:
+				_apply_active_slot()
+				return true
 		_update_hotbar()
 		return true
 	return false
@@ -153,7 +185,10 @@ func remove_pocket_item(pocket_index: int) -> ResourceDef:
 	var old := _backpack_data.pocket_slots[pocket_index]
 	_backpack_data.pocket_slots[pocket_index] = null
 	pocket_changed.emit(pocket_index, null)
-	_update_hotbar()
+	if pocket_index + BELT_COUNT == _active_slot:
+		_apply_active_slot()
+	else:
+		_update_hotbar()
 	return old
 
 
@@ -208,22 +243,83 @@ func _notify_all_pockets() -> void:
 		pocket_changed.emit(i, content)
 
 
-## Synchronise ToolController avec le slot actif.
+## Synchronise le viewmodel avec le slot actif : outil (ToolController)
+## pour les slots ceinture, petit objet (hand_anchor) pour les poches.
 func _apply_active_slot() -> void:
-	if tool_controller == null:
-		return
-	var tool_def := get_active_tool()
-	if tool_def != null:
-		tool_controller.equip(tool_def)
-	else:
-		tool_controller.unequip()
+	var hands_busy: bool = carry_controller != null and carry_controller.is_carrying()
+
+	# Viewmodel outil.
+	if tool_controller:
+		var tool_def := get_active_tool()
+		if tool_def != null:
+			tool_controller.equip(tool_def)
+		else:
+			tool_controller.unequip()
+
+	# Viewmodel petit objet en poche.
+	_clear_pocket_view()
+	if not hands_busy and _active_slot >= BELT_COUNT:
+		var res := get_pocket_content(_active_slot)
+		if res and hand_anchor:
+			_spawn_pocket_view(res)
+
 	_update_hotbar()
+
+
+func _spawn_pocket_view(res: ResourceDef) -> void:
+	var instance: Node3D = ResourceRegistry.spawn_pickup(res)
+	if instance == null:
+		return
+	# Le viewmodel est décoratif : pas de physique ni de collision.
+	_strip_physics(instance)
+	hand_anchor.add_child(instance)
+	instance.position = Vector3.ZERO
+	instance.rotation = Vector3.ZERO
+	_pocket_view_instance = instance
+
+
+func _clear_pocket_view() -> void:
+	if _pocket_view_instance:
+		_pocket_view_instance.queue_free()
+		_pocket_view_instance = null
+
+
+## Désactive collision et physique d'une instance affichée en viewmodel.
+func _strip_physics(node: Node) -> void:
+	if node is CollisionObject3D:
+		var body: CollisionObject3D = node
+		body.collision_layer = 0
+		body.collision_mask = 0
+		if node is RigidBody3D:
+			node.set("freeze", true)
+	for child in node.get_children():
+		_strip_physics(child)
+
+
+## Retire l'objet de la poche active et retourne son ResourceDef (ou null).
+## Utilisé par InteractionController pour poser/livrer le petit objet.
+func take_active_pocket_item() -> ResourceDef:
+	if _active_slot < BELT_COUNT:
+		return null
+	return remove_pocket_item(_active_slot - BELT_COUNT)
+
+
+## ResourceDef affiché en main via une poche, ou null.
+func get_active_pocket_item() -> ResourceDef:
+	if carry_controller and carry_controller.is_carrying():
+		return null
+	if _active_slot < BELT_COUNT:
+		return null
+	return get_pocket_content(_active_slot)
 
 
 func _update_hotbar() -> void:
 	if hud == null:
 		return
 	hud.update_hotbar(_active_slot, _belt, _backpack_data)
+	# Source unique de vérité pour le grisage : les mains sont-elles prises ?
+	var hands_busy: bool = carry_controller != null and carry_controller.is_carrying()
+	hud.set_hotbar_dimmed(hands_busy)
 
 
 ## --- Drop depuis le hotbar ----------------------------------------------
@@ -243,11 +339,18 @@ func _drop_belt_slot(index: int) -> void:
 
 
 func _drop_pocket_slot(pocket_index: int) -> void:
-	# Pas d'items petits pour l'instant — prêt pour la suite.
-	var _resource := remove_pocket_item(pocket_index)
-	if _resource == null:
+	var resource := remove_pocket_item(pocket_index)
+	if resource == null:
 		return
-	# TODO Passe B : spawn un ResourcePickup depuis resource.pickup_scene
+	var camera := get_parent() as Camera3D
+	if camera == null:
+		return
+	var pickup: Node3D = ResourceRegistry.spawn_pickup(resource)
+	if pickup == null:
+		return
+	var drop_pos := camera.global_position + camera.global_basis.z * -drop_distance
+	get_tree().current_scene.add_child(pickup)
+	pickup.global_position = drop_pos
 
 
 func _spawn_tool_pickup(tool_def: ToolDef) -> void:

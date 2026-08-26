@@ -28,12 +28,12 @@ var _active_slot: int = 0
 var _belt: Array[ToolDef] = []
 var _backpack_data: BackpackData
 var _dimmed: bool = false
+var _icons: Dictionary = {}
 var _font: Font
 var _font_small: Font
 
 
 func _ready() -> void:
-	_belt.resize(BELT_COUNT)
 	_font = ThemeDB.fallback_font
 	_font_small = _font
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -46,7 +46,52 @@ func update(active_slot: int, belt: Array[ToolDef], backpack_data: BackpackData)
 	_active_slot = active_slot
 	_belt = belt
 	_backpack_data = backpack_data
+	_request_icons()
 	queue_redraw()
+
+
+## Demande les icônes manquantes des poches. Le texte reste affiché tant
+## qu'une icône n'est pas prête.
+func _request_icons() -> void:
+	print("[Hotbar] _request_icons — belt.size=%d contenu=%s" % [_belt.size(), _belt])
+	# Outils en ceinture.
+	for tool_def in _belt:
+		if tool_def == null:
+			continue
+		var key: String = "tool:" + tool_def.display_name
+		if _icons.has(key):
+			continue
+		_icons[key] = null
+		_fetch_tool_icon(tool_def, key)
+
+	# Petits objets en poche.
+	if _backpack_data == null:
+		return
+	for res in _backpack_data.pocket_slots:
+		if res == null or _icons.has(res.id):
+			continue
+		_icons[res.id] = null  # marque comme "en cours", évite les doublons
+		_fetch_icon(res)
+
+
+func _fetch_tool_icon(tool_def: ToolDef, key: String) -> void:
+	var icon: Texture2D = await ResourceRegistry.get_tool_icon(tool_def)
+	print("[Hotbar] fetch '%s' → %s" % [key, icon])
+	if icon:
+		_icons[key] = icon
+		queue_redraw()
+	else:
+		# Échec (registre pas encore prêt) : libérer la clé pour réessayer.
+		_icons.erase(key)
+
+
+func _fetch_icon(res: ResourceDef) -> void:
+	var icon: Texture2D = await ResourceRegistry.get_icon(res)
+	if icon:
+		_icons[res.id] = icon
+		queue_redraw()
+	else:
+		_icons.erase(res.id)
 
 
 ## Grise tout le hotbar quand les mains sont occupées (objet lourd).
@@ -107,14 +152,26 @@ func _draw() -> void:
 		draw_string(_font_small, Vector2(x_cursor + 5.0, start_y + 14.0),
 			num_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, num_color)
 
-		# Nom du contenu (centré).
-		var label: String = _slot_label(i)
-		if label != "":
-			var label_color: Color = color_text if is_active else color_text_dim
+		# Contenu : icône si disponible, sinon nom en texte.
+		var icon := _slot_icon(i)
+		if icon:
+			var pad: float = 6.0
+			var icon_rect := Rect2(
+				x_cursor + pad, start_y + pad,
+				SLOT_SIZE - pad * 2.0, SLOT_SIZE - pad * 2.0
+			)
+			var modulate_color := Color.WHITE
 			if _dimmed:
-				label_color = Color(0.4, 0.4, 0.4, 0.2)
-			draw_string(_font_small, Vector2(x_cursor + SLOT_SIZE * 0.5, start_y + SLOT_SIZE * 0.65),
-				label, HORIZONTAL_ALIGNMENT_CENTER, SLOT_SIZE - 6.0, 10, label_color)
+				modulate_color = Color(1.0, 1.0, 1.0, 0.2)
+			draw_texture_rect(icon, icon_rect, false, modulate_color)
+		else:
+			var label: String = _slot_label(i)
+			if label != "":
+				var label_color: Color = color_text if is_active else color_text_dim
+				if _dimmed:
+					label_color = Color(0.4, 0.4, 0.4, 0.2)
+				draw_string(_font_small, Vector2(x_cursor + SLOT_SIZE * 0.5, start_y + SLOT_SIZE * 0.65),
+					label, HORIZONTAL_ALIGNMENT_CENTER, SLOT_SIZE - 6.0, 10, label_color)
 
 		x_cursor += SLOT_SIZE + SLOT_GAP
 		if i == BELT_COUNT - 1 and show_pockets:
@@ -128,6 +185,22 @@ func _slot_has_content(index: int) -> bool:
 		return false
 	var pocket_i: int = index - BELT_COUNT
 	return pocket_i < _backpack_data.pocket_slots.size() and _backpack_data.pocket_slots[pocket_i] != null
+
+
+func _slot_icon(index: int) -> Texture2D:
+	if index < BELT_COUNT:
+		if index >= _belt.size() or _belt[index] == null:
+			return null
+		return _icons.get("tool:" + _belt[index].display_name)
+	if _backpack_data == null:
+		return null
+	var pocket_i: int = index - BELT_COUNT
+	if pocket_i >= _backpack_data.pocket_slots.size():
+		return null
+	var res := _backpack_data.pocket_slots[pocket_i]
+	if res == null:
+		return null
+	return _icons.get(res.id)
 
 
 func _slot_label(index: int) -> String:

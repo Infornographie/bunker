@@ -6,7 +6,7 @@ class_name BackpackData
 ## sac a sa propre instance de BackpackData.
 
 const POCKET_COUNT: int = 3
-const STORAGE_COUNT: int = 10
+const STORAGE_COUNT: int = 9
 
 ## Poches (accès direct, hotbar 3-5). null = slot vide.
 @export var pocket_slots: Array[ResourceDef] = []

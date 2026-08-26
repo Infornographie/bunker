@@ -48,10 +48,10 @@ func unequip() -> void:
 	_current_tool = null
 
 
-func set_tool_visible(show: bool) -> void:
-	_visible = show
+func set_tool_visible(is_shown: bool) -> void:
+	_visible = is_shown
 	if _tool_instance:
-		_tool_instance.visible = show
+		_tool_instance.visible = is_shown
 
 
 func can_swing() -> bool:

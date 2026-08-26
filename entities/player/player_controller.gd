@@ -23,6 +23,11 @@ var _pitch: float = 0.0
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
 var _is_active: bool = true
 
+var _input_enabled: bool = true
+
+func set_input_enabled(enabled: bool) -> void:
+	_input_enabled = enabled
+
 func _ready() -> void:
 	_camera = get_node(camera_path)
 	_yaw = rotation.y

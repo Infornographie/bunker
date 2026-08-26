@@ -19,7 +19,9 @@ Carte de repérage technique : où vit quoi, et qui dépend de quoi. Pas un suiv
 ```
 res://
 ├── autoloads/
-│   └── sound_manager.gd
+│   ├── sound_manager.gd                — pool d'AudioStreamPlayer3D, SFX positionnés
+│   ├── resource_registry.gd            — (autoload) table ResourceDef → PackedScene, scan auto de entities/interactable/ au boot, sert aussi les icônes
+│   └── icon_generator.gd               — rendu SubViewport ortho 3/4 d'un modèle 3D → Texture2D, cache par clé, instancié par ResourceRegistry (pas un autoload)
 ├── debug/
 │   ├── debug_camera_switch.gd          — bascule cam player ↔ freecam (F7)
 │   └── freecam_controller.gd           — caméra libre noclip
@@ -31,11 +33,13 @@ res://
 │   │   ├── construction_site.gd        — hérite Interactable : blueprint posé, réceptionne les livraisons
 │   │   ├── construction_site.tscn
 │   │   ├── tool_pickup.gd             — outil posé au sol (Interactable, créé dynamiquement par EquipmentController)
+│   │   ├── backpack_pickup.gd             — sac à dos dans le monde, porte le BackpackData, snap au sol au drop
 │   │   ├── buildings/
 │   │   │   ├── campfire.gd             — bâtiment fini, allumage/entretien, combustion Timer
 │   │   │   ├── campfire.tscn
 │   │   │   └── flame_light_flicker.gd  — script d'ambiance sur le Light3D de la flamme
 │   │   └── forest/
+│   │       ├── mushroom_pickup.tscn       — premier petit objet (CarryType.SMALL)
 │   │       ├── oak_choppable.tscn      — instance concrète de Choppable (chêne)
 │   │       └── resource_pickup_wood.tscn — instance concrète de ResourcePickup (bois)
 │   └── player/
@@ -50,7 +54,8 @@ res://
 │       │   ├── player_hud.tscn         — CanvasLayer HUD
 │       │   ├── player_hud.gd           — crosshair + prompt + hotbar
 │       │   ├── crosshair.gd            — crosshair dessiné en code
-│       │   └── hotbar.gd              — hotbar dessiné en code (2 belt + 3 poches si sac équipé), dimming quand mains occupées
+│       │   ├── hotbar.gd              — hotbar dessiné en code (2 belt + 3 poches si sac équipé), dimming quand mains occupées
+│       │   └── backpack_ui.gd         — UI du sac ouvert, ancrée sur la position monde projetée, grille 3x3 + 3 poches + main, drag & drop natif Godot
 │       └── tools/
 │           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, piloté par EquipmentController (plus de default_tool)
 ├── resources/
