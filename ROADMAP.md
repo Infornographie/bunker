@@ -42,8 +42,8 @@
 - [x] Poches (3 slots, G/D/avant, barre 3-5, accès direct)
 - [x] Sac à dos (9 slots, remplissage auto au ramassage, accès uniquement posé au sol façon Peak)
 - [x] Extension de `CarryController` en mécanisme main transversal
+- [x] Course (sprint, Shift, ×1.6, kick de FOV) et saut (Espace, coyote time) — bridés quand les mains portent un objet lourd
 - [ ] Recette de cuisson (champi cru → grillé) via un `RecipeDef` générique (.tres — inputs/output/durée) branché sur le feu de camp existant
-- [ ] Course (sprint) et saut
 > **Repoussé, non bloquant pour la clôture J3** (à reprendre sans urgence) :
 > - Grips + hand_position pour les 10 autres outils du pack (lance, pelle, bouclier, pioche, couteau, marteau, massue, flèche, torche, arc)
 > - Intégration Universal Animation Library 2 — de toute façon à revalider au chassis robot (J5)
@@ -57,6 +57,8 @@
 - FX minimal manquant à l'impact (particules bois, léger shake caméra) — rien pour l'instant, juste le son non assigné.
 - Ombre flottante de la hache (pas de bras) — résolue par le chassis robot au Jalon 6.
 - Course/saut gratuits pour l'instant (pas de coût) alors que le GDD prévoit que toute action du robot passe par l'énergie — à rattacher au pool d'énergie local du Jalon 6.
+- Feeling course/saut non réglé (valeurs de départ posées à l'inspecteur : ×1.6, jump 4.5, coyote 0.12, FOV +8). Passe de réglage à faire au moment du chassis robot (Jalon 6), quand la silhouette et l'échelle réelle du protagoniste seront fixées.
+- Pas de head bob ni de son de pas — la course se lit surtout au FOV. À traiter avec le FX/audio général.
 - ToolPickup posé au sol : collision BoxShape3D générique (pas calée au mesh réel), pas de rotation couchée au drop (la hache se plante debout). À ajuster quand on aura plus d'outils à tester.
 - Poches et sac à dos : `BackpackData` et routage SMALL/TOOL prêts dans le code, mais pas testables faute d'objets petits et de sac physique — à valider avec le premier petit objet (champignon, Passe B).
 - Icônes générées au premier affichage : léger hoquet possible à la première ouverture d'un sac contenant des objets jamais vus. Acceptable pour l'instant ; si ça devient visible, pré-générer au chargement de la partie.
@@ -88,6 +90,7 @@
 ### Dette anticipée Jalon 4
 - Perf de génération à valider en pratique (plusieurs étapes empilées au chargement) — piste si besoin : `WorkerThreadPool` ou split sur plusieurs frames, pas un problème tant que non mesuré.
 - Résolution/taille de zone (300-500m, pas 1-2m envisagés) à confirmer par un premier test en jeu plutôt qu'en théorie.
+- Le step-up et le saut sont calibrés sur du sol plat/marches SciFi : à revalider sur terrain irrégulier (pentes, rives de rivière) une fois la heightmap en place.
 ## Jalon 5 — Réveil de pawn + ordres directs
 - [ ] Pawn dormant scripté (état sommeil → réveil via interaction robot)
 - [ ] `ActionStateMachine` pawn (idle / se_deplacer / tâche_courante) via `NavigationAgent3D` — prépare les états `EVALUATING`/`INTERRUPTED` utilisés au Jalon 8
@@ -99,6 +102,7 @@
  
 - [ ] Chassis robot (visuel + rigging) remplaçant l'apparence humaine implicite du contrôleur — bras/effecteur porteur d'outils (reprend `ToolController` du Jalon 3)
 - [ ] Pool énergie **local** (jauge embarquée, recharge au bunker central) — inclut le coût de course/saut posé en dette Jalon 3
+- [ ] Passe de réglage du feeling course/saut sur le chassis robot définitif (dette Jalon 3)
 - [ ] Pool énergie **bunker global** (décrément continu, horloge de fin de partie, quasi non-rechargeable)
 - [ ] Rayon d'action = énergie (calcul aller-retour + alerte visuelle avant seuil critique, pas de mur invisible)
 - [ ] Roue de réaction (radial menu, touche type A/Q) : set minimal oui / non / suis-moi / reste / reprends ton activité — réutilise la sélection de pawn du Jalon 5, directement utile puisque les pawns existent déjà
@@ -168,3 +172,4 @@
 - **Avant Jalon 9** — Règles précises du sauvetage dégressif (distances, probabilités, cooldown de récidive)
 - **Avant Jalon 12** — Modalités exactes de la transition d'autonomie politique (seuils, déclencheurs, réversibilité)
 - **Avant Jalon 12** — Système de vote / gouvernance : détail à travailler en session dédiée
+ 	

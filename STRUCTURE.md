@@ -44,7 +44,7 @@ res://
 │   │       └── resource_pickup_wood.tscn — instance concrète de ResourcePickup (bois)
 │   └── player/
 │       ├── player.tscn                 — scène joueur assemblée
-│       ├── player_controller.gd        — CharacterBody3D, locomotion, marches auto (step_height 0.35m)
+│       ├── player_controller.gd        — CharacterBody3D, locomotion, marches auto (step_height 0.35m), sprint (Shift) + saut (Espace) avec coyote time et kick de FOV
 │       ├── action_state_machine.gd     — IDLE / USING_TOOL, découple timing swing/dégâts
 │       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, E → interact/carry
 │       ├── carry_controller.gd         — point unique "en main", reparent → HandAnchor, désactive collision + freeze
@@ -92,6 +92,7 @@ Hors `res://` scripts, à noter :
 - Sur E : soit `Interactable.interact()`, soit délégation à `CarryController` (mains libres uniquement).
 - `CarryController` ↔ `ResourcePickup` : le pickup lit son `ResourceDef.CarryType` pour valider le portage main.
 - Miroir : `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` quand les mains sont occupées.
+- `PlayerController` lit `CarryController.is_carrying()` pour brider sprint et saut — seule dépendance locomotion → portage.
 ### Flux de construction
 - `BuildModeController` (B) : lit la liste des `BuildingDef` disponibles, instancie le blueprint, tourne à la molette, `Shift` désactive le snap, check collision via `BuildingDef.shape`.
 - Placement validé → spawn d'un `ConstructionSite` (Interactable).

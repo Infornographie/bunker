@@ -15,12 +15,29 @@ class_name PlayerController
 @export var step_height: float = 0.35  # hauteur max de marche franchissable auto (à ajuster selon la hauteur réelle des Platform_Stairs_*)
 @export var step_check_distance: float = 0.3  # distance testée devant le joueur pour détecter une marche
 
+@export_group("Sprint & saut")
+@export var sprint_multiplier: float = 1.6
+@export var jump_velocity: float = 4.5
+## Fenêtre de tolérance après avoir quitté le sol : évite le saut "avalé"
+## quand on appuie une frame trop tard en sortant d'un rebord.
+@export var coyote_time: float = 0.12
+@export var sprint_fov_bonus: float = 8.0
+@export var fov_lerp_speed: float = 8.0
+@export_group("")
+
+## Mains occupées = ni course ni saut (décision de conception : le portage
+## d'un objet lourd immobilise le protagoniste au rythme de la marche).
+@export_node_path("Node") var carry_controller_path: NodePath = NodePath("Camera3D/CarryController")
+
 @export_node_path("Camera3D") var camera_path: NodePath = NodePath("Camera3D")
 
 var _camera: Camera3D
 var _yaw: float = 0.0
 var _pitch: float = 0.0
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
+var _carry_controller: CarryController
+var _coyote_timer: float = 0.0
+var _base_fov: float = 75.0
 var _is_active: bool = true
 
 var _input_enabled: bool = true
@@ -30,6 +47,9 @@ func set_input_enabled(enabled: bool) -> void:
 
 func _ready() -> void:
 	_camera = get_node(camera_path)
+	_carry_controller = get_node_or_null(carry_controller_path)
+	_base_fov = _camera.fov
+	_yaw = rotation.y
 	_yaw = rotation.y
 	_pitch = _camera.rotation.x
 	set_active(_is_active)
@@ -66,12 +86,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _physics_process(delta: float) -> void:
-	# Gravité, même sans saut prévu au MVP (voir GDD) — nécessaire pour rester
-	# collé au sol sur les irrégularités du terrain scatterisé.
-	if not is_on_floor():
-		velocity.y -= _gravity * delta
-	else:
+	var hands_free: bool = _carry_controller == null or not _carry_controller.is_carrying()
+
+	# Gravité : nécessaire pour rester collé au sol sur les irrégularités du
+	# terrain scatterisé, et pour la retombée du saut.
+	if is_on_floor():
 		velocity.y = 0.0
+		_coyote_timer = coyote_time
+	else:
+		velocity.y -= _gravity * delta
+		_coyote_timer = maxf(_coyote_timer - delta, 0.0)
+
+	if hands_free and _input_enabled and _coyote_timer > 0.0 and Input.is_action_just_pressed("jump"):
+		velocity.y = jump_velocity
+		_coyote_timer = 0.0  # sinon la fenêtre coyote autorise un second saut en l'air
 
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var move_basis := transform.basis
@@ -80,10 +108,18 @@ func _physics_process(delta: float) -> void:
 	if target_direction.length() > 0.0:
 		target_direction = target_direction.normalized()
 
-	var target_velocity := target_direction * move_speed
+	var sprinting: bool = hands_free and _input_enabled and Input.is_action_pressed("sprint") and target_direction.length() > 0.0
+	var current_speed := move_speed * (sprint_multiplier if sprinting else 1.0)
 
-	velocity.x = move_toward(velocity.x, target_velocity.x, acceleration * delta * move_speed)
-	velocity.z = move_toward(velocity.z, target_velocity.z, acceleration * delta * move_speed)
+	# Kick de FOV : lissé ici plutôt qu'en tween, pour suivre le lâcher de
+	# touche en cours de course sans avoir à annuler un tween en vol.
+	var target_fov := _base_fov + (sprint_fov_bonus if sprinting else 0.0)
+	_camera.fov = lerpf(_camera.fov, target_fov, fov_lerp_speed * delta)
+
+	var target_velocity := target_direction * current_speed
+
+	velocity.x = move_toward(velocity.x, target_velocity.x, acceleration * delta * current_speed)
+	velocity.z = move_toward(velocity.z, target_velocity.z, acceleration * delta * current_speed)
 
 	if is_on_floor() and target_direction.length() > 0.0:
 		_try_step_up(target_direction)
@@ -128,9 +164,8 @@ func _try_step_up(direction: Vector3) -> void:
 #   d'éventuels menus/UI qui utiliseraient ui_left/right/up/down.
 # - ESC libère la souris (menu futur, inventaire...) ; un clic dans le
 #   viewport la recapture.
-# - Pas de saut au MVP (cohérent avec le GDD, aucune mention de plateforme/
-#   verticalité). Si besoin plus tard : dette à ajouter en ROADMAP, pas à
-#   improviser ici.
+# - Sprint (Shift) et saut (Espace) sont gratuits : pas de coût d'énergie.
+#   Dette assumée, rattachée au Jalon 6 (survie/énergie) — voir ROADMAP.
 # - step_height (0.35 par défaut) doit rester UN PEU plus haut que la
 #   contremarche réelle des Platform_Stairs_* du kit SciFi. Si tu changes de
 #   pack ou de type d'escalier plus tard, remesure et ajuste — trop bas et le
