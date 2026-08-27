@@ -89,6 +89,9 @@
 - [ ] Barre de progression de cuisson (`TransformationSite.get_progress()`) et jauge de combustible (`Campfire.get_fuel_ratio()`)
 - [ ] Case combustible en lecture seule, drag-to-alimenter en option
 - [ ] Prompt contextuel selon la ressource proposée (dette J3)
+- [ ] Supprimer l'action morte `cancel_build_mode` (dette J3, voir ci-dessous) — **à faire après vérification en jeu** du comportement réel de B en mode construction
+### Dette Jalon 3.6
+- `cancel_build_mode` : action de l'Input Map bindée sur **B**, jamais atteinte. `BuildModeController._unhandled_input()` teste `toggle_build_mode` en premier et fait un `return` inconditionnel, donc la branche `cancel_build_mode` est du code mort et B ne ferme le mode que via le toggle. Correction : supprimer la branche + l'action dans l'Input Map (~2 min). Détectée au sanity check pré-J3.5 ; report volontaire pour tester le comportement en jeu avant de toucher au code.
 ## Jalon 4 — Terrain procédural
 - [ ] `terrain_gen_config.gd` (Resource) : seed, taille de zone, refs `FastNoiseLite` par couche, rayon/falloff bunker partagé (flatten + exclusion scatter)
 - [ ] `heightmap_generator.gd` : bruit macro → masque relief → ridge noise (escarpement) → domain warp → flatten bunker → tracé + creusement rivière

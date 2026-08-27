@@ -9,15 +9,23 @@ Carte de repérage technique : où vit quoi, et qui dépend de quoi. Pas un suiv
 - Organisation par feature/domaine, pas par type de fichier (scène et script d'une même feature côte à côte).
 - `entities/` = tout ce qui est instanciable individuellement (script de base + scènes concrètes qui en héritent), rangé par comportement.
 - `world/` = scènes qui assemblent des entités dans un lieu (le niveau lui-même).
-- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, futur `techs/`...), à côté des scripts `*_def.gd` correspondants.
+- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, `recipes/`, futur `techs/`...), à côté des scripts `*_def.gd` correspondants.
 - `assets/` = ressources brutes tierces (FBX, textures, audio) + quelques scènes wrapper Godot quand l'asset importé demande un pivot correctif (cf. `wooden_axe_grip.tscn`).
+- Un même item peut avoir trois fichiers homonymes dans trois dossiers distincts, un par rôle : sa définition (`resources/resources/x.tres`), sa recette de production (`resources/recipes/x.tres`), sa scène de pickup (`entities/interactable/.../x.tscn`). C'est le cas de `grilled_mushroom`.
 ## Autoloads (globaux, accessibles partout sans référence)
  
-- `autoloads/sound_manager.gd` — pool d'`AudioStreamPlayer3D` réutilisables pour SFX ponctuels positionnés.
+Déclarés dans `project.godot` § `[autoload]` — cette liste doit correspondre exactement :
+ 
+- `SoundManager` → `autoloads/sound_manager.gd` — pool d'`AudioStreamPlayer3D` réutilisables pour SFX ponctuels positionnés.
+- `ResourceRegistry` → `autoloads/resource_registry.gd` — table `ResourceDef` → `PackedScene`, scan auto au boot, sert aussi les icônes.
+`autoloads/icon_generator.gd` vit dans le même dossier mais **n'est pas** un autoload : il est instancié par `ResourceRegistry`.
 ## Arborescence
  
 ```
 res://
+├── .editorconfig, .gitattributes, .gitignore
+├── project.godot                        — config moteur, autoloads, input map (→ INPUTS.md)
+├── icon.svg
 ├── autoloads/
 │   ├── sound_manager.gd                — pool d'AudioStreamPlayer3D, SFX positionnés
 │   ├── resource_registry.gd            — (autoload) table ResourceDef → PackedScene, scan auto de entities/interactable/ au boot, sert aussi les icônes
@@ -32,17 +40,18 @@ res://
 │   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D) : objet ramassable, lit ResourceDef
 │   │   ├── construction_site.gd        — hérite Interactable : blueprint posé, réceptionne les livraisons
 │   │   ├── construction_site.tscn
-│   │   ├── tool_pickup.gd             — outil posé au sol (Interactable, créé dynamiquement par EquipmentController)
-│   │   ├── backpack_pickup.gd             — sac à dos dans le monde, porte le BackpackData, snap au sol au drop
+│   │   ├── tool_pickup.gd              — outil posé au sol (Interactable, créé dynamiquement par EquipmentController)
+│   │   ├── backpack_pickup.gd          — sac à dos dans le monde, porte le BackpackData, snap au sol au drop
+│   │   ├── backpack_pickup.tscn
 │   │   ├── buildings/
 │   │   │   ├── campfire.gd             — bâtiment fini, allumage/entretien, combustion Timer
 │   │   │   ├── campfire.tscn
 │   │   │   ├── transformation_site.gd
 │   │   │   └── flame_light_flicker.gd  — script d'ambiance sur le Light3D de la flamme
 │   │   ├── food/
-│   │   │   └── grilled_mushroom.tscn
+│   │   │   └── grilled_mushroom.tscn   — pickup du champignon grillé (sortie de TransformationSite)
 │   │   └── forest/
-│   │       ├── mushroom_pickup.tscn       — premier petit objet (CarryType.SMALL)
+│   │       ├── mushroom_pickup.tscn    — premier petit objet (CarryType.SMALL)
 │   │       ├── oak_choppable.tscn      — instance concrète de Choppable (chêne)
 │   │       └── resource_pickup_wood.tscn — instance concrète de ResourcePickup (bois)
 │   └── player/
@@ -57,20 +66,22 @@ res://
 │       │   ├── player_hud.tscn         — CanvasLayer HUD
 │       │   ├── player_hud.gd           — crosshair + prompt + hotbar
 │       │   ├── crosshair.gd            — crosshair dessiné en code
-│       │   ├── hotbar.gd              — hotbar dessiné en code (2 belt + 3 poches si sac équipé), dimming quand mains occupées
-│       │   └── backpack_ui.gd         — UI du sac ouvert, ancrée sur la position monde projetée, grille 3x3 + 3 poches + main, drag & drop natif Godot
+│       │   ├── hotbar.gd               — hotbar dessiné en code (2 belt + 3 poches si sac équipé), dimming quand mains occupées
+│       │   └── backpack_ui.gd          — UI du sac ouvert, ancrée sur la position monde projetée, grille 3x3 + 3 poches + main, drag & drop natif Godot
 │       └── tools/
 │           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, piloté par EquipmentController (plus de default_tool)
 ├── resources/
 │   ├── resource_def.gd                 — Resource : définition d'item (CarryType: HAND/SMALL/TOOL)
 │   ├── tool_def.gd                     — Resource : définition data-driven d'un outil
 │   ├── backpack_data.gd                — Resource : contenu d'un sac à dos (3 poches + 10 stockage), vit sur l'objet sac
-│   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, shape, blueprint/built scene)
+│   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, collision_shape, blueprint/built scene)
 │   ├── resource_cost.gd
 │   ├── recipe_def.gd
-│   ├── resources/
-│   │   └── wood.tres                   — instance ResourceDef
-│   ├── recipes/
+│   ├── resources/                      — instances ResourceDef
+│   │   ├── wood.tres
+│   │   ├── mushroom.tres
+│   │   └── grilled_mushroom.tres
+│   ├── recipes/                        — instances RecipeDef
 │   │   └── grilled_mushroom.tres
 │   ├── tools/
 │   │   └── wooden_axe.tres             — instance ToolDef
@@ -91,7 +102,8 @@ Hors `res://` scripts, à noter :
 ## Dépendances transversales clés
  
 ### Flux d'action (swing outil)
-- `ToolController.swing()` → pilote `ActionStateMachine` (IDLE → USING_TOOL) ; au signal `swing_impact`, déclenche `receive_tool_hit()` sur la cible verrouillée par l'`InteractionController`.
+- Sens de la dépendance : `ActionStateMachine.use_tool_on(target, on_impact, reach_distance)` appelle `ToolController.swing()` et écoute son signal `swing_impact` en retour. La SM pilote le controller, jamais l'inverse.
+- Au `swing_impact`, la SM exécute le `Callable` fourni par l'appelant — typiquement `receive_tool_hit()` sur la cible verrouillée par l'`InteractionController` — uniquement si la cible est encore valide.
 - `Choppable.receive_tool_hit()` : vérifie le type d'outil via `ToolDef`, décrémente HP, émet `depleted` → spawn 3 `ResourcePickup` physiques, hook `chop_sound` → `SoundManager` (asset non branché).
 ### Flux d'interaction / portage
 - `InteractionController` : raycast vers un `Interactable`, gère le prompt (fix `tree_exiting` sur la cible, pas `is_instance_valid()` seul).
@@ -101,10 +113,11 @@ Hors `res://` scripts, à noter :
 - `PlayerController` lit `CarryController.is_carrying()` pour brider sprint et saut — seule dépendance locomotion → portage.
 - `TransformationSite` (enfant d'un bâtiment) : `Campfire.receive_resource()` route le combustible vers lui-même et tout le reste vers `try_insert()`. Sortie en `ResourcePickup` via `ResourceRegistry`.
 ### Flux de construction
-- `BuildModeController` (B) : lit la liste des `BuildingDef` disponibles, instancie le blueprint, tourne à la molette, `Shift` désactive le snap, check collision via `BuildingDef.shape`.
+- `BuildModeController` (B) : lit la liste des `BuildingDef` disponibles, instancie le blueprint, tourne à la molette, `Shift` désactive le snap, check collision via `BuildingDef.collision_shape` (+ `collision_shape_local_transform()`).
 - Placement validé → spawn d'un `ConstructionSite` (Interactable).
-- `ConstructionSite` : lit `BuildingDef.costs` (Array[`BuildingCost`]), réceptionne les livraisons de `ResourcePickup` (via `interact()` avec ressource en main), à complétion → `queue_free` + spawn de la `built_scene` (ex : `Campfire`).
+- `ConstructionSite` : lit `BuildingDef.costs` (Array[`ResourceCost`]), réceptionne les livraisons de `ResourcePickup` (via `interact()` avec ressource en main), à complétion → `queue_free` + spawn de la `built_scene` (ex : `Campfire`).
 - `Campfire` : bâtiment fini, `Timer` de combustion, `flame_light_flicker` anime le Light3D de la flamme.
+- **Le mode construction n'est pas un état de l'`ActionStateMachine`** (décision documentée dans STATE) : son exclusivité repose sur deux gardes croisées — `BuildModeController` refuse d'entrer si l'état n'est pas `IDLE`, `InteractionController` se désactive tant que `BuildModeController.is_active()`.
 ### Contraintes d'ordre
 - `ForestScatter` doit tourner **avant** le bake de `NavigationRegion3D` (revalidé au Jalon 4 avec le terrain procédural).
 ### Autoload commun
@@ -114,3 +127,4 @@ Hors `res://` scripts, à noter :
 - Drop (G) : retire du slot, spawn un `ToolPickup` dynamique (StaticBody3D + mesh + BoxShape3D, raycast sol). `ToolPickup.interact()` → retour en ceinture via `EquipmentController.try_store_tool()`.
 - Priorité affichage : Main (CarryController) > Hotbar actif. Hotbar dimmed quand mains occupées.
 - `BackpackData` vit sur l'objet sac (pas sur le joueur) — prêt pour pawns avec leur propre sac.
+ 
