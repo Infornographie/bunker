@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3 uid="uid://be6y5r5kgnvy6"]
+
+[ext_resource type="Script" uid="uid://bh06t1p88ijyk" path="res://resources/resource_cost.gd" id="1_06iok"]
+[ext_resource type="Script" uid="uid://ckpbjpvjjbyfs" path="res://resources/recipe_def.gd" id="2_86nov"]
+[ext_resource type="Resource" uid="uid://bapl4q618wbyy" path="res://resources/resources/mushroom.tres" id="2_ygp5p"]
+[ext_resource type="Resource" uid="uid://n0g2llhiy7lq" path="res://resources/resources/grilled_mushroom.tres" id="3_lf0ww"]
+
+[sub_resource type="Resource" id="Resource_ygp5p"]
+script = ExtResource("1_06iok")
+resource = ExtResource("2_ygp5p")
+metadata/_custom_type_script = "uid://bh06t1p88ijyk"
+
+[resource]
+script = ExtResource("2_86nov")
+id = "grilled_mushroom"
+display_name = "Grilled Mushroom"
+inputs = Array[ExtResource("1_06iok")]([SubResource("Resource_ygp5p")])
+output = ExtResource("3_lf0ww")
+metadata/_custom_type_script = "uid://ckpbjpvjjbyfs"

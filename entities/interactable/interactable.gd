@@ -30,13 +30,11 @@ func receive_tool_hit(_tool: ToolDef, _hit_origin: Vector3 = Vector3.ZERO) -> vo
 func receive_resource(_resource: ResourceDef, _amount: int) -> bool:
 	return false
 
-## Utilitaire pour les sous-classes réceptrices : résout le ResourceDef
-## actuellement porté par l'interactor, ou null si rien / pas une ressource.
-func _get_carried_resource(interactor: Node) -> ResourceDef:
+## Utilitaire pour les sous-classes réceptrices : résout le ResourceDef que
+## l'interactor propose actuellement (main ou poche active), ou null. Le
+## calcul lui-même vit dans InteractionController — ici on ne fait que le
+## demander.
+func _get_offered_resource(interactor: Node) -> ResourceDef:
 	if interactor is InteractionController:
-		var controller := interactor as InteractionController
-		if controller.carry_controller:
-			var item: Node = controller.carry_controller.get_carried_item()
-			if item is ResourcePickup:
-				return item.resource_def
+		return (interactor as InteractionController).get_offered_resource()
 	return null

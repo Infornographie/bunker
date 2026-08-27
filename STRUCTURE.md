@@ -37,7 +37,10 @@ res://
 │   │   ├── buildings/
 │   │   │   ├── campfire.gd             — bâtiment fini, allumage/entretien, combustion Timer
 │   │   │   ├── campfire.tscn
+│   │   │   ├── transformation_site.gd
 │   │   │   └── flame_light_flicker.gd  — script d'ambiance sur le Light3D de la flamme
+│   │   ├── food/
+│   │   │   └── grilled_mushroom.tscn
 │   │   └── forest/
 │   │       ├── mushroom_pickup.tscn       — premier petit objet (CarryType.SMALL)
 │   │       ├── oak_choppable.tscn      — instance concrète de Choppable (chêne)
@@ -63,9 +66,12 @@ res://
 │   ├── tool_def.gd                     — Resource : définition data-driven d'un outil
 │   ├── backpack_data.gd                — Resource : contenu d'un sac à dos (3 poches + 10 stockage), vit sur l'objet sac
 │   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, shape, blueprint/built scene)
-│   ├── building_cost.gd                — Resource sous-type : une ligne de coût (ResourceDef × quantité)
+│   ├── resource_cost.gd
+│   ├── recipe_def.gd
 │   ├── resources/
 │   │   └── wood.tres                   — instance ResourceDef
+│   ├── recipes/
+│   │   └── grilled_mushroom.tres
 │   ├── tools/
 │   │   └── wooden_axe.tres             — instance ToolDef
 │   └── buildings/
@@ -93,6 +99,7 @@ Hors `res://` scripts, à noter :
 - `CarryController` ↔ `ResourcePickup` : le pickup lit son `ResourceDef.CarryType` pour valider le portage main.
 - Miroir : `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` quand les mains sont occupées.
 - `PlayerController` lit `CarryController.is_carrying()` pour brider sprint et saut — seule dépendance locomotion → portage.
+- `TransformationSite` (enfant d'un bâtiment) : `Campfire.receive_resource()` route le combustible vers lui-même et tout le reste vers `try_insert()`. Sortie en `ResourcePickup` via `ResourceRegistry`.
 ### Flux de construction
 - `BuildModeController` (B) : lit la liste des `BuildingDef` disponibles, instancie le blueprint, tourne à la molette, `Shift` désactive le snap, check collision via `BuildingDef.shape`.
 - Placement validé → spawn d'un `ConstructionSite` (Interactable).

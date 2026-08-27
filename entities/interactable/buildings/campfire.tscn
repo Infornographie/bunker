@@ -4,6 +4,9 @@
 [ext_resource type="Resource" uid="uid://cc1jos21u05lp" path="res://resources/resources/wood.tres" id="2_rmn12"]
 [ext_resource type="PackedScene" uid="uid://clm14aspqqe5t" path="res://assets/survival/Bonfire.fbx" id="3_14ded"]
 [ext_resource type="Script" uid="uid://dv83qgt2uh0v0" path="res://entities/interactable/buildings/flame_light_flicker.gd" id="4_vaoel"]
+[ext_resource type="Script" uid="uid://edxftjk7b4gj" path="res://entities/interactable/buildings/transformation_site.gd" id="5_rmn12"]
+[ext_resource type="Script" uid="uid://ckpbjpvjjbyfs" path="res://resources/recipe_def.gd" id="6_5oroc"]
+[ext_resource type="Resource" uid="uid://be6y5r5kgnvy6" path="res://resources/recipes/grilled_mushroom.tres" id="7_2bfcr"]
 
 [sub_resource type="Gradient" id="Gradient_jawy5"]
 offsets = PackedFloat32Array(0, 0.15428571, 0.4, 0.7, 1)
@@ -58,10 +61,11 @@ size = Vector2(0.8, 0.8)
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_vaoel"]
 points = PackedVector3Array(-0.0035086917, -0.0040659187, -1.3305689e-05, 0.0034097752, 0.0056214286, 0.002062275, 0.0034097752, 0.0056214286, 0.0015437355, 0.0046204794, -0.0021634216, 0.001370889, -0.00472048, -0.0032006025, 0.0034468253, -0.0024714093, 0.004755113, -0.00018650782, -0.002297987, 0.00510084, 0.0034468253, 0.0035831975, -0.0032006025, 0.0029275746, 0.004793902, 0.0042365226, -1.3305689e-05, 0.004793902, 0.0044083865, 0.0029275746, 0.0028905922, -0.003374465, -1.3305689e-05, -0.0055865077, -0.002336285, 0.0010251959, -0.0042012967, 0.0042365226, 0.002062275, -0.00281717, -0.0045865076, 0.0025815258, -0.004374719, -0.003374465, -0.00018650782, 0.0025448313, -0.004066918, 0.0010248404, 0.0034097752, 0.002678753, -0.00018650782, -0.0042012967, 0.0042365226, 0.00085163815, 0.005486508, 0.0035440696, 0.0018894285, -0.0038555362, -0.0040659187, 0.0034468253, -0.0016064654, 0.005447566, 0.0022351216, -0.0033363532, 0.0045822496, 0.0032732675, -0.005412001, -0.002336285, 0.0025815258, -0.005066241, -0.003027739, 0.0001595408, 0.0037566198, -0.0021634216, -1.3305689e-05, 0.0053130854, 0.0035440696, 0.0005059452, 0.004447058, -0.002336285, 0.0024083238, -0.0029905925, -0.0045865076, 0.0010251959, 0.0028905922, -0.0038930555, 0.0024083238, 0.0039289584, 0.004755113, -1.3305689e-05, -0.0033363532, 0.004409386, -1.3305689e-05, -0.0014341271, 0.00510084, 0.0001595408)
 
-[node name="Campfire" type="StaticBody3D" unique_id=1587530180 node_paths=PackedStringArray("flame_visual")]
+[node name="Campfire" type="StaticBody3D" unique_id=1587530180 node_paths=PackedStringArray("flame_visual", "transformation")]
 script = ExtResource("1_vaoel")
 refuel_resource = ExtResource("2_rmn12")
 flame_visual = NodePath("Flame")
+transformation = NodePath("TransformationSite")
 
 [node name="Bonfire" parent="." unique_id=1314483954 instance=ExtResource("3_14ded")]
 
@@ -83,5 +87,9 @@ script = ExtResource("4_vaoel")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=272643221]
 transform = Transform3D(200, 0, 0, 0, -8.742278e-06, 200, 0, -200, -8.742278e-06, 0, 0, 0)
 shape = SubResource("ConvexPolygonShape3D_vaoel")
+
+[node name="TransformationSite" type="Node" parent="." unique_id=416472028]
+script = ExtResource("5_rmn12")
+recipes = Array[ExtResource("6_5oroc")]([ExtResource("7_2bfcr")])
 
 [editable path="Bonfire"]

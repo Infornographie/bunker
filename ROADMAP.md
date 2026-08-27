@@ -43,7 +43,7 @@
 - [x] Sac à dos (9 slots, remplissage auto au ramassage, accès uniquement posé au sol façon Peak)
 - [x] Extension de `CarryController` en mécanisme main transversal
 - [x] Course (sprint, Shift, ×1.6, kick de FOV) et saut (Espace, coyote time) — bridés quand les mains portent un objet lourd
-- [ ] Recette de cuisson (champi cru → grillé) via un `RecipeDef` générique (.tres — inputs/output/durée) branché sur le feu de camp existant
+- [x] Recette de cuisson (champi cru → grillé) via un `RecipeDef` générique (.tres — inputs/output/durée) branché sur le feu de camp existant
 > **Repoussé, non bloquant pour la clôture J3** (à reprendre sans urgence) :
 > - Grips + hand_position pour les 10 autres outils du pack (lance, pelle, bouclier, pioche, couteau, marteau, massue, flèche, torche, arc)
 > - Intégration Universal Animation Library 2 — de toute façon à revalider au chassis robot (J5)
@@ -64,6 +64,10 @@
 - Icônes générées au premier affichage : léger hoquet possible à la première ouverture d'un sac contenant des objets jamais vus. Acceptable pour l'instant ; si ça devient visible, pré-générer au chargement de la partie.
 - UI du sac : polish restant (position du panneau parfois haute selon l'angle, pas de feedback sonore au transfert, pas d'animation d'ouverture).
 - Grille 3x3 = 9 slots au lieu des 10 annoncés au GDD — GDD à mettre à jour (9 + 3 poches = 12, plus cohérent).
+- Prompt d'interaction non contextuel : `_refresh_prompt()` affiche le `prompt_text` de la cible sans tenir compte de la ressource proposée (le feu dit "Alimenter" même avec un champi en poche prêt à cuire). À régler avec le panneau de cuisson (J3.6).
+- `grilled_mushroom` = champi cru avec albedo teinté brun. Asset dédié à faire, aucune urgence.
+- `Choppable.pickup_scene` : seul endroit du projet où une scène de pickup est référencée en direct plutôt que résolue par `ResourceRegistry` depuis un `ResourceDef`. Deux façons d'obtenir un pickup selon l'appelant. Correction ~5 min, à faire au prochain passage sur `Choppable`.
+- Cuisson : une recette à la fois, pas de brûlé si on oublie, ingrédients non visibles sur les braises. Assumé tant que le feu est le seul site de transformation.
 ## Jalon 3.5 — Localisation (infrastructure L10N)
 > Petit jalon transverse posé avant J4 : mettre en place la l10n maintenant coûte 30 min, l'ajouter après 6 mois de strings hardcodées coûte des heures. Décision : dev en **anglais** (langue source, garantit des clés stables si le texte évolue) et **français** disponible dès maintenant pour permettre les playtests du fils d'Anthony.
  
@@ -78,6 +82,13 @@
 - Format `.po` (gettext, standard pour LQA externe) pas retenu — CSV suffit pour un dev solo avec peu de strings. À revoir si un jour on veut envoyer à un traducteur pro.
 - Pas de gestion de la pluralisation ni des accords genre à ce stade — à ajouter au premier besoin réel (aucune string avec `%d truc(s)` dans J3 actuel).
 - `TranslationServer` sur les noms de ressources/outils/bâtiments = clés dans les `.tres` (ex : `ResourceDef.name_key`) plutôt que texte brut. Prévoir un helper au moment de créer ces `_key` fields, sinon on va oublier `tr()` à l'affichage.
+## Jalon 3.6 — Panneau de cuisson
+> Posé après la l10n : une UI neuve écrite avant les clés de traduction, c'est des strings à remigrer aussitôt.
+- [ ] Extraire `ItemSlot` (aujourd'hui classe interne de `BackpackUI`) et une base `WorldAnchoredPanel` (ancrage monde, fermeture distance/angle) — sac et feu deviennent deux consommateurs
+- [ ] Panneau feu : liste des recettes à gauche, slots d'ingrédients au centre avec fantôme de l'attendu
+- [ ] Barre de progression de cuisson (`TransformationSite.get_progress()`) et jauge de combustible (`Campfire.get_fuel_ratio()`)
+- [ ] Case combustible en lecture seule, drag-to-alimenter en option
+- [ ] Prompt contextuel selon la ressource proposée (dette J3)
 ## Jalon 4 — Terrain procédural
 - [ ] `terrain_gen_config.gd` (Resource) : seed, taille de zone, refs `FastNoiseLite` par couche, rayon/falloff bunker partagé (flatten + exclusion scatter)
 - [ ] `heightmap_generator.gd` : bruit macro → masque relief → ridge noise (escarpement) → domain warp → flatten bunker → tracé + creusement rivière

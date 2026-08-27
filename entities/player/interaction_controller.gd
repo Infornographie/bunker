@@ -99,12 +99,13 @@ func _unhandled_input(event: InputEvent) -> void:
 func _try_deliver_carried_item() -> bool:
 	if _current_target == null or carry_controller == null:
 		return false
-	var pickup := carry_controller.get_carried_item() as ResourcePickup
-	if pickup == null or pickup.resource_def == null:
+	var resource := get_offered_resource()
+	if resource == null:
 		return false
 	if not _current_target.can_interact(self):
 		return false
-	if not _current_target.receive_resource(pickup.resource_def, pickup.amount):
+	var pickup := carry_controller.get_carried_item() as ResourcePickup
+	if not _current_target.receive_resource(resource, pickup.amount):
 		return false
 	carry_controller.consume()
 	if tool_controller:
@@ -208,12 +209,12 @@ func _try_use_pocket_item() -> bool:
 			return true
 
 	# Sinon dépose au sol.
-	if resource.pickup_scene == null:
+	var pickup: Node3D = ResourceRegistry.spawn_pickup(resource)
+	if pickup == null:
 		return false
 	equipment_controller.take_active_pocket_item()
 	var camera := get_parent() as Camera3D
 	var drop_position := camera.global_position + camera.global_basis.z * -drop_distance
-	var pickup: Node3D = ResourceRegistry.spawn_pickup(resource)
 	get_tree().current_scene.add_child(pickup)
 	pickup.global_position = drop_position
 	return true
@@ -241,3 +242,14 @@ func _set_player_frozen(frozen: bool) -> void:
 	var player := owner as Node
 	if player and player.has_method("set_input_enabled"):
 		player.set_input_enabled(not frozen)
+
+## Ressource que le joueur propose à la cible visée : la main d'abord (objet
+## lourd porté), sinon le petit objet sélectionné en poche. Point unique de
+## vérité pour les can_interact()/receive_resource() des Interactable.
+func get_offered_resource() -> ResourceDef:
+	if carry_controller and carry_controller.is_carrying():
+		var pickup := carry_controller.get_carried_item() as ResourcePickup
+		return pickup.resource_def if pickup else null
+	if equipment_controller:
+		return equipment_controller.get_active_pocket_item()
+	return null

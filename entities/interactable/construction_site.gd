@@ -27,7 +27,7 @@ func _ready() -> void:
 	if building_def == null:
 		return
 	for cost in building_def.costs:
-		_delivered[cost.resource_def.id] = 0
+		_delivered[cost.resource.id] = 0
 	if collision_shape_node and building_def.collision_shape:
 		collision_shape_node.shape = building_def.collision_shape
 		collision_shape_node.transform = building_def.collision_shape_local_transform()
@@ -38,7 +38,7 @@ func _ready() -> void:
 		_tint(ghost, SITE_TINT)
 
 func can_interact(interactor: Node) -> bool:
-	var resource := _get_carried_resource(interactor)
+	var resource := _get_offered_resource(interactor)
 	return resource != null and _remaining_for(resource) > 0
 
 func receive_resource(resource: ResourceDef, amount: int) -> bool:
@@ -51,13 +51,13 @@ func receive_resource(resource: ResourceDef, amount: int) -> bool:
 
 func _remaining_for(resource: ResourceDef) -> int:
 	for cost in building_def.costs:
-		if cost.resource_def == resource:
-			return cost.count - _delivered.get(resource.id, 0)
+		if cost.resource == resource:
+			return cost.amount - _delivered.get(resource.id, 0)
 	return 0
 
 func _is_complete() -> bool:
 	for cost in building_def.costs:
-		if _delivered.get(cost.resource_def.id, 0) < cost.count:
+		if _delivered.get(cost.resource.id, 0) < cost.amount:
 			return false
 	return true
 

@@ -20,7 +20,7 @@ class_name BuildingDef
 ## de test aligné sur le mesh.
 @export var collision_shape_position: Vector3 = Vector3.ZERO
 @export var collision_shape_scale: Vector3 = Vector3.ONE
-@export var costs: Array[BuildingCost] = []
+@export var costs: Array[ResourceCost] = []
 
 func collision_shape_local_transform() -> Transform3D:
 	return Transform3D(Basis().scaled(collision_shape_scale), collision_shape_position)

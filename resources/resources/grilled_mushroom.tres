@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ResourceDef" format=3 uid="uid://n0g2llhiy7lq"]
+
+[ext_resource type="Script" uid="uid://b7ww6eyv8f76p" path="res://resources/resource_def.gd" id="1_ro2t2"]
+
+[resource]
+script = ExtResource("1_ro2t2")
+id = "grilled_mushroom"
+display_name = "Grilled Mushroom"
+carry_type = 1
+metadata/_custom_type_script = "uid://b7ww6eyv8f76p"
