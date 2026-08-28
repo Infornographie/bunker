@@ -2,11 +2,9 @@
  
 ## État au 28/08/2026
  
-- Jalon 0 (setup) : projet créé (Godot 4.7.2, renderer Forward+), Stylized Nature MegaKit + Modular SciFi MegaKit importés (GLTF + Textures)
-- Jalon 1 (forêt + freecam) : terminé
-- Jalon 2 (bunker) : terminé — structure SciFi, sol troué au CSG, éclairage fonctionnel (recette SpotLight + lumière de remplissage), nav mesh bakée
-- Jalon 3 (contrôleur protagoniste) : **terminé** — locomotion/caméra/marches auto/course/saut, viewmodel outil (hache), interaction générique (`Interactable`/`InteractionController`), récolte bouclée (`Choppable` → 3 `ResourcePickup` → portage main via `CarryController`), construction data-driven (menu, blueprint, collision, livraison des matériaux, feu de camp construit et alimenté), équipement complet (ceinture 2 outils + 3 poches + sac à dos 9 slots, `EquipmentController`), cuisson générique (`RecipeDef` → `TransformationSite`, champi cru → grillé)
-- Jalon 3.5 (localisation) : à démarrer — rien de posé côté code
+- **Jalon courant** : 3.5 — Localisation (infrastructure L10N). À démarrer, rien de posé côté code.
+- **Jalon suivant** : 3.6 — Panneau de cuisson.
+Socle : Godot 4.7.2, renderer Forward+. Avancement détaillé → ROADMAP.md.
 ## Décisions de conception
  
 Choix retenus actuellement pour guider le développement — pas gravés dans le marbre, révisables si un jalon en montre le besoin.
