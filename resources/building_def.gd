@@ -2,7 +2,7 @@ extends Resource
 class_name BuildingDef
 
 @export var id: StringName
-@export var display_name: String = ""
+@export var name_key: String = ""
 ## Fantôme affiché pendant le placement (BuildModeController) ET pendant que
 ## le chantier attend ses ressources (ConstructionSite le teinte) — même
 ## scène, deux usages, un seul asset à maintenir.

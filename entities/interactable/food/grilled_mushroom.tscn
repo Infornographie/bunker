@@ -14,7 +14,6 @@ points = PackedVector3Array(0.24165002, 0.18658146, -0.11747364, -0.0057268925, 
 [node name="MushroomPickup" type="StaticBody3D" unique_id=1839153897]
 script = ExtResource("1_nc8a7")
 resource_def = ExtResource("2_8tok8")
-prompt_text = "Ramasser"
 
 [node name="Mushroom_Common2" parent="." unique_id=2013929652 instance=ExtResource("3_b4nf8")]
 

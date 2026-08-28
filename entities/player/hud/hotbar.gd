@@ -53,12 +53,11 @@ func update(active_slot: int, belt: Array[ToolDef], backpack_data: BackpackData)
 ## Demande les icônes manquantes des poches. Le texte reste affiché tant
 ## qu'une icône n'est pas prête.
 func _request_icons() -> void:
-	print("[Hotbar] _request_icons — belt.size=%d contenu=%s" % [_belt.size(), _belt])
 	# Outils en ceinture.
 	for tool_def in _belt:
 		if tool_def == null:
 			continue
-		var key: String = "tool:" + tool_def.display_name
+		var key: String = "tool:" + str(tool_def.id)
 		if _icons.has(key):
 			continue
 		_icons[key] = null
@@ -76,7 +75,6 @@ func _request_icons() -> void:
 
 func _fetch_tool_icon(tool_def: ToolDef, key: String) -> void:
 	var icon: Texture2D = await ResourceRegistry.get_tool_icon(tool_def)
-	print("[Hotbar] fetch '%s' → %s" % [key, icon])
 	if icon:
 		_icons[key] = icon
 		queue_redraw()
@@ -191,7 +189,7 @@ func _slot_icon(index: int) -> Texture2D:
 	if index < BELT_COUNT:
 		if index >= _belt.size() or _belt[index] == null:
 			return null
-		return _icons.get("tool:" + _belt[index].display_name)
+		return _icons.get("tool:" + str(_belt[index].id))
 	if _backpack_data == null:
 		return null
 	var pocket_i: int = index - BELT_COUNT
@@ -206,11 +204,11 @@ func _slot_icon(index: int) -> Texture2D:
 func _slot_label(index: int) -> String:
 	if index < BELT_COUNT:
 		if index < _belt.size() and _belt[index] != null:
-			return _belt[index].display_name
+			return tr(_belt[index].name_key)
 		return ""
 	if _backpack_data == null:
 		return ""
 	var pocket_i: int = index - BELT_COUNT
 	if pocket_i < _backpack_data.pocket_slots.size() and _backpack_data.pocket_slots[pocket_i] != null:
-		return _backpack_data.pocket_slots[pocket_i].display_name
+		return tr(_backpack_data.pocket_slots[pocket_i].name_key)
 	return ""

@@ -13,7 +13,7 @@ metadata/_custom_type_script = "uid://bh06t1p88ijyk"
 [resource]
 script = ExtResource("2_86nov")
 id = "grilled_mushroom"
-display_name = "Grilled Mushroom"
+name_key = "recipe.grilled_mushroom.name"
 inputs = Array[ExtResource("1_06iok")]([SubResource("Resource_ygp5p")])
 output = ExtResource("3_lf0ww")
 metadata/_custom_type_script = "uid://ckpbjpvjjbyfs"

@@ -77,7 +77,7 @@ func _extinguish() -> void:
 
 func _set_lit(value: bool) -> void:
 	_lit = value
-	prompt_text = "Alimenter" if value else "Allumer"
+	prompt_key = "interact.prompt.feed_fire" if value else "interact.prompt.light_fire"
 	if flame_visual:
 		flame_visual.visible = value
 		# Coupe aussi l'émission (pas juste le rendu) si c'est un système de

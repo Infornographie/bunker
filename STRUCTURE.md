@@ -12,30 +12,35 @@ Carte de repérage technique : où vit quoi, et qui dépend de quoi. Pas un suiv
 - `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, `recipes/`, futur `techs/`...), à côté des scripts `*_def.gd` correspondants.
 - `assets/` = ressources brutes tierces (FBX, textures, audio) + quelques scènes wrapper Godot quand l'asset importé demande un pivot correctif (cf. `wooden_axe_grip.tscn`).
 - Un même item peut avoir trois fichiers homonymes dans trois dossiers distincts, un par rôle : sa définition (`resources/resources/x.tres`), sa recette de production (`resources/recipes/x.tres`), sa scène de pickup (`entities/interactable/.../x.tscn`). C'est le cas de `grilled_mushroom`.
+- **Aucun texte affichable dans le code ni dans les `.tres`** : uniquement des clés de traduction (`name_key`, `prompt_key`). Voir § Flux de localisation.
 ## Autoloads (globaux, accessibles partout sans référence)
  
 Déclarés dans `project.godot` § `[autoload]` — cette liste doit correspondre exactement :
  
 - `SoundManager` → `autoloads/sound_manager.gd` — pool d'`AudioStreamPlayer3D` réutilisables pour SFX ponctuels positionnés.
 - `ResourceRegistry` → `autoloads/resource_registry.gd` — table `ResourceDef` → `PackedScene`, scan auto au boot, sert aussi les icônes.
+- `Locale` → `autoloads/locale.gd` — wrapper `TranslationServer` : `get_locale()`, `set_locale()`, signal `locale_changed`, fallback `en`. Porte aussi sa bascule debug (F10).
 `autoloads/icon_generator.gd` vit dans le même dossier mais **n'est pas** un autoload : il est instancié par `ResourceRegistry`.
 ## Arborescence
  
 ```
 res://
 ├── .editorconfig, .gitattributes, .gitignore
-├── project.godot                        — config moteur, autoloads, input map (→ INPUTS.md)
+├── project.godot                        — config moteur, autoloads, input map (→ INPUTS.md), locale fallback
 ├── icon.svg
 ├── autoloads/
 │   ├── sound_manager.gd                — pool d'AudioStreamPlayer3D, SFX positionnés
 │   ├── resource_registry.gd            — (autoload) table ResourceDef → PackedScene, scan auto de entities/interactable/ au boot, sert aussi les icônes
+│   ├── locale.gd                       — (autoload) wrapper TranslationServer, bascule debug EN ↔ FR (F10)
 │   └── icon_generator.gd               — rendu SubViewport ortho 3/4 d'un modèle 3D → Texture2D, cache par clé, instancié par ResourceRegistry (pas un autoload)
+├── translations/
+│   └── strings.csv                     — source unique des textes affichés (colonnes `keys`, `en`, `fr`) ; Godot compile en .translation à l'import
 ├── debug/
 │   ├── debug_camera_switch.gd          — bascule cam player ↔ freecam (F7)
 │   └── freecam_controller.gd           — caméra libre noclip
 ├── entities/
 │   ├── interactable/
-│   │   ├── interactable.gd             — base PhysicsBody3D, receive_tool_hit()
+│   │   ├── interactable.gd             — base PhysicsBody3D, receive_tool_hit(), prompt_key
 │   │   ├── choppable.gd                — hérite Interactable : HP, type d'outil, depleted → 3× pickup
 │   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D) : objet ramassable, lit ResourceDef
 │   │   ├── construction_site.gd        — hérite Interactable : blueprint posé, réceptionne les livraisons
@@ -71,12 +76,12 @@ res://
 │       └── tools/
 │           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, piloté par EquipmentController (plus de default_tool)
 ├── resources/
-│   ├── resource_def.gd                 — Resource : définition d'item (CarryType: HAND/SMALL/TOOL)
-│   ├── tool_def.gd                     — Resource : définition data-driven d'un outil
+│   ├── resource_def.gd                 — Resource : définition d'item (CarryType: HAND/SMALL/TOOL), name_key
+│   ├── tool_def.gd                     — Resource : définition data-driven d'un outil, name_key
 │   ├── backpack_data.gd                — Resource : contenu d'un sac à dos (3 poches + 10 stockage), vit sur l'objet sac
-│   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, collision_shape, blueprint/built scene)
+│   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, collision_shape, blueprint/built scene), name_key
 │   ├── resource_cost.gd
-│   ├── recipe_def.gd
+│   ├── recipe_def.gd                   — Resource : recette de transformation (inputs/output/durée), name_key
 │   ├── resources/                      — instances ResourceDef
 │   │   ├── wood.tres
 │   │   ├── mushroom.tres
@@ -112,6 +117,17 @@ Hors `res://` scripts, à noter :
 - Miroir : `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` quand les mains sont occupées.
 - `PlayerController` lit `CarryController.is_carrying()` pour brider sprint et saut — seule dépendance locomotion → portage.
 - `TransformationSite` (enfant d'un bâtiment) : `Campfire.receive_resource()` route le combustible vers lui-même et tout le reste vers `try_insert()`. Sortie en `ResourcePickup` via `ResourceRegistry`.
+### Flux de localisation
+- `translations/strings.csv` = source unique de tout texte affiché. Rangé en sections (une par namespace de clé), alphabétique à l'intérieur. Les lignes de titre ont une **première colonne vide** : Godot les ignore à l'import.
+- Convention de clés : `namespace.section.key` (`interact.prompt.chop`, `resource.wood.name`).
+- Les `.tres` et les `.tscn` ne portent que des clés : `ResourceDef`/`ToolDef`/`BuildingDef`/`RecipeDef.name_key`, `Interactable.prompt_key`.
+- **Le `tr()` ne se fait qu'aux points d'affichage — quatre dans tout le projet** :
+  - `PlayerHud.show_prompt()` — tous les prompts d'interaction
+  - `Hotbar._slot_label()` — noms en ceinture et en poche
+  - `BackpackUI.BackpackSlot.set_content()` — noms dans les slots du sac
+  - `BackpackUI` — libellé de l'aperçu de drag
+  Tout nouveau `tr()` ailleurs signale une string qui aurait dû transiter par une clé.
+- ⚠️ Les clés de cache d'icônes (`Hotbar`, `ResourceRegistry.get_tool_icon()`) sont bâties sur `ToolDef.id` / `ResourceDef.id`, **jamais** sur un nom affiché — sinon le cache se casse au changement de langue.
 ### Flux de construction
 - `BuildModeController` (B) : lit la liste des `BuildingDef` disponibles, instancie le blueprint, tourne à la molette, `Shift` désactive le snap, check collision via `BuildingDef.collision_shape` (+ `collision_shape_local_transform()`).
 - Placement validé → spawn d'un `ConstructionSite` (Interactable).
@@ -127,4 +143,3 @@ Hors `res://` scripts, à noter :
 - Drop (G) : retire du slot, spawn un `ToolPickup` dynamique (StaticBody3D + mesh + BoxShape3D, raycast sol). `ToolPickup.interact()` → retour en ceinture via `EquipmentController.try_store_tool()`.
 - Priorité affichage : Main (CarryController) > Hotbar actif. Hotbar dimmed quand mains occupées.
 - `BackpackData` vit sur l'objet sac (pas sur le joueur) — prêt pour pawns avec leur propre sac.
- 

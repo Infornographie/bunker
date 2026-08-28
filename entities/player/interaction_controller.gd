@@ -60,7 +60,7 @@ func _refresh_prompt() -> void:
 		hud.show_prompt("Déposer")
 		hud.set_targeting(true)
 	elif _current_target and _current_target.can_interact(self):
-		hud.show_prompt(_current_target.prompt_text)
+		hud.show_prompt(_current_target.prompt_key)
 		hud.set_targeting(true)
 	else:
 		hud.hide_prompt()

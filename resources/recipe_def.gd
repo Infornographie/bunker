@@ -5,7 +5,7 @@ class_name RecipeDef
 ## qui ne connaît aucun bâtiment en particulier.
 
 @export var id: String = ""
-@export var display_name: String = ""
+@export var name_key: String = ""
 @export var inputs: Array[ResourceCost] = []
 @export var output: ResourceDef
 @export var output_amount: int = 1

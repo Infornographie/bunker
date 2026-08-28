@@ -15,8 +15,8 @@ func set_targeting(active: bool) -> void:
 	_crosshair.set_active(active)
 
 
-func show_prompt(text: String) -> void:
-	_prompt_label.text = text
+func show_prompt(key: String) -> void:
+	_prompt_label.text = tr(key)
 	_prompt_label.visible = true
 
 

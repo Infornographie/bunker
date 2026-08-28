@@ -16,8 +16,8 @@ func set_fall_direction(direction: Vector3) -> void:
 
 func _ready() -> void:
 	# Prompt automatique depuis le nom de la ressource si non surchargé.
-	if resource_def and prompt_text == "Interagir":
-		prompt_text = resource_def.display_name
+	if resource_def and prompt_key == "interact.prompt.interact":
+		prompt_key = resource_def.name_key
 
 	var node: Node = self
 	if not (node is RigidBody3D):

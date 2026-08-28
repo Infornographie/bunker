@@ -341,7 +341,7 @@ class BackpackSlot extends Panel:
 			preview.add_child(preview_icon)
 		else:
 			var preview_label := Label.new()
-			preview_label.text = content.display_name
+			preview_label.text = tr(content.name_key)
 			preview_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 			preview_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			preview_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

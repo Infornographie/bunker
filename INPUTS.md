@@ -35,6 +35,8 @@ L'Input Map contient aussi une action `cancel_build_mode` (bindée sur **B**) : 
 ## Debug
  
 - **F7** — bascule caméra joueur ↔ freecam noclip (`toggle_debug_cam`)
+- **F10** — bascule de langue EN ↔ FR (`toggle_locale`), écoutée par l'autoload `Locale`
+⚠️ **La rangée F5-F9 est réservée à l'éditeur Godot** (lancer / stop / pause…). En fenêtre de jeu embarquée, l'éditeur intercepte ces touches avant le jeu : le binding a l'air correct dans l'Input Map et ne se déclenche jamais. F8 et F9 ont été essayés et écartés pour cette raison. Toute nouvelle touche de debug se teste **en fenêtre embarquée** avant d'atterrir ici.
 ## Collisions de touches assumées
  
 Aucune n'est arbitrée par l'Input Map : ce sont les contrôleurs qui garantissent l'exclusivité. Toute modification de ces gardes doit repasser par ici.

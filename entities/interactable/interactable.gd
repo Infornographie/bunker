@@ -1,7 +1,7 @@
 extends PhysicsBody3D
 class_name Interactable
 
-@export var prompt_text: String = "Interagir"
+@export var prompt_key: String = "interact.prompt.interact"
 
 ## Override dans les classes filles pour une condition (ex: hache requise).
 func can_interact(_interactor: Node) -> bool:

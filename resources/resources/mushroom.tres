@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_ns8x3")
 id = "mushroom"
-display_name = "Mushroom"
+name_key = "resource.mushroom.name"
 carry_type = 1
 metadata/_custom_type_script = "uid://b7ww6eyv8f76p"

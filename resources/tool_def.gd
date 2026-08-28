@@ -4,7 +4,7 @@ class_name ToolDef
 enum ToolType { CHOP, MINE, STAB, BLUNT }
 
 @export var id: StringName
-@export var display_name: String
+@export var name_key: String = ""
 @export var tool_type: ToolType = ToolType.CHOP
 @export var mesh_scene: PackedScene
 @export var damage: int = 1

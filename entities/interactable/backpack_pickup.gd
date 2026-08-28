@@ -22,8 +22,8 @@ var _snap_requested: bool = false
 func _ready() -> void:
 	if backpack_data == null:
 		backpack_data = BackpackData.new()
-	if prompt_text == "Interagir":
-		prompt_text = "Ouvrir le sac"
+	if prompt_key == "interact.prompt.interact":
+		prompt_key = "interact.prompt.open_backpack"
 	set_physics_process(false)
 
 

@@ -14,7 +14,7 @@ metadata/_custom_type_script = "uid://bh06t1p88ijyk"
 [resource]
 script = ExtResource("2_lbtx7")
 id = &"campfire"
-display_name = "Campfire"
+name_key = "building.campfire.name"
 ghost_scene = ExtResource("1_6cc0j")
 collision_shape = ExtResource("2_vpluw")
 built_scene = ExtResource("1_6cc0j")

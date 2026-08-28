@@ -23,7 +23,7 @@ const SITE_TINT := Color(1.0, 0.7, 0.1, 0.6)
 var _delivered: Dictionary = {}
 
 func _ready() -> void:
-	prompt_text = "Livrer"
+	prompt_key = "interact.prompt.deliver"
 	if building_def == null:
 		return
 	for cost in building_def.costs:

@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_1i5ft")
 id = "wood"
-display_name = "Wood"
+name_key = "resource.wood.name"
 metadata/_custom_type_script = "uid://b7ww6eyv8f76p"

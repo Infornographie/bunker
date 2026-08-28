@@ -53,7 +53,8 @@ func get_tool_icon(tool_def: ToolDef) -> Texture2D:
 	if tool_def == null or tool_def.mesh_scene == null:
 		return null
 	_ensure_generator()
-	var key: String = "tool:" + tool_def.display_name
+	# Clé de cache sur l'id (stable), surtout pas sur un nom traduit.
+	var key: String = "tool:" + tool_def.id
 	return await _icon_generator.get_icon(key, tool_def.mesh_scene)
 
 

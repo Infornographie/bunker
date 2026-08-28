@@ -1,0 +1,23 @@
+keys,en,fr
+,=== INTERACTION PROMPTS ===,
+interact.prompt.chop,Chop,Couper
+interact.prompt.deliver,Deliver,Livrer
+interact.prompt.feed_fire,Feed,Alimenter
+interact.prompt.interact,Interact,Interagir
+interact.prompt.light_fire,Light,Allumer
+interact.prompt.open_backpack,Open backpack,Ouvrir le sac
+interact.prompt.pickup,Pick up,Ramasser
+,,
+,=== RESOURCES ===,
+resource.grilled_mushroom.name,Grilled mushroom,Champignon grillé
+resource.mushroom.name,Mushroom,Champignon
+resource.wood.name,Wood,Bois
+,,
+,=== TOOLS ===,
+tool.wooden_axe.name,Wooden axe,Hache en bois
+,,
+,=== BUILDINGS ===,
+building.campfire.name,Campfire,Feu de camp
+,,
+,=== RECIPES ===,
+recipe.grilled_mushroom.name,Grilled mushroom,Champignon grillé

@@ -371,7 +371,7 @@ func _spawn_tool_pickup(tool_def: ToolDef) -> void:
 	var body := StaticBody3D.new()
 	body.set_script(pickup_script)
 	body.tool_def = tool_def
-	body.prompt_text = tool_def.display_name
+	body.prompt_key = tool_def.name_key
 
 	# Collision simple pour le raycast d'interaction.
 	var col := CollisionShape3D.new()

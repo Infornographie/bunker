@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1_lw4og")
 id = &"wooden_axe"
-display_name = "Wooden Axe"
+name_key = "tool.wooden_axe.name"
 mesh_scene = ExtResource("1_gei06")
 hand_position = Vector3(0.41, -0.565, -0.47)
 hand_rotation_degrees = Vector3(0, -96, 15)

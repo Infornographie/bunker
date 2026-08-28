@@ -31,13 +31,13 @@
   pièce "Bottom" pour les sols, contrairement aux murs). Solution retenue :
   socle réutilisable (BoxMesh + couleur unie) — définie mais pas encore
   généralisée à toutes les plateformes posées.
-## Jalon 3 — Contrôleur protagoniste + interactions
+## Jalon 3 — Contrôleur protagoniste + interactions ✅
 - [x] `CharacterBody3D` + input (locomotion, caméra, franchissement de marches auto via test_move — voir player_controller.gd)
 - [x] Système d'interaction (raycast/zone), prompts world-space → `Interactable`/`InteractionController`/`Choppable` fonctionnels, dégâts synchronisés sur `swing_impact` (`receive_tool_hit`).
 - [x] Récolte : `Choppable` fait tomber 3 `ResourcePickup` physiques à sa destruction, ramassables (E) et portables à la main via `CarryController` (`ResourceDef.CarryType.HAND`), dépose au clic E.
 - [x] Sound manager de base (`autoloads/sound_manager.gd`, pool de `AudioStreamPlayer3D`) → SFX ponctuels positionnés, hook posé sur `Choppable.chop_sound` (pas encore d'asset son assigné). Pas de bus séparé ni de son UI/2D — à ajouter si besoin réel apparaît.
 - [x] Système d'outils tenus (viewmodel 1ère personne, `ToolDef` data-driven) → hache en bois fonctionnelle et calée à l'écran (`ToolController` + `ToolDef`).
-- [x] Construction data-driven (.tres façon `BuildingDefs`) — menu construction, blueprint au sol, détection de collision, livraison physique des matériaux, premier bâtiment fonctionnel (feu de camp).
+- [x] Construction data-driven (.tres façon `BuildingDefs`) — blueprint au sol, détection de collision, livraison physique des matériaux, premier bâtiment fonctionnel (feu de camp).
 - [x] Ceinture d'outils (2 slots, hanche G/D, barre 1-2, accès direct)
 - [x] Poches (3 slots, G/D/avant, barre 3-5, accès direct)
 - [x] Sac à dos (9 slots, remplissage auto au ramassage, accès uniquement posé au sol façon Peak)
@@ -50,6 +50,7 @@
  
 ### Dette Jalon 3
 - Le protagoniste est officiellement un robot (cf. GDD) : l'apparence humaine implicite du viewmodel/main tenant la hache est temporaire — chassis robot + bras/effecteur traités au Jalon 6.
+- **Pas de menu de sélection de bâtiment** : `BuildModeController` expose un unique `building_def` à l'inspecteur. Tant qu'il n'y a qu'un bâtiment (feu de camp), ça ne se voit pas ; le menu devient nécessaire au deuxième `BuildingDef`. À traiter au Jalon 11 (ressources & recettes solarpunk) au plus tard, ou dès qu'un deuxième bâtiment arrive.
 - Physique des rondins pas réglée (friction/rebond par défaut, roulis parfois excessif) — à ajuster via Physics Material sur le RigidBody3D.
 - Objet porté en main pas contraint en taille/collision au HandAnchor — un futur objet plus gros qu'un rondin pourrait traverser le viewmodel ou sortir du champ visuel — à surveiller au cas par cas.
 - La hache traverse les murs/arbres quand la caméra s'en approche (viewmodel sans profondeur séparée du monde). Piste : caméra/layer dédié au viewmodel avec son propre near/far.
@@ -64,26 +65,28 @@
 - Icônes générées au premier affichage : léger hoquet possible à la première ouverture d'un sac contenant des objets jamais vus. Acceptable pour l'instant ; si ça devient visible, pré-générer au chargement de la partie.
 - UI du sac : polish restant (position du panneau parfois haute selon l'angle, pas de feedback sonore au transfert, pas d'animation d'ouverture).
 - Grille 3x3 = 9 slots au lieu des 10 annoncés au GDD — GDD à mettre à jour (9 + 3 poches = 12, plus cohérent).
-- Prompt d'interaction non contextuel : `_refresh_prompt()` affiche le `prompt_text` de la cible sans tenir compte de la ressource proposée (le feu dit "Alimenter" même avec un champi en poche prêt à cuire). À régler avec le panneau de cuisson (J3.6).
+- Prompt d'interaction non contextuel : `_refresh_prompt()` affiche le `prompt_key` de la cible sans tenir compte de la ressource proposée (le feu dit "Alimenter" même avec un champi en poche prêt à cuire). À régler avec le panneau de cuisson (J3.6).
 - `grilled_mushroom` = champi cru avec albedo teinté brun. Asset dédié à faire, aucune urgence.
 - `Choppable.pickup_scene` : seul endroit du projet où une scène de pickup est référencée en direct plutôt que résolue par `ResourceRegistry` depuis un `ResourceDef`. Deux façons d'obtenir un pickup selon l'appelant. Correction ~5 min, à faire au prochain passage sur `Choppable`.
 - Cuisson : une recette à la fois, pas de brûlé si on oublie, ingrédients non visibles sur les braises. Assumé tant que le feu est le seul site de transformation.
-## Jalon 3.5 — Localisation (infrastructure L10N)
+## Jalon 3.5 — Localisation (infrastructure L10N) ✅
 > Petit jalon transverse posé avant J4 : mettre en place la l10n maintenant coûte 30 min, l'ajouter après 6 mois de strings hardcodées coûte des heures. Décision : dev en **anglais** (langue source, garantit des clés stables si le texte évolue) et **français** disponible dès maintenant pour permettre les playtests du fils d'Anthony.
  
-- [ ] `translations/strings.csv` — première colonne = clé, colonnes `en`, `fr`. Godot compile automatiquement en `.translation` à l'import.
-- [ ] Convention de clés : `namespace.section.key` (ex : `interact.prompt.chop`, `ui.build.menu_title`, `resource.wood.name`)
-- [ ] Autoload `locale.gd` — wrapper minimal autour de `TranslationServer` (get/set locale courante, fallback `en`, persistance simple si utile plus tard)
-- [ ] Migration des strings existants vers clés + `tr()` : prompts d'interaction (chop, pickup, drop, interact), HUD, menu construction, noms de ressources / outils / bâtiments
-- [ ] Bascule debug FR ↔ EN sur F8 (proposition, à côté de F7) — permet de switcher sans relancer pendant le playtest
-- [ ] Project settings : `internationalization/locale/fallback = en`
-- [ ] Mise à jour docs à la clôture : INPUTS.md (F8), STRUCTURE.md (autoload `Locale` + dossier `translations/`), STATE.md (décision validée en pratique)
+- [x] `translations/strings.csv` — première colonne = clé, colonnes `en`, `fr`. Godot compile automatiquement en `.translation` à l'import. Rangé en sections (ligne à première colonne vide = ignorée à l'import), alphabétique à l'intérieur.
+- [x] Convention de clés : `namespace.section.key` (ex : `interact.prompt.chop`, `resource.wood.name`)
+- [x] Autoload `Locale` (`autoloads/locale.gd`) — wrapper `TranslationServer` : `get_locale()`, `set_locale()`, signal `locale_changed`, fallback `en`
+- [x] Migration des strings existants vers clés + `tr()` : `Interactable.prompt_text` → `prompt_key`, `display_name` → `name_key` sur `ResourceDef`/`ToolDef`/`BuildingDef`/`RecipeDef`
+- [x] Le `tr()` centralisé sur quatre points d'affichage seulement (voir STRUCTURE §Flux de localisation) — pas de helper intermédiaire
+- [x] Clés de cache d'icônes rebasées sur `ToolDef.id`/`ResourceDef.id` au lieu du nom affiché (corrige au passage la collision entre deux outils homonymes)
+- [x] Bascule debug EN ↔ FR sur **F10** (`toggle_locale`) — F8 et F9 écartés, réservées à l'éditeur en fenêtre embarquée
+- [x] Project settings : `internationalization/locale/fallback = en`
+- [x] Mise à jour docs à la clôture : INPUTS.md, STRUCTURE.md, STATE.md
 ### Dette Jalon 3.5
 - Format `.po` (gettext, standard pour LQA externe) pas retenu — CSV suffit pour un dev solo avec peu de strings. À revoir si un jour on veut envoyer à un traducteur pro.
-- Pas de gestion de la pluralisation ni des accords genre à ce stade — à ajouter au premier besoin réel (aucune string avec `%d truc(s)` dans J3 actuel).
-- `TranslationServer` sur les noms de ressources/outils/bâtiments = clés dans les `.tres` (ex : `ResourceDef.name_key`) plutôt que texte brut. Prévoir un helper au moment de créer ces `_key` fields, sinon on va oublier `tr()` à l'affichage.
+- Pas de gestion de la pluralisation ni des accords genre à ce stade — à ajouter au premier besoin réel (aucune string avec `%d truc(s)` aujourd'hui).
+- **Aucune vérification qu'une clé utilisée existe dans le CSV** : `tr()` sur une clé absente affiche la clé brute à l'écran, sans erreur ni warning. Pas gênant à 13 clés (ça se voit immédiatement en jeu), à revoir si le volume grossit — piste : petit script d'éditeur qui croise les `tr(...)`/`_key` du projet avec les colonnes du CSV.
 ## Jalon 3.6 — Panneau de cuisson
-> Posé après la l10n : une UI neuve écrite avant les clés de traduction, c'est des strings à remigrer aussitôt.
+> Posé après la l10n : une UI neuve écrite avant les clés de traduction, c'est des strings à remigrer aussitôt. Toute string ajoutée ici passe directement par `strings.csv`.
 - [ ] Extraire `ItemSlot` (aujourd'hui classe interne de `BackpackUI`) et une base `WorldAnchoredPanel` (ancrage monde, fermeture distance/angle) — sac et feu deviennent deux consommateurs
 - [ ] Panneau feu : liste des recettes à gauche, slots d'ingrédients au centre avec fantôme de l'attendu
 - [ ] Barre de progression de cuisson (`TransformationSite.get_progress()`) et jauge de combustible (`Campfire.get_fuel_ratio()`)
@@ -148,6 +151,7 @@
 - [ ] Sélection d'un axe de recherche par le joueur (Énergie / Construction / Agriculture-Bio / Matériaux / Gouvernance-Social) : tags suffisants → recette débloquée ; manquants → **indice de propriété**, pas d'item exact
 - [ ] Archive du bunker comme ressource limitée : dégrade avant l'extinction complète (nombre de requêtes ou temps d'accès fini) → force le pivot vers la découverte empirique
 ## Jalon 11 — Ressources & recettes solarpunk (T2 → T3)
+- [ ] Menu de sélection de bâtiment en mode construction (dette Jalon 3) — indispensable dès le deuxième `BuildingDef`
 - [ ] **Phytominière** (T2) : plantes hyperaccumulatrices → cultivées, récoltées, brûlées, cendre raffinée
 - [ ] **Mycoculture** dans la grotte (T2) : bassins + chambres de fermentation, mycélium comme matériau structurel, substrat = bois mort (boucle bois)
 - [ ] Construction **terre crue** (pisé/torchis) + **hempcrete** (T2) — pierre en ramassage de surface uniquement
@@ -186,3 +190,4 @@
 - **Avant Jalon 9** — Règles précises du sauvetage dégressif (distances, probabilités, cooldown de récidive)
 - **Avant Jalon 12** — Modalités exactes de la transition d'autonomie politique (seuils, déclencheurs, réversibilité)
 - **Avant Jalon 12** — Système de vote / gouvernance : détail à travailler en session dédiée
+ 
