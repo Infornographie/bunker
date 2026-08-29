@@ -67,18 +67,21 @@ res://
 │       ├── carry_controller.gd         — point unique "en main", reparent → HandAnchor, désactive collision + freeze
 │       ├── build_mode_controller.gd    — mode construction (B), blueprint, molette (rotation), Shift (free placing), spawn ConstructionSite
 │       ├── equipment_controller.gd     — ceinture (2 outils) + sac à dos (BackpackData), hotbar actif, routage ramassage, drop (G → ToolPickup dynamique)
+│       ├── ui_panel_controller.gd      — arbitre des panneaux ancrés : registre des panneaux ouverts, mouse mode, gel du joueur, touche de fermeture, exclusivité avec les autres modes joueur
 │       ├── hud/
 │       │   ├── player_hud.tscn         — CanvasLayer HUD
 │       │   ├── player_hud.gd           — crosshair + prompt + hotbar
 │       │   ├── crosshair.gd            — crosshair dessiné en code
 │       │   ├── hotbar.gd               — hotbar dessiné en code (2 belt + 3 poches si sac équipé), dimming quand mains occupées
-│       │   └── backpack_ui.gd          — UI du sac ouvert, ancrée sur la position monde projetée, grille 3x3 + 3 poches + main, drag & drop natif Godot
+│       │   ├── world_anchored_panel.gd — base des panneaux ancrés sur un objet du monde : projection écran, fermeture distance / cible détruite / derrière-caméra, _build_content() et refresh() surchargeables
+│       │   ├── item_slot.gd            — case d'inventaire générique : icône générée + nom traduit en repli, drag & drop natif, payload opaque posé par le panneau propriétaire
+│       │   └── backpack_ui.gd          — UI du sac ouvert (hérite WorldAnchoredPanel) : disposition 3x3 + 3 poches + main, règles de transfert
 │       └── tools/
 │           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, piloté par EquipmentController (plus de default_tool)
 ├── resources/
 │   ├── resource_def.gd                 — Resource : définition d'item (CarryType: HAND/SMALL/TOOL), name_key
 │   ├── tool_def.gd                     — Resource : définition data-driven d'un outil, name_key
-│   ├── backpack_data.gd                — Resource : contenu d'un sac à dos (3 poches + 10 stockage), vit sur l'objet sac
+│   ├── backpack_data.gd                — Resource : contenu d'un sac à dos (3 poches + 9 stockage), vit sur l'objet sac
 │   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, collision_shape, blueprint/built scene), name_key
 │   ├── resource_cost.gd
 │   ├── recipe_def.gd                   — Resource : recette de transformation (inputs/output/durée), name_key
@@ -117,6 +120,14 @@ Hors `res://` scripts, à noter :
 - Miroir : `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` quand les mains sont occupées.
 - `PlayerController` lit `CarryController.is_carrying()` pour brider sprint et saut — seule dépendance locomotion → portage.
 - `TransformationSite` (enfant d'un bâtiment) : `Campfire.receive_resource()` route le combustible vers lui-même et tout le reste vers `try_insert()`. Sortie en `ResourcePickup` via `ResourceRegistry`.
+### Flux des panneaux ancrés
+- Trois responsabilités, trois fichiers, aucun recouvrement : `ItemSlot` affiche et drague, `WorldAnchoredPanel` s'ancre et se ferme, `UIPanelController` arbitre.
+- `UIPanelController.open_panel(panel, anchor)` est **le seul chemin d'ouverture**. Il refuse si un mode exclusif tourne ou si l'`ActionStateMachine` n'est pas `IDLE`, puis appelle `panel.open_anchored(anchor, camera)`.
+- Le contrôleur possède seul le mouse mode et le gel du joueur (`set_input_enabled`), pilotés par une question unique : reste-t-il un panneau ouvert ? Un panneau n'y touche jamais.
+- **Plusieurs panneaux peuvent être ouverts simultanément** (sac posé + feu voisin) : l'exclusivité est entre *modes* joueur, pas entre panneaux. C'est ce qui rend possible le drag d'un panneau à l'autre.
+- `exclusive_modes: Array[Node]` — tout nœud exposant `is_active() -> bool` bloque l'ouverture d'un panneau (duck typing, même patron que `TransformationSite` ↔ son hôte). Le contrôleur ne cite aucun type de mode : c'est ce qui lui permet d'être référencé *par* eux sans cycle de `class_name`.
+- Réciproquement, un mode exclusif appelle `can_enter_exclusive_mode()` avant de s'ouvrir. Une seule direction de connaissance typée : mode → contrôleur.
+- Drag & drop : la donnée de drag est l'`ItemSlot` source elle-même, pas un dictionnaire à schéma. La case cible interroge son propre propriétaire (`slot_can_accept()` / `slot_accept_drop()`) en lui passant la source telle quelle. Deux panneaux s'échangent donc des items sans se connaître — chacun décide chez lui, et `BackpackUI` refuse aujourd'hui toute source étrangère.
 ### Flux de localisation
 - `translations/strings.csv` = source unique de tout texte affiché. Rangé en sections (une par namespace de clé), alphabétique à l'intérieur. Les lignes de titre ont une **première colonne vide** : Godot les ignore à l'import.
 - Convention de clés : `namespace.section.key` (`interact.prompt.chop`, `resource.wood.name`).
@@ -124,8 +135,8 @@ Hors `res://` scripts, à noter :
 - **Le `tr()` ne se fait qu'aux points d'affichage — quatre dans tout le projet** :
   - `PlayerHud.show_prompt()` — tous les prompts d'interaction
   - `Hotbar._slot_label()` — noms en ceinture et en poche
-  - `BackpackUI.BackpackSlot.set_content()` — noms dans les slots du sac
-  - `BackpackUI` — libellé de l'aperçu de drag
+  - `ItemSlot.set_content()` — noms dans les cases d'inventaire, tous panneaux confondus
+  - `ItemSlot._make_preview()` — libellé de l'aperçu de drag
   Tout nouveau `tr()` ailleurs signale une string qui aurait dû transiter par une clé.
 - ⚠️ Les clés de cache d'icônes (`Hotbar`, `ResourceRegistry.get_tool_icon()`) sont bâties sur `ToolDef.id` / `ResourceDef.id`, **jamais** sur un nom affiché — sinon le cache se casse au changement de langue.
 ### Flux de construction
@@ -133,7 +144,7 @@ Hors `res://` scripts, à noter :
 - Placement validé → spawn d'un `ConstructionSite` (Interactable).
 - `ConstructionSite` : lit `BuildingDef.costs` (Array[`ResourceCost`]), réceptionne les livraisons de `ResourcePickup` (via `interact()` avec ressource en main), à complétion → `queue_free` + spawn de la `built_scene` (ex : `Campfire`).
 - `Campfire` : bâtiment fini, `Timer` de combustion, `flame_light_flicker` anime le Light3D de la flamme.
-- **Le mode construction n'est pas un état de l'`ActionStateMachine`** (décision documentée dans STATE) : son exclusivité repose sur deux gardes croisées — `BuildModeController` refuse d'entrer si l'état n'est pas `IDLE`, `InteractionController` se désactive tant que `BuildModeController.is_active()`.
+- **Le mode construction n'est pas un état de l'`ActionStateMachine`** (décision documentée dans STATE). Son exclusivité passe désormais par `UIPanelController` : `_enter_build_mode()` appelle `can_enter_exclusive_mode()`, et `InteractionController` se tait tant que `is_any_panel_open()` ou `BuildModeController.is_active()`.
 ### Contraintes d'ordre
 - `ForestScatter` doit tourner **avant** le bake de `NavigationRegion3D` (revalidé au Jalon 4 avec le terrain procédural).
 ### Autoload commun

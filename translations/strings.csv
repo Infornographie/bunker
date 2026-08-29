@@ -2,6 +2,7 @@ keys,en,fr
 ,=== INTERACTION PROMPTS ===,
 interact.prompt.chop,Chop,Couper
 interact.prompt.deliver,Deliver,Livrer
+interact.prompt.drop,Drop,Déposer
 interact.prompt.feed_fire,Feed,Alimenter
 interact.prompt.interact,Interact,Interagir
 interact.prompt.light_fire,Light,Allumer

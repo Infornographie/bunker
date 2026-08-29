@@ -9,6 +9,7 @@ class_name InteractionController
 @export var drop_distance: float = 1.5
 @export var build_mode_controller: BuildModeController
 @export var equipment_controller: EquipmentController
+@export var ui_panel_controller: UIPanelController
 
 var _current_target: Interactable
 var _current_target_distance: float = -1.0
@@ -57,7 +58,7 @@ func _refresh_prompt() -> void:
 		hud.set_targeting(false)
 		return
 	if carry_controller and carry_controller.is_carrying():
-		hud.show_prompt("Déposer")
+		hud.show_prompt("interact.prompt.drop")
 		hud.set_targeting(true)
 	elif _current_target and _current_target.can_interact(self):
 		hud.show_prompt(_current_target.prompt_key)
@@ -72,7 +73,7 @@ func get_current_target_distance() -> float:
 	return _current_target_distance
 
 func _unhandled_input(event: InputEvent) -> void:
-	if hud and hud.get_backpack_ui() and hud.get_backpack_ui().is_open():
+	if ui_panel_controller and ui_panel_controller.is_any_panel_open():
 		return
 	# Mode construction actif = mode à part entière, mains libres : les
 	# actions habituelles (outil, ramassage) se taisent le temps du placement.
@@ -219,29 +220,16 @@ func _try_use_pocket_item() -> bool:
 	pickup.global_position = drop_position
 	return true
 
-## Ouvre l'UI du sac visé. Verrouille caméra et déplacement.
+## Ouvre l'UI du sac visé. Gel et souris sont gérés par UIPanelController.
 func open_backpack_ui(backpack: BackpackPickup) -> void:
-	if hud == null:
+	if hud == null or ui_panel_controller == null:
 		return
 	var ui := hud.get_backpack_ui()
 	if ui == null:
 		return
-	var camera := get_parent() as Camera3D
-	ui.open(backpack, equipment_controller, carry_controller, camera)
-	if not ui.closed.is_connected(_on_backpack_ui_closed):
-		ui.closed.connect(_on_backpack_ui_closed)
-	_set_player_frozen(true)
+	ui.bind(backpack, equipment_controller, carry_controller)
+	ui_panel_controller.open_panel(ui, backpack)
 
-
-func _on_backpack_ui_closed() -> void:
-	_set_player_frozen(false)
-
-
-## Gèle locomotion et rotation caméra (UI modale ouverte).
-func _set_player_frozen(frozen: bool) -> void:
-	var player := owner as Node
-	if player and player.has_method("set_input_enabled"):
-		player.set_input_enabled(not frozen)
 
 ## Ressource que le joueur propose à la cible visée : la main d'abord (objet
 ## lourd porté), sinon le petit objet sélectionné en poche. Point unique de

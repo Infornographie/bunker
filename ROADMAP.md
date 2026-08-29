@@ -81,20 +81,26 @@
 - [x] Bascule debug EN ↔ FR sur **F10** (`toggle_locale`) — F8 et F9 écartés, réservées à l'éditeur en fenêtre embarquée
 - [x] Project settings : `internationalization/locale/fallback = en`
 - [x] Mise à jour docs à la clôture : INPUTS.md, STRUCTURE.md, STATE.md
+> Deux migrations manquées, détectées et corrigées au J3.6 : `BackpackSlot.set_content()` lisait encore `resource.display_name` (propriété supprimée), et `InteractionController._refresh_prompt()` passait la string "Déposer" en dur à `tr()` (désormais `interact.prompt.drop`).
+ 
 ### Dette Jalon 3.5
 - Format `.po` (gettext, standard pour LQA externe) pas retenu — CSV suffit pour un dev solo avec peu de strings. À revoir si un jour on veut envoyer à un traducteur pro.
 - Pas de gestion de la pluralisation ni des accords genre à ce stade — à ajouter au premier besoin réel (aucune string avec `%d truc(s)` aujourd'hui).
 - **Aucune vérification qu'une clé utilisée existe dans le CSV** : `tr()` sur une clé absente affiche la clé brute à l'écran, sans erreur ni warning. Pas gênant à 13 clés (ça se voit immédiatement en jeu), à revoir si le volume grossit — piste : petit script d'éditeur qui croise les `tr(...)`/`_key` du projet avec les colonnes du CSV.
 ## Jalon 3.6 — Panneau de cuisson
 > Posé après la l10n : une UI neuve écrite avant les clés de traduction, c'est des strings à remigrer aussitôt. Toute string ajoutée ici passe directement par `strings.csv`.
-- [ ] Extraire `ItemSlot` (aujourd'hui classe interne de `BackpackUI`) et une base `WorldAnchoredPanel` (ancrage monde, fermeture distance/angle) — sac et feu deviennent deux consommateurs
+- [x] **Passe A** — `ItemSlot` et `WorldAnchoredPanel` extraits de `BackpackUI`, plus `UIPanelController` : l'arbitre de modes annoncé dans STATE. Comportement du sac inchangé, vérifié en jeu.
 - [ ] Panneau feu : liste des recettes à gauche, slots d'ingrédients au centre avec fantôme de l'attendu
 - [ ] Barre de progression de cuisson (`TransformationSite.get_progress()`) et jauge de combustible (`Campfire.get_fuel_ratio()`)
 - [ ] Case combustible en lecture seule, drag-to-alimenter en option
-- [ ] Prompt contextuel selon la ressource proposée (dette J3)
+- [ ] Drag d'un panneau à l'autre (sac posé → feu), rendu possible par le choix « exclusivité entre modes, pas entre panneaux »
+- [ ] Prompt contextuel selon la ressource proposée (dette J3) : E dépose si le joueur propose une ressource acceptée, ouvre le panneau sinon
 - [ ] Supprimer l'action morte `cancel_build_mode` (dette J3, voir ci-dessous) — **à faire après vérification en jeu** du comportement réel de B en mode construction
+- [ ] Nettoyage au passage : `print()` de debug oublié dans `Campfire.receive_resource()`, et `Choppable.pickup_scene` → `ResourceRegistry` (dette J3)
 ### Dette Jalon 3.6
 - `cancel_build_mode` : action de l'Input Map bindée sur **B**, jamais atteinte. `BuildModeController._unhandled_input()` teste `toggle_build_mode` en premier et fait un `return` inconditionnel, donc la branche `cancel_build_mode` est du code mort et B ne ferme le mode que via le toggle. Correction : supprimer la branche + l'action dans l'Input Map (~2 min). Détectée au sanity check pré-J3.5 ; report volontaire pour tester le comportement en jeu avant de toucher au code.
+- Fermeture d'un panneau ancré : seules la distance, la destruction de la cible et le passage derrière la caméra ferment. Pas de fermeture à l'angle (se détourner sans s'éloigner laisse le panneau ouvert sur le bord de l'écran). À trancher au feeling une fois deux panneaux ouvrables côte à côte.
+- `UIPanelController` gèle le joueur dès qu'un panneau est ouvert. Acceptable pour le sac posé ; à réévaluer si un panneau doit rester lisible pendant qu'on bouge.
 ## Jalon 4 — Terrain procédural
 - [ ] `terrain_gen_config.gd` (Resource) : seed, taille de zone, refs `FastNoiseLite` par couche, rayon/falloff bunker partagé (flatten + exclusion scatter)
 - [ ] `heightmap_generator.gd` : bruit macro → masque relief → ridge noise (escarpement) → domain warp → flatten bunker → tracé + creusement rivière
@@ -111,7 +117,7 @@
 ## Jalon 5 — Réveil de pawn + ordres directs
 - [ ] Pawn dormant scripté (état sommeil → réveil via interaction robot)
 - [ ] `ActionStateMachine` pawn (idle / se_deplacer / tâche_courante) via `NavigationAgent3D` — prépare les états `EVALUATING`/`INTERRUPTED` utilisés au Jalon 8
-- [ ] Sélection de pawn (proximité ou liste rapide) — réutilisée par la roue de réaction au Jalon 6
+- [ ] Sélection de pawn (proximité ou liste rapide) — réutilisée par la roue de réaction au Jalon 6, et à déclarer dans `UIPanelController.exclusive_modes`
 - [ ] Ordres directs minimaux (suivre / reste / va-là) — préfigure la roue
 - [ ] Corriger dette Jalon 1 (navmesh/branches, cf. section dédiée) avant de tester le déplacement des pawns
 ## Jalon 6 — Robot : identité, énergie, communication
@@ -122,7 +128,7 @@
 - [ ] Passe de réglage du feeling course/saut sur le chassis robot définitif (dette Jalon 3)
 - [ ] Pool énergie **bunker global** (décrément continu, horloge de fin de partie, quasi non-rechargeable)
 - [ ] Rayon d'action = énergie (calcul aller-retour + alerte visuelle avant seuil critique, pas de mur invisible)
-- [ ] Roue de réaction (radial menu, touche type A/Q) : set minimal oui / non / suis-moi / reste / reprends ton activité — réutilise la sélection de pawn du Jalon 5, directement utile puisque les pawns existent déjà
+- [ ] Roue de réaction (radial menu, touche type A/Q) : set minimal oui / non / suis-moi / reste / reprends ton activité — réutilise la sélection de pawn du Jalon 5, et se déclare dans `UIPanelController.exclusive_modes`
 - [ ] Bulles techniques robot (diagnostics, alertes) — pas d'émotions, marque l'altérité
 ## Jalon 7 — Portage simulation temps réel
 - [ ] Fatigue **par catégorie d'action** (float par pawn par catégorie, decay au switch de tâche) — remplace le calcul par tour de Degel
@@ -190,4 +196,3 @@
 - **Avant Jalon 9** — Règles précises du sauvetage dégressif (distances, probabilités, cooldown de récidive)
 - **Avant Jalon 12** — Modalités exactes de la transition d'autonomie politique (seuils, déclencheurs, réversibilité)
 - **Avant Jalon 12** — Système de vote / gouvernance : détail à travailler en session dédiée
- 

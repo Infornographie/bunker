@@ -1,111 +1,51 @@
-extends Control
+extends WorldAnchoredPanel
 class_name BackpackUI
 
-## Interface du sac posé au sol. Ancrée sur la position monde du sac
-## (projetée à l'écran) plutôt que centrée sur l'écran — on reste "accroupi
-## devant son sac" plutôt que dans un menu.
+## Interface du sac posé au sol.
 ##
 ## Layout :
 ##                    [ MAIN ]
 ##      [POCHE G]   [3x3 stockage]   [POCHE D]
 ##                   [POCHE BAS]
 ##
-## Drag & drop natif Godot (_get_drag_data / _can_drop_data / _drop_data),
-## via une petite classe de slot interne.
-
-signal closed
+## L'ancrage monde, la fermeture et le cycle d'ouverture vivent dans
+## WorldAnchoredPanel ; l'affichage et le drag & drop dans ItemSlot. Ne
+## reste ici que ce qui est propre au sac : sa disposition et ses règles de
+## transfert.
 
 const STORAGE_SLOT_SIZE: float = 52.0
 const BIG_SLOT_SIZE: float = 68.0
 const GRID_GAP: float = 6.0
 const ZONE_GAP: float = 24.0
-## Distance au-delà de laquelle le sac se referme tout seul.
-@export var close_distance: float = 2.5
 
-## Identifiants de zone pour le drag & drop.
+## Identifiants de zone, portés par le payload des cases.
 enum Zone { STORAGE, POCKET, HAND }
 
 var _backpack_data: BackpackData
 var _equipment: EquipmentController
 var _carry: CarryController
-var _anchor_node: Node3D
-var _camera: Camera3D
 
-var _storage_slots: Array[BackpackSlot] = []
-var _pocket_slots: Array[BackpackSlot] = []
-var _hand_slot: BackpackSlot
+var _storage_slots: Array[ItemSlot] = []
+var _pocket_slots: Array[ItemSlot] = []
+var _hand_slot: ItemSlot
 
 
-func _ready() -> void:
-	set_process(false)
-	visible = false
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-
-## Ouvre l'UI ancrée sur le sac visé.
-func open(backpack: BackpackPickup, equipment: EquipmentController, carry: CarryController, camera: Camera3D) -> void:
+## Branche le panneau sur un sac et le joueur. Appelé avant l'ouverture, qui
+## passe elle par UIPanelController.
+func bind(backpack: BackpackPickup, equipment: EquipmentController, carry: CarryController) -> void:
 	_backpack_data = backpack.backpack_data
 	_equipment = equipment
 	_carry = carry
-	_anchor_node = backpack
-	_camera = camera
-
-	if _storage_slots.is_empty():
-		_build_slots()
-
-	refresh()
-	visible = true
-	set_process(true)
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
-func close() -> void:
-	visible = false
-	set_process(false)
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	closed.emit()
+## Le mesh du sac remonterait sur la poche basse : on décale vers le haut.
+func anchor_screen_offset() -> Vector2:
+	return Vector2(0.0, -20.0)
 
 
-func is_open() -> bool:
-	return visible
+## --- Construction des cases ----------------------------------------------
 
-
-func _process(_delta: float) -> void:
-	if _anchor_node == null or not is_instance_valid(_anchor_node) or _camera == null:
-		close()
-		return
-	# Referme si le joueur s'éloigne trop du sac.
-	if _camera.global_position.distance_to(_anchor_node.global_position) > close_distance:
-		close()
-		return
-	_update_anchor_position()
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if not visible:
-		return
-	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("interact"):
-		close()
-		get_viewport().set_input_as_handled()
-
-
-## --- Positionnement ancré sur le sac -------------------------------------
-
-func _update_anchor_position() -> void:
-	var world_pos := _anchor_node.global_position
-	# Le sac est passé derrière la caméra : on referme.
-	if _camera.is_position_behind(world_pos):
-		close()
-		return
-	var screen_pos := _camera.unproject_position(world_pos)
-	# Le panneau est centré sur le sac, légèrement remonté pour ne pas
-	# empiler la poche du bas sur le mesh.
-	position = screen_pos - size * 0.5 - Vector2(0.0, 20.0)
-
-
-## --- Construction des slots ----------------------------------------------
-
-func _build_slots() -> void:
+func _build_content() -> void:
 	var grid_width: float = 3.0 * STORAGE_SLOT_SIZE + 2.0 * GRID_GAP
 	var grid_height: float = grid_width
 	var total_width: float = grid_width + 2.0 * (BIG_SLOT_SIZE + ZONE_GAP)
@@ -160,14 +100,14 @@ func _build_slots() -> void:
 	)
 
 
-func _make_slot(zone: Zone, index: int, slot_size: float) -> BackpackSlot:
-	var slot := BackpackSlot.new()
-	slot.setup(zone, index, slot_size, self)
+func _make_slot(zone: Zone, index: int, slot_size: float) -> ItemSlot:
+	var slot := ItemSlot.new()
+	slot.setup({"zone": zone, "index": index}, slot_size, self)
 	add_child(slot)
 	return slot
 
 
-## --- Rafraîchissement ----------------------------------------------------
+## --- Rafraîchissement -----------------------------------------------------
 
 func refresh() -> void:
 	if _backpack_data == null:
@@ -190,11 +130,23 @@ func _get_hand_resource() -> ResourceDef:
 	return null
 
 
-## --- Transferts (appelés par les slots) ----------------------------------
+## --- Contrat ItemSlot -----------------------------------------------------
 
-## Lit le contenu d'un emplacement.
-func get_slot_content(zone: Zone, index: int) -> ResourceDef:
-	match zone:
+## Le sac n'accepte que ses propres cases : un drag venu d'un autre panneau
+## est refusé ici, c'est à ce panneau-là de définir ses règles.
+func slot_can_accept(_target: ItemSlot, source: ItemSlot) -> bool:
+	return source.slot_owner == self and source.content != null
+
+
+func slot_accept_drop(target: ItemSlot, source: ItemSlot) -> void:
+	move_item(source.payload, target.payload)
+
+
+## --- Transferts -----------------------------------------------------------
+
+func get_slot_content(slot_payload: Dictionary) -> ResourceDef:
+	var index: int = slot_payload["index"]
+	match slot_payload["zone"]:
 		Zone.STORAGE:
 			return _backpack_data.storage_slots[index]
 		Zone.POCKET:
@@ -204,26 +156,27 @@ func get_slot_content(zone: Zone, index: int) -> ResourceDef:
 	return null
 
 
-## Déplace le contenu d'un emplacement vers un autre. Échange si la cible
-## est occupée (comportement attendu d'un inventaire à slots).
-func move_item(from_zone: Zone, from_index: int, to_zone: Zone, to_index: int) -> void:
-	if from_zone == to_zone and from_index == to_index:
+## Déplace le contenu d'un emplacement vers un autre. Échange si la cible est
+## occupée (comportement attendu d'un inventaire à cases).
+func move_item(from_payload: Dictionary, to_payload: Dictionary) -> void:
+	if from_payload == to_payload:
 		return
-	var moving := get_slot_content(from_zone, from_index)
+	var moving := get_slot_content(from_payload)
 	if moving == null:
 		return
-	var displaced := get_slot_content(to_zone, to_index)
+	var displaced := get_slot_content(to_payload)
 
-	_set_slot_content(from_zone, from_index, displaced)
-	_set_slot_content(to_zone, to_index, moving)
+	_set_slot_content(from_payload, displaced)
+	_set_slot_content(to_payload, moving)
 	refresh()
 	# Le hotbar reflète les poches : le tenir à jour.
 	if _equipment:
 		_equipment.notify_backpack_changed()
 
 
-func _set_slot_content(zone: Zone, index: int, resource: ResourceDef) -> void:
-	match zone:
+func _set_slot_content(slot_payload: Dictionary, resource: ResourceDef) -> void:
+	var index: int = slot_payload["index"]
+	match slot_payload["zone"]:
 		Zone.STORAGE:
 			_backpack_data.storage_slots[index] = resource
 		Zone.POCKET:
@@ -248,111 +201,3 @@ func _set_hand_content(resource: ResourceDef) -> void:
 	get_tree().current_scene.add_child(pickup)
 	pickup.global_position = _camera.global_position
 	_carry.carry(pickup)
-
-
-## --- Slot interne --------------------------------------------------------
-
-class BackpackSlot extends Panel:
-	var zone: BackpackUI.Zone
-	var index: int
-	var content: ResourceDef
-
-	var _ui: BackpackUI
-	var _icon: TextureRect
-	var _label: Label
-
-	func setup(p_zone: BackpackUI.Zone, p_index: int, p_size: float, p_ui: BackpackUI) -> void:
-		zone = p_zone
-		index = p_index
-		_ui = p_ui
-		custom_minimum_size = Vector2(p_size, p_size)
-		size = Vector2(p_size, p_size)
-		mouse_filter = Control.MOUSE_FILTER_STOP
-
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(0.12, 0.12, 0.14, 0.85)
-		style.border_color = Color(0.6, 0.6, 0.65, 0.6)
-		style.set_border_width_all(2)
-		style.set_corner_radius_all(4)
-		add_theme_stylebox_override("panel", style)
-
-		_icon = TextureRect.new()
-		_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_icon.offset_left = 4.0
-		_icon.offset_top = 4.0
-		_icon.offset_right = -4.0
-		_icon.offset_bottom = -4.0
-		_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(_icon)
-
-		# Fallback texte tant que l'icône n'est pas générée.
-		_label = Label.new()
-		_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_label.add_theme_font_size_override("font_size", 11)
-		_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(_label)
-
-	func set_content(resource: ResourceDef) -> void:
-		content = resource
-		if resource == null:
-			_icon.texture = null
-			_label.text = ""
-			return
-		_label.text = resource.display_name
-		_load_icon(resource)
-
-	## Charge l'icône en asynchrone : le texte reste affiché en attendant,
-	## et disparaît dès que l'icône arrive.
-	func _load_icon(resource: ResourceDef) -> void:
-		var icon: Texture2D = await ResourceRegistry.get_icon(resource)
-		# La case a pu changer de contenu pendant la génération.
-		if content != resource:
-			return
-		if icon:
-			_icon.texture = icon
-			_label.text = ""
-
-	## --- Drag & drop natif Godot ---
-
-	func _get_drag_data(_at_position: Vector2) -> Variant:
-		if content == null:
-			return null
-		# Aperçu suivant le curseur.
-		var preview := Panel.new()
-		preview.custom_minimum_size = Vector2(size.x * 0.8, size.y * 0.8)
-		preview.size = preview.custom_minimum_size
-		var preview_style := StyleBoxFlat.new()
-		preview_style.bg_color = Color(0.2, 0.2, 0.24, 0.9)
-		preview_style.border_color = Color(1.0, 0.85, 0.2, 0.9)
-		preview_style.set_border_width_all(2)
-		preview_style.set_corner_radius_all(4)
-		preview.add_theme_stylebox_override("panel", preview_style)
-		if _icon.texture:
-			var preview_icon := TextureRect.new()
-			preview_icon.texture = _icon.texture
-			preview_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
-			preview_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			preview_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			preview.add_child(preview_icon)
-		else:
-			var preview_label := Label.new()
-			preview_label.text = tr(content.name_key)
-			preview_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-			preview_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			preview_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			preview_label.add_theme_font_size_override("font_size", 11)
-			preview.add_child(preview_label)
-		set_drag_preview(preview)
-
-		return {"zone": zone, "index": index}
-
-	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-		return data is Dictionary and data.has("zone") and data.has("index")
-
-	func _drop_data(_at_position: Vector2, data: Variant) -> void:
-		_ui.move_item(data["zone"], data["index"], zone, index)

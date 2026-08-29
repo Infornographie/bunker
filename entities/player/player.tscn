@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://csfobklnkvevo" path="res://entities/player/player_controller.gd" id="1_symyc"]
 [ext_resource type="Script" uid="uid://d4jgecxaici8v" path="res://entities/player/tools/tool_controller.gd" id="2_bls4j"]
+[ext_resource type="Script" uid="uid://dy1q0vki3400j" path="res://entities/player/ui_panel_controller.gd" id="2_gx6sm"]
 [ext_resource type="Script" uid="uid://b8rq8e1nju4eq" path="res://debug/debug_camera_switch.gd" id="2_sglur"]
 [ext_resource type="Script" uid="uid://d1euaa03t7lv1" path="res://debug/freecam_controller.gd" id="3_bls4j"]
 [ext_resource type="Resource" uid="uid://s8t1r53rbhcl" path="res://resources/tools/wooden_axe.tres" id="3_fkugw"]
@@ -31,6 +32,11 @@ shape = SubResource("CapsuleShape3D_abrql")
 [node name="Camera3D" type="Camera3D" parent="CharacterBody3D" unique_id=445877674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5366557, 0)
 
+[node name="UIPanelController" type="Node" parent="CharacterBody3D/Camera3D" unique_id=1775465887 node_paths=PackedStringArray("exclusive_modes", "action_state_machine")]
+script = ExtResource("2_gx6sm")
+exclusive_modes = [NodePath("../BuildModeController")]
+action_state_machine = NodePath("../ActionStateMachine")
+
 [node name="ActionStateMachine" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=1070756714 node_paths=PackedStringArray("tool_controller")]
 script = ExtResource("5_qiwj3")
 tool_controller = NodePath("../ToolController")
@@ -39,16 +45,15 @@ tool_controller = NodePath("../ToolController")
 script = ExtResource("2_bls4j")
 max_reach = 1.0
 
-[node name="InteractionController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=718804829 node_paths=PackedStringArray("tool_controller", "action_state_machine", "hud", "carry_controller", "build_mode_controller", "equipment_controller")]
+[node name="InteractionController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=718804829 node_paths=PackedStringArray("tool_controller", "action_state_machine", "hud", "carry_controller", "build_mode_controller", "equipment_controller", "ui_panel_controller")]
 script = ExtResource("4_8fjmc")
-interaction_range = null
 tool_controller = NodePath("../ToolController")
 action_state_machine = NodePath("../ActionStateMachine")
 hud = NodePath("../../../PlayerHud")
 carry_controller = NodePath("../CarryController")
-drop_distance = null
 build_mode_controller = NodePath("../BuildModeController")
 equipment_controller = NodePath("../EquipmentController")
+ui_panel_controller = NodePath("../UIPanelController")
 
 [node name="BuildModeController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=2112869161 node_paths=PackedStringArray("carry_controller", "action_state_machine")]
 script = ExtResource("6_7thud")

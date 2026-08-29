@@ -24,6 +24,7 @@ const MAX_PLACEMENT_DISTANCE: float = 5.0
 @export var carry_controller: CarryController
 @export var action_state_machine: ActionStateMachine
 @export var world_parent: Node3D
+@export var ui_panel_controller: UIPanelController
 ## Layer(s) du sol/terrain uniquement — sert à trouver où poser le fantôme.
 ## Ne doit PAS inclure arbres/murs/bâtiments, sinon le fantôme peut se caler
 ## sur n'importe quelle surface visée (bug observé : pose sur troncs/murs).
@@ -73,6 +74,8 @@ func _enter_build_mode() -> void:
 	if building_def == null or building_def.ghost_scene == null:
 		return
 	if carry_controller and carry_controller.is_carrying():
+		return
+	if ui_panel_controller and not ui_panel_controller.can_enter_build_mode():
 		return
 	if action_state_machine and action_state_machine.get_state() != ActionStateMachine.State.IDLE:
 		return
