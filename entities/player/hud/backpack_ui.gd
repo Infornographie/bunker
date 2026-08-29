@@ -142,6 +142,16 @@ func slot_accept_drop(target: ItemSlot, source: ItemSlot) -> void:
 	move_item(source.payload, target.payload)
 
 
+## Vide une de ses cases, appelé par le panneau *cible* après un transfert
+## réussi vers lui (contrat ItemSlot). C'est ce qui permet de glisser un
+## ingrédient du sac posé vers le feu d'à côté.
+func slot_release(source: ItemSlot) -> void:
+	_set_slot_content(source.payload, null)
+	refresh()
+	if _equipment:
+		_equipment.notify_backpack_changed()
+
+
 ## --- Transferts -----------------------------------------------------------
 
 func get_slot_content(slot_payload: Dictionary) -> ResourceDef:

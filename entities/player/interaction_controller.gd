@@ -61,7 +61,7 @@ func _refresh_prompt() -> void:
 		hud.show_prompt("interact.prompt.drop")
 		hud.set_targeting(true)
 	elif _current_target and _current_target.can_interact(self):
-		hud.show_prompt(_current_target.prompt_key)
+		hud.show_prompt(_current_target.get_prompt_key(self))
 		hud.set_targeting(true)
 	else:
 		hud.hide_prompt()
@@ -229,6 +229,18 @@ func open_backpack_ui(backpack: BackpackPickup) -> void:
 		return
 	ui.bind(backpack, equipment_controller, carry_controller)
 	ui_panel_controller.open_panel(ui, backpack)
+
+
+## Ouvre le panneau de cuisson du site visé. Gel et souris sont gérés par
+## UIPanelController.
+func open_cooking_panel(campfire: Campfire) -> void:
+	if hud == null or ui_panel_controller == null:
+		return
+	var ui := hud.get_cooking_panel()
+	if ui == null:
+		return
+	ui.bind(campfire)
+	ui_panel_controller.open_panel(ui, campfire)
 
 
 ## Ressource que le joueur propose à la cible visée : la main d'abord (objet

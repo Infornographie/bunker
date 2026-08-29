@@ -12,6 +12,12 @@ func can_interact(_interactor: Node) -> bool:
 func interact(_interactor: Node) -> void:
 	pass
 
+## Clé de prompt à afficher pour cet interactor. Par défaut le prompt_key
+## fixe ; les cibles dont l'action dépend de ce que le joueur propose la
+## surchargent (voir Campfire).
+func get_prompt_key(_interactor: Node) -> String:
+	return prompt_key
+
 ## Indique si cette interaction se déclenche via l'outil en main (clic gauche,
 ## action "use_tool") ou via la touche d'interaction générique (E, "interact").
 ## Par défaut : générique. Choppable la surcharge (voir choppable.gd).

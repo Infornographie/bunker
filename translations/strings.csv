@@ -1,9 +1,11 @@
 keys,en,fr
 ,=== INTERACTION PROMPTS ===,
 interact.prompt.chop,Chop,Couper
+interact.prompt.cook,Cook,Cuire
 interact.prompt.deliver,Deliver,Livrer
 interact.prompt.drop,Drop,Déposer
 interact.prompt.feed_fire,Feed,Alimenter
+interact.prompt.inspect_fire,Examine fire,Examiner le feu
 interact.prompt.interact,Interact,Interagir
 interact.prompt.light_fire,Light,Allumer
 interact.prompt.open_backpack,Open backpack,Ouvrir le sac

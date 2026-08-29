@@ -9,6 +9,10 @@ class_name Campfire
 ## enfant "bonfire_fire" (flamme) assigné à flame_visual, togglé selon
 ## l'état + un enfant TransformationSite portant les recettes de cuisson.
 ##
+## E est contextuel : il livre ce que le joueur propose si le feu l'accepte
+## (combustible ou ingrédient), et ouvre le panneau de cuisson quand les
+## mains et la poche active sont vides.
+##
 ## Dette : burn_duration arbitraire, à ajuster au feeling en jeu une fois
 ## testé — voir ROADMAP.md.
 
@@ -36,22 +40,41 @@ func is_active() -> bool:
 	return _lit
 
 
-## Combustible restant, 0.0 → 1.0. Pour la jauge de l'UI (Passe B).
+## Combustible restant, 0.0 → 1.0. Lu par la jauge du panneau de cuisson.
 func get_fuel_ratio() -> float:
 	return _burn_timer.time_left / burn_duration
 
 
 func can_interact(interactor: Node) -> bool:
 	var resource := _get_offered_resource(interactor)
+	# Mains et poche vides : E ouvre le panneau, il y a donc toujours
+	# quelque chose à faire devant un feu.
 	if resource == null:
-		return false
+		return true
 	if resource == refuel_resource:
 		return true
 	return transformation != null and transformation.accepts(resource)
 
 
+## Le prompt dépend de ce que le joueur propose, pas seulement de l'état du
+## feu — c'est ce qui évitait de lire "Alimenter" avec un champi en poche.
+func get_prompt_key(interactor: Node) -> String:
+	var resource := _get_offered_resource(interactor)
+	if resource == refuel_resource:
+		return "interact.prompt.feed_fire" if _lit else "interact.prompt.light_fire"
+	if resource != null and transformation != null and transformation.accepts(resource):
+		return "interact.prompt.cook"
+	return "interact.prompt.inspect_fire"
+
+
+## Atteint uniquement quand rien n'est proposé : les livraisons passent par
+## receive_resource(), appelé en amont par InteractionController.
+func interact(interactor: Node) -> void:
+	if interactor.has_method("open_cooking_panel"):
+		interactor.call("open_cooking_panel", self)
+
+
 func receive_resource(resource: ResourceDef, amount: int) -> bool:
-	print("recv ", resource.id, " | transfo=", transformation, " | accepts=", transformation.accepts(resource) if transformation else "n/a")
 	# Le combustible prime : un même objet ne peut pas être à la fois bûche
 	# et ingrédient sans qu'on ait à trancher ici.
 	if resource == refuel_resource:
@@ -77,7 +100,6 @@ func _extinguish() -> void:
 
 func _set_lit(value: bool) -> void:
 	_lit = value
-	prompt_key = "interact.prompt.feed_fire" if value else "interact.prompt.light_fire"
 	if flame_visual:
 		flame_visual.visible = value
 		# Coupe aussi l'émission (pas juste le rendu) si c'est un système de

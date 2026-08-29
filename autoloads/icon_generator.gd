@@ -7,6 +7,15 @@ class_name IconGenerator
 ## éclairage neutre. On y instancie le mesh, on cadre automatiquement sur
 ## sa bounding box, on capture une frame, on garde la texture.
 ##
+## Le viewport est **jetable** : un par icône, détruit juste après la
+## capture. Un viewport partagé et réveillé ponctuellement en UPDATE_ONCE
+## garde les pixels de son rendu précédent (le nettoyage ne passe pas sur
+## une cible endormie), et les modèles s'empilent d'une icône à l'autre —
+## symptôme vécu : hache et champignon dans la même case, à 328 frames
+## d'écart. Une cible neuve est vide par construction. Corollaire agréable :
+## deux générations simultanées ne se marchent plus dessus, il n'y a plus
+## rien à sérialiser.
+##
 ## Utilisé par ResourceRegistry — pas appelé directement.
 
 const ICON_SIZE: int = 128
@@ -16,9 +25,6 @@ const CAMERA_PITCH: float = -25.0
 ## Marge autour de l'objet dans le cadre (1.0 = objet pile dans le cadre).
 const FRAMING_MARGIN: float = 1.25
 
-var _viewport: SubViewport
-var _camera: Camera3D
-var _model_root: Node3D
 var _cache: Dictionary = {}
 
 
@@ -29,8 +35,6 @@ func get_icon(cache_key: String, scene: PackedScene) -> Texture2D:
 		return null
 	if _cache.has(cache_key):
 		return _cache[cache_key]
-	if _viewport == null:
-		_build_viewport()
 	var icon := await _render(scene)
 	if icon:
 		_cache[cache_key] = icon
@@ -44,76 +48,79 @@ func clear_cache() -> void:
 
 ## --- Rendu ---------------------------------------------------------------
 
-func _build_viewport() -> void:
-	_viewport = SubViewport.new()
-	_viewport.size = Vector2i(ICON_SIZE, ICON_SIZE)
-	_viewport.transparent_bg = true
-	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
-	_viewport.own_world_3d = true
-	add_child(_viewport)
-
-	_camera = Camera3D.new()
-	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	_viewport.add_child(_camera)
-
-	# Éclairage neutre : une clé en 3/4, un fill doux à l'opposé pour que
-	# les faces sombres ne soient pas noires.
-	var key := DirectionalLight3D.new()
-	key.rotation_degrees = Vector3(-40.0, -40.0, 0.0)
-	key.light_energy = 1.2
-	_viewport.add_child(key)
-
-	var fill := DirectionalLight3D.new()
-	fill.rotation_degrees = Vector3(-10.0, 140.0, 0.0)
-	fill.light_energy = 0.4
-	_viewport.add_child(fill)
-
-	var env := Environment.new()
-	env.background_mode = Environment.BG_CANVAS
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.6, 0.62, 0.68)
-	env.ambient_light_energy = 0.5
-	var cam_attributes := CameraAttributesPractical.new()
-	_camera.environment = env
-	_camera.attributes = cam_attributes
-
-	_model_root = Node3D.new()
-	_viewport.add_child(_model_root)
-
-
 func _render(scene: PackedScene) -> Texture2D:
-	# Nettoyer le modèle précédent.
-	for child in _model_root.get_children():
-		child.free()
+	var viewport := _make_viewport()
+	var camera: Camera3D = viewport.get_node("Camera")
+	var model_root: Node3D = viewport.get_node("ModelRoot")
 
 	var instance := scene.instantiate()
-	_model_root.add_child(instance)
+	model_root.add_child(instance)
 	_strip_non_visual(instance)
 
-	var bounds := _compute_visual_bounds(instance)
+	var bounds := _compute_visual_bounds(model_root, instance)
 	if bounds.size == Vector3.ZERO:
-		instance.free()
+		viewport.queue_free()
 		return null
 
-	_frame_camera(bounds)
+	_frame_camera(camera, bounds)
 
 	# Une seule frame suffit : on force le rendu puis on lit la texture.
-	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	await RenderingServer.frame_post_draw
 
-	var image := _viewport.get_texture().get_image()
-	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
-
-	for child in _model_root.get_children():
-		child.free()
+	var image := viewport.get_texture().get_image()
+	viewport.queue_free()
 
 	if image == null:
 		return null
 	return ImageTexture.create_from_image(image)
 
 
+## Viewport complet et autonome : caméra, éclairage, porte-modèle. Nommés,
+## parce que _render() les récupère par leur nom plutôt que de trimballer
+## trois variables.
+func _make_viewport() -> SubViewport:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(ICON_SIZE, ICON_SIZE)
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	viewport.own_world_3d = true
+	add_child(viewport)
+
+	var camera := Camera3D.new()
+	camera.name = "Camera"
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	viewport.add_child(camera)
+
+	# Éclairage neutre : une clé en 3/4, un fill doux à l'opposé pour que
+	# les faces sombres ne soient pas noires.
+	var key := DirectionalLight3D.new()
+	key.rotation_degrees = Vector3(-40.0, -40.0, 0.0)
+	key.light_energy = 1.2
+	viewport.add_child(key)
+
+	var fill := DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(-10.0, 140.0, 0.0)
+	fill.light_energy = 0.4
+	viewport.add_child(fill)
+
+	var env := Environment.new()
+	env.background_mode = Environment.BG_CANVAS
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.6, 0.62, 0.68)
+	env.ambient_light_energy = 0.5
+	camera.environment = env
+	camera.attributes = CameraAttributesPractical.new()
+
+	var model_root := Node3D.new()
+	model_root.name = "ModelRoot"
+	viewport.add_child(model_root)
+
+	return viewport
+
+
 ## Place la caméra en 3/4 et cadre sur la bounding box du modèle.
-func _frame_camera(bounds: AABB) -> void:
+func _frame_camera(camera: Camera3D, bounds: AABB) -> void:
 	var center := bounds.get_center()
 	var radius := bounds.size.length() * 0.5
 
@@ -123,21 +130,21 @@ func _frame_camera(bounds: AABB) -> void:
 		0.0
 	))
 	var direction := basis * Vector3.BACK
-	_camera.global_position = center + direction * (radius * 4.0 + 1.0)
-	_camera.look_at(center, Vector3.UP)
-	_camera.size = radius * 2.0 * FRAMING_MARGIN
-	_camera.near = 0.01
-	_camera.far = radius * 10.0 + 10.0
+	camera.global_position = center + direction * (radius * 4.0 + 1.0)
+	camera.look_at(center, Vector3.UP)
+	camera.size = radius * 2.0 * FRAMING_MARGIN
+	camera.near = 0.01
+	camera.far = radius * 10.0 + 10.0
 
 
 ## Union des AABB de tous les MeshInstance3D, en espace local du modèle.
-func _compute_visual_bounds(node: Node) -> AABB:
+func _compute_visual_bounds(model_root: Node3D, node: Node) -> AABB:
 	var result := AABB()
 	var found := false
 	for mesh_node in _collect_meshes(node):
 		var mesh_aabb: AABB = mesh_node.get_aabb()
 		# Repasser en espace du model_root.
-		var xform: Transform3D = _model_root.global_transform.affine_inverse() * mesh_node.global_transform
+		var xform: Transform3D = model_root.global_transform.affine_inverse() * mesh_node.global_transform
 		mesh_aabb = xform * mesh_aabb
 		if not found:
 			result = mesh_aabb

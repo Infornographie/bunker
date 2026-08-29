@@ -5,11 +5,13 @@ class_name PlayerHud
 @onready var _prompt_label: Label = $PromptLabel
 @onready var _hotbar: Hotbar = $Hotbar
 @onready var _backpack_ui: BackpackUI = $BackpackUI
-
+@onready var _cooking_panel: CookingPanel = $CookingPanel
 
 func get_backpack_ui() -> BackpackUI:
 	return _backpack_ui
 
+func get_cooking_panel() -> CookingPanel:
+	return _cooking_panel
 
 func set_targeting(active: bool) -> void:
 	_crosshair.set_active(active)

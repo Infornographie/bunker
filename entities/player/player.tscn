@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://bwdnti672a2j7" path="res://entities/player/hud/player_hud.tscn" id="7_qiwj3"]
 [ext_resource type="Script" uid="uid://ch5bhk78mm7sm" path="res://resources/tool_def.gd" id="8_j3ovn"]
 [ext_resource type="PackedScene" uid="uid://ddwvl4p2drvne" path="res://entities/interactable/backpack_pickup.tscn" id="10_afbqv"]
+[ext_resource type="Script" uid="uid://ben18pb3qln2o" path="res://entities/player/hud/cooking_panel.gd" id="15_yqrof"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_abrql"]
 radius = 0.4
@@ -85,6 +86,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6640453, -0.35318947)
 script = ExtResource("3_bls4j")
 
 [node name="PlayerHud" parent="." unique_id=1238662632 instance=ExtResource("7_qiwj3")]
+
+[node name="CookingPanel" type="Control" parent="PlayerHud" unique_id=1157462309]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("15_yqrof")
 
 [node name="DebugCameraSwitch" type="Node3D" parent="." unique_id=1778962938]
 script = ExtResource("2_sglur")
