@@ -1,11 +1,16 @@
 extends Interactable
 class_name Choppable
 
+## Destination : entities/interactable/choppable.gd
+
 signal depleted
 
 @export var max_health: int = 3
 @export var chop_sound: AudioStream
-@export var pickup_scene: PackedScene
+## Ressource lâchée à la destruction. La scène de pickup correspondante est
+## résolue par ResourceRegistry : c'est la seule façon d'obtenir un pickup
+## dans le projet, ici comme ailleurs.
+@export var drop_resource: ResourceDef
 @export var pickup_count: int = 3
 @export var spawn_height_offset: float = 0.3
 @export var pickup_stack_spacing: float = 1.3
@@ -46,7 +51,7 @@ func receive_tool_hit(tool: ToolDef, hit_origin: Vector3 = Vector3.ZERO) -> void
 		queue_free()
 
 func _spawn_pickup(hit_origin: Vector3, spawn_position: Vector3) -> void:
-	if pickup_scene == null:
+	if drop_resource == null:
 		return
 	var fall_direction := Vector3.ZERO
 	if hit_origin != Vector3.ZERO:
@@ -55,7 +60,9 @@ func _spawn_pickup(hit_origin: Vector3, spawn_position: Vector3) -> void:
 		fall_direction = fall_direction.normalized()
 	var parent := get_parent()
 	for i in pickup_count:
-		var pickup := pickup_scene.instantiate()
+		var pickup: Node3D = ResourceRegistry.spawn_pickup(drop_resource)
+		if pickup == null:
+			return
 		var world_position := spawn_position + Vector3(0.0, spawn_height_offset + i * pickup_stack_spacing, 0.0)
 		pickup.position = parent.global_transform.affine_inverse() * world_position
 		pickup.rotation_degrees = pickup_spawn_rotation_degrees

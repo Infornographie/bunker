@@ -15,6 +15,8 @@ var backpack_data: BackpackData
 ## Décalage vertical appliqué après le snap au sol. À régler si l'origine
 ## du .tscn n'est pas à la base du mesh (sinon le sac s'enfonce).
 @export var ground_offset: float = 0.0
+## Panneau ouvert quand on interagit avec le sac posé.
+@export var panel_scene: PackedScene
 
 var _snap_requested: bool = false
 
@@ -36,7 +38,7 @@ func can_interact(_interactor: Node) -> bool:
 
 func interact(interactor: Node) -> void:
 	if interactor is InteractionController:
-		interactor.open_backpack_ui(self)
+		interactor.open_object_panel(self, panel_scene)
 
 
 ## --- Snap au sol --------------------------------------------------------

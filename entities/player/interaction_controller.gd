@@ -57,11 +57,13 @@ func _refresh_prompt() -> void:
 		hud.hide_prompt()
 		hud.set_targeting(false)
 		return
-	if carry_controller and carry_controller.is_carrying():
-		hud.show_prompt("interact.prompt.drop")
-		hud.set_targeting(true)
-	elif _current_target and _current_target.can_interact(self):
+	# Une cible qui accepte ce qu'on tient a priorité sur le simple dépôt au
+	# sol : c'est elle qui dicte le verbe affiché.
+	if _current_target and _current_target.can_interact(self):
 		hud.show_prompt(_current_target.get_prompt_key(self))
+		hud.set_targeting(true)
+	elif carry_controller and carry_controller.is_carrying():
+		hud.show_prompt("interact.prompt.drop")
 		hud.set_targeting(true)
 	else:
 		hud.hide_prompt()
@@ -73,10 +75,10 @@ func get_current_target_distance() -> float:
 	return _current_target_distance
 
 func _unhandled_input(event: InputEvent) -> void:
-	if ui_panel_controller and ui_panel_controller.is_any_panel_open():
-		return
 	# Mode construction actif = mode à part entière, mains libres : les
 	# actions habituelles (outil, ramassage) se taisent le temps du placement.
+	# Les panneaux ouverts, eux, ne bloquent plus rien : leurs cases SONT des
+	# cibles d'interaction, elles passent par les mêmes branches ci-dessous.
 	if build_mode_controller and build_mode_controller.is_active():
 		return
 	if event.is_action_pressed("use_tool"):
@@ -93,10 +95,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				tool_controller.set_tool_visible(false)
 	if event.is_action_pressed("backpack_toggle"):
 		_handle_backpack_toggle()
-		
+
 ## Livre l'objet porté à la cible visée si elle l'accepte (chantier,
-## structure rechargeable...). Retourne true si la livraison a eu lieu —
-## l'appelant ne droppe alors pas l'objet au sol.
+## structure rechargeable, case de panneau...). Retourne true si la
+## livraison a eu lieu — l'appelant ne droppe alors pas l'objet au sol.
 func _try_deliver_carried_item() -> bool:
 	if _current_target == null or carry_controller == null:
 		return false
@@ -141,12 +143,12 @@ func _drop_carried_item() -> void:
 	var camera := get_parent() as Camera3D
 	if camera == null:
 		return
-	var item := carry_controller.get_carried_item()  # ← AJOUTER (sauver avant drop)
+	var item := carry_controller.get_carried_item()
 	var drop_position := camera.global_position + camera.global_basis.z * -drop_distance
 	carry_controller.drop(drop_position, get_tree().current_scene)
 	# Snap au sol pour les objets non-RigidBody (sac à dos).
-	if item is BackpackPickup:                        # ← AJOUTER
-		item.request_ground_snap()                    # ← AJOUTER
+	if item is BackpackPickup:
+		item.request_ground_snap()
 	if tool_controller:
 		tool_controller.set_tool_visible(true)
 
@@ -203,11 +205,16 @@ func _try_use_pocket_item() -> bool:
 	if resource == null:
 		return false
 
-	# Tentative de livraison (chantier, feu de camp...).
+	# Tentative de livraison (chantier, feu de camp, case de panneau...).
 	if _current_target and _current_target.can_interact(self):
 		if _current_target.receive_resource(resource, 1):
 			equipment_controller.take_active_pocket_item()
 			return true
+		# La cible est interactive mais ne veut pas de cet objet : on lui
+		# rend la main plutôt que de lâcher l'objet par terre. Sans ça, viser
+		# une case de recette avec un champi en poche le jetait au sol au
+		# lieu de choisir la recette.
+		return false
 
 	# Sinon dépose au sol.
 	var pickup: Node3D = ResourceRegistry.spawn_pickup(resource)
@@ -220,28 +227,45 @@ func _try_use_pocket_item() -> bool:
 	pickup.global_position = drop_position
 	return true
 
-## Ouvre l'UI du sac visé. Gel et souris sont gérés par UIPanelController.
-func open_backpack_ui(backpack: BackpackPickup) -> void:
-	if hud == null or ui_panel_controller == null:
-		return
-	var ui := hud.get_backpack_ui()
-	if ui == null:
-		return
-	ui.bind(backpack, equipment_controller, carry_controller)
-	ui_panel_controller.open_panel(ui, backpack)
+## Ouvre — ou referme — le panneau que l'objet visé porte lui-même. Point
+## d'entrée unique : c'est l'objet qui sait de quelle UI il dispose, pas une
+## liste centrale. Le panneau est branché avant l'ouverture, puis confié à
+## l'arbitre.
+##
+## E bascule : le verbe qui a ouvert le panneau est celui qui le ferme, sans
+## avoir à inventer un bouton ni une touche de plus.
+func open_object_panel(source: Node3D, panel_scene: PackedScene) -> bool:
+	if panel_scene == null or ui_panel_controller == null:
+		return false
+	if ui_panel_controller.has_panel_for(source):
+		ui_panel_controller.close_panel_for(source)
+		return true
+	var panel := panel_scene.instantiate() as WorldPanel
+	if panel.has_method("bind"):
+		panel.call("bind", source)
+	if not ui_panel_controller.open_panel(panel, source):
+		panel.free()
+		return false
+	return true
 
-
-## Ouvre le panneau de cuisson du site visé. Gel et souris sont gérés par
-## UIPanelController.
-func open_cooking_panel(campfire: Campfire) -> void:
-	if hud == null or ui_panel_controller == null:
-		return
-	var ui := hud.get_cooking_panel()
-	if ui == null:
-		return
-	ui.bind(campfire)
-	ui_panel_controller.open_panel(ui, campfire)
-
+## Fait apparaître un exemplaire de cette ressource directement en main.
+## Utilisé par les cases de panneau : prendre dans une case, c'est prendre
+## en main pour de vrai, pas entrer dans un état de transfert.
+func take_into_hand(resource: ResourceDef) -> bool:
+	if carry_controller == null or not carry_controller.can_carry():
+		return false
+	var camera := get_parent() as Camera3D
+	if camera == null:
+		return false
+	var pickup: Node3D = ResourceRegistry.spawn_pickup(resource)
+	if pickup == null:
+		return false
+	get_tree().current_scene.add_child(pickup)
+	pickup.global_position = camera.global_position
+	carry_controller.carry(pickup)
+	if tool_controller:
+		tool_controller.set_tool_visible(false)
+	return true
 
 ## Ressource que le joueur propose à la cible visée : la main d'abord (objet
 ## lourd porté), sinon le petit objet sélectionné en poche. Point unique de

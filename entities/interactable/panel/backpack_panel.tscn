@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://k1aqd6h47ovl"]
+
+[ext_resource type="Script" uid="uid://g3gqmsb152o8" path="res://entities/interactable/panel/backpack_panel.gd" id="1"]
+
+[node name="BackpackPanel" type="Node3D" unique_id=322781152]
+script = ExtResource("1")

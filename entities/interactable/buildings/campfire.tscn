@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c7eaxg36bn7se" path="res://entities/interactable/buildings/campfire.gd" id="1_vaoel"]
 [ext_resource type="Resource" uid="uid://cc1jos21u05lp" path="res://resources/resources/wood.tres" id="2_rmn12"]
+[ext_resource type="PackedScene" path="res://entities/interactable/panel/cooking_panel.tscn" id="3_2bfcr"]
 [ext_resource type="PackedScene" uid="uid://clm14aspqqe5t" path="res://assets/survival/Bonfire.fbx" id="3_14ded"]
 [ext_resource type="Script" uid="uid://dv83qgt2uh0v0" path="res://entities/interactable/buildings/flame_light_flicker.gd" id="4_vaoel"]
 [ext_resource type="Script" uid="uid://edxftjk7b4gj" path="res://entities/interactable/buildings/transformation_site.gd" id="5_rmn12"]
@@ -66,6 +67,7 @@ script = ExtResource("1_vaoel")
 refuel_resource = ExtResource("2_rmn12")
 flame_visual = NodePath("Flame")
 transformation = NodePath("TransformationSite")
+panel_scene = ExtResource("3_2bfcr")
 
 [node name="Bonfire" parent="." unique_id=1314483954 instance=ExtResource("3_14ded")]
 

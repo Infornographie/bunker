@@ -21,6 +21,9 @@ Déclarés dans `project.godot` § `[autoload]` — cette liste doit correspondr
 - `ResourceRegistry` → `autoloads/resource_registry.gd` — table `ResourceDef` → `PackedScene`, scan auto au boot, sert aussi les icônes.
 - `Locale` → `autoloads/locale.gd` — wrapper `TranslationServer` : `get_locale()`, `set_locale()`, signal `locale_changed`, fallback `en`. Porte aussi sa bascule debug (F10).
 `autoloads/icon_generator.gd` vit dans le même dossier mais **n'est pas** un autoload : il est instancié par `ResourceRegistry`.
+## Couches de collision
+ 
+- **Couche 5 — « UI 3D »** : cases des panneaux du monde (`PanelSlot`). Vue par le raycast d'interaction (qui n'a pas de masque), et retirée de trois masques : le `collision_mask` du `CharacterBody3D` joueur, `ground_mask` et `overlap_mask` de `BuildModeController`. Sans ça on se cogne dans ses propres cases et on pose des bâtiments dessus.
 ## Arborescence
  
 ```
@@ -32,7 +35,7 @@ res://
 │   ├── sound_manager.gd                — pool d'AudioStreamPlayer3D, SFX positionnés
 │   ├── resource_registry.gd            — (autoload) table ResourceDef → PackedScene, scan auto de entities/interactable/ au boot, sert aussi les icônes
 │   ├── locale.gd                       — (autoload) wrapper TranslationServer, bascule debug EN ↔ FR (F10)
-│   └── icon_generator.gd               — rendu SubViewport ortho 3/4 d'un modèle 3D → Texture2D, cache par clé, instancié par ResourceRegistry (pas un autoload)
+│   └── icon_generator.gd               — rendu d'un modèle 3D → Texture2D, un SubViewport jetable par icône, cache par clé, instancié par ResourceRegistry (pas un autoload)
 ├── translations/
 │   └── strings.csv                     — source unique des textes affichés (colonnes `keys`, `en`, `fr`) ; Godot compile en .translation à l'import
 ├── debug/
@@ -40,16 +43,25 @@ res://
 │   └── freecam_controller.gd           — caméra libre noclip
 ├── entities/
 │   ├── interactable/
-│   │   ├── interactable.gd             — base PhysicsBody3D, receive_tool_hit(), prompt_key
+│   │   ├── interactable.gd             — base PhysicsBody3D : can_interact(), interact(), get_prompt_key(), receive_resource(), receive_tool_hit()
 │   │   ├── choppable.gd                — hérite Interactable : HP, type d'outil, depleted → 3× pickup
 │   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D) : objet ramassable, lit ResourceDef
 │   │   ├── construction_site.gd        — hérite Interactable : blueprint posé, réceptionne les livraisons
 │   │   ├── construction_site.tscn
 │   │   ├── tool_pickup.gd              — outil posé au sol (Interactable, créé dynamiquement par EquipmentController)
-│   │   ├── backpack_pickup.gd          — sac à dos dans le monde, porte le BackpackData, snap au sol au drop
+│   │   ├── backpack_pickup.gd          — sac à dos dans le monde, porte le BackpackData et sa panel_scene, snap au sol au drop
 │   │   ├── backpack_pickup.tscn
+│   │   ├── panel/                      — panneaux posés dans le monde (voir § Flux des panneaux)
+│   │   │   ├── world_panel.gd          — base : suivi de l'ancre, billboard axe Y, ouverture/fermeture, contrat de case
+│   │   │   ├── panel_slot.gd           — case, hérite Interactable : icône Sprite3D, nom traduit en repli, prendre/poser/activer
+│   │   │   ├── panel_slot.tscn         — StaticBody3D + CollisionShape3D + Background + Icon + Label (tout dimensionné au code)
+│   │   │   ├── panel_gauge.gd          — barre de remplissage, deux quads non éclairés, construite au code
+│   │   │   ├── backpack_panel.gd       — panneau du sac posé : 3x3 stockage + 3 poches
+│   │   │   ├── backpack_panel.tscn
+│   │   │   ├── cooking_panel.gd        — panneau d'un site de transformation : recettes, ingrédients, combustible, jauges
+│   │   │   └── cooking_panel.tscn      — porte ses réglages (anchor_offset 1.6m, slot_size 0.26, close_distance 4m)
 │   │   ├── buildings/
-│   │   │   ├── campfire.gd             — bâtiment fini, allumage/entretien, combustion Timer
+│   │   │   ├── campfire.gd             — bâtiment fini, allumage/entretien, combustion Timer, E contextuel
 │   │   │   ├── campfire.tscn
 │   │   │   ├── transformation_site.gd
 │   │   │   └── flame_light_flicker.gd  — script d'ambiance sur le Light3D de la flamme
@@ -63,21 +75,18 @@ res://
 │       ├── player.tscn                 — scène joueur assemblée
 │       ├── player_controller.gd        — CharacterBody3D, locomotion, marches auto (step_height 0.35m), sprint (Shift) + saut (Espace) avec coyote time et kick de FOV
 │       ├── action_state_machine.gd     — IDLE / USING_TOOL, découple timing swing/dégâts
-│       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, E → interact/carry
+│       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, E → interact/carry, ouverture des panneaux, take_into_hand()
 │       ├── carry_controller.gd         — point unique "en main", reparent → HandAnchor, désactive collision + freeze
 │       ├── build_mode_controller.gd    — mode construction (B), blueprint, molette (rotation), Shift (free placing), spawn ConstructionSite
 │       ├── equipment_controller.gd     — ceinture (2 outils) + sac à dos (BackpackData), hotbar actif, routage ramassage, drop (G → ToolPickup dynamique)
-│       ├── ui_panel_controller.gd      — arbitre des panneaux ancrés : registre des panneaux ouverts, mouse mode, gel du joueur, touche de fermeture, exclusivité avec les autres modes joueur
+│       ├── ui_panel_controller.gd      — arbitre des panneaux : registre des ouverts, touche de fermeture, exclusivité avec les autres modes joueur
 │       ├── hud/
 │       │   ├── player_hud.tscn         — CanvasLayer HUD
-│       │   ├── player_hud.gd           — crosshair + prompt + hotbar
+│       │   ├── player_hud.gd           — réticule + prompt + hotbar, rien de manipulable
 │       │   ├── crosshair.gd            — crosshair dessiné en code
-│       │   ├── hotbar.gd               — hotbar dessiné en code (2 belt + 3 poches si sac équipé), dimming quand mains occupées
-│       │   ├── world_anchored_panel.gd — base des panneaux ancrés sur un objet du monde : projection écran, fermeture distance / cible détruite / derrière-caméra, _build_content() et refresh() surchargeables
-│       │   ├── item_slot.gd            — case d'inventaire générique : icône générée + nom traduit en repli, drag & drop natif, payload opaque posé par le panneau propriétaire
-│       │   └── backpack_ui.gd          — UI du sac ouvert (hérite WorldAnchoredPanel) : disposition 3x3 + 3 poches + main, règles de transfert
+│       │   └── hotbar.gd               — hotbar dessiné en code (2 belt + 3 poches si sac équipé), dimming quand mains occupées
 │       └── tools/
-│           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, piloté par EquipmentController (plus de default_tool)
+│           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, piloté par EquipmentController
 ├── resources/
 │   ├── resource_def.gd                 — Resource : définition d'item (CarryType: HAND/SMALL/TOOL), name_key
 │   ├── tool_def.gd                     — Resource : définition data-driven d'un outil, name_key
@@ -114,37 +123,37 @@ Hors `res://` scripts, à noter :
 - Au `swing_impact`, la SM exécute le `Callable` fourni par l'appelant — typiquement `receive_tool_hit()` sur la cible verrouillée par l'`InteractionController` — uniquement si la cible est encore valide.
 - `Choppable.receive_tool_hit()` : vérifie le type d'outil via `ToolDef`, décrémente HP, émet `depleted` → spawn 3 `ResourcePickup` physiques, hook `chop_sound` → `SoundManager` (asset non branché).
 ### Flux d'interaction / portage
-- `InteractionController` : raycast vers un `Interactable`, gère le prompt (fix `tree_exiting` sur la cible, pas `is_instance_valid()` seul).
-- Sur E : soit `Interactable.interact()`, soit délégation à `CarryController` (mains libres uniquement).
+- `InteractionController` : raycast vers un `Interactable`, gère le prompt (fix `tree_exiting` sur la cible, pas `is_instance_valid()` seul). Le prompt vient de `Interactable.get_prompt_key(interactor)`, surchargeable — c'est ce qui rend le verbe contextuel (le feu dit « Cuire » avec un champi, « Alimenter » avec une bûche).
+- Ordre des branches sur E, et il compte : objet lourd en main → livraison ou dépose ; petit objet en poche active → livraison ; sinon `interact()`. Une cible interactive qui **refuse** la ressource proposée rend la main à la branche suivante au lieu de faire tomber l'objet au sol.
 - `CarryController` ↔ `ResourcePickup` : le pickup lit son `ResourceDef.CarryType` pour valider le portage main.
 - Miroir : `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` quand les mains sont occupées.
 - `PlayerController` lit `CarryController.is_carrying()` pour brider sprint et saut — seule dépendance locomotion → portage.
 - `TransformationSite` (enfant d'un bâtiment) : `Campfire.receive_resource()` route le combustible vers lui-même et tout le reste vers `try_insert()`. Sortie en `ResourcePickup` via `ResourceRegistry`.
-### Flux des panneaux ancrés
-- Trois responsabilités, trois fichiers, aucun recouvrement : `ItemSlot` affiche et drague, `WorldAnchoredPanel` s'ancre et se ferme, `UIPanelController` arbitre.
-- `UIPanelController.open_panel(panel, anchor)` est **le seul chemin d'ouverture**. Il refuse si un mode exclusif tourne ou si l'`ActionStateMachine` n'est pas `IDLE`, puis appelle `panel.open_anchored(anchor, camera)`.
-- Le contrôleur possède seul le mouse mode et le gel du joueur (`set_input_enabled`), pilotés par une question unique : reste-t-il un panneau ouvert ? Un panneau n'y touche jamais.
-- **Plusieurs panneaux peuvent être ouverts simultanément** (sac posé + feu voisin) : l'exclusivité est entre *modes* joueur, pas entre panneaux. C'est ce qui rend possible le drag d'un panneau à l'autre.
-- `exclusive_modes: Array[Node]` — tout nœud exposant `is_active() -> bool` bloque l'ouverture d'un panneau (duck typing, même patron que `TransformationSite` ↔ son hôte). Le contrôleur ne cite aucun type de mode : c'est ce qui lui permet d'être référencé *par* eux sans cycle de `class_name`.
-- Réciproquement, un mode exclusif appelle `can_enter_exclusive_mode()` avant de s'ouvrir. Une seule direction de connaissance typée : mode → contrôleur.
-- Drag & drop : la donnée de drag est l'`ItemSlot` source elle-même, pas un dictionnaire à schéma. La case cible interroge son propre propriétaire (`slot_can_accept()` / `slot_accept_drop()`) en lui passant la source telle quelle. Deux panneaux s'échangent donc des items sans se connaître — chacun décide chez lui, et `BackpackUI` refuse aujourd'hui toute source étrangère.
+### Flux des panneaux
+- Un panneau est un objet du monde, pas un élément de HUD : `WorldPanel` (Node3D) suit son ancre et pivote sur l'axe Y pour lui faire face. Ses cases sont des `PanelSlot`, qui héritent d'`Interactable`.
+- **Conséquence structurante : il n'existe aucun système de visée, de survol ni de transfert propre à l'UI.** Le réticule est le pointeur, le raycast d'interaction touche les cases comme il touche un rondin, et E prend, pose ou active. C'est le même chemin de code que tout le reste du jeu.
+- `UIPanelController.open_panel(panel, anchor)` est le seul chemin d'ouverture. Il refuse si un mode exclusif tourne ou si l'`ActionStateMachine` n'est pas `IDLE`.
+- `InteractionController.open_object_panel(source, panel_scene)` **bascule** : E sur l'objet ouvre, E à nouveau ferme. Le panneau est instancié à l'ouverture, branché par `bind()`, détruit à la fermeture — un exemplaire par ancre, jamais rebranché.
+- Le panneau est enfant de la **scène**, pas de son ancre : les assets du projet ont des échelles arbitraires et un panneau enfant les hériterait.
+- `exclusive_modes: Array[Node]` — tout nœud exposant `is_active() -> bool` bloque l'ouverture (duck typing). L'arbitre ne cite aucun type de mode : c'est ce qui lui permet d'être référencé *par* eux sans cycle de `class_name`. Réciproquement, un mode appelle `can_enter_exclusive_mode()`.
+- Plusieurs panneaux peuvent être ouverts ensemble : l'exclusivité est entre *modes*, pas entre panneaux. Passer un objet d'un panneau à l'autre ne demande aucun code — on le prend en main d'un côté, on le pose de l'autre.
+- Contrat de case, implémenté par le panneau propriétaire : `slot_content()`, `slot_accepts()`, `slot_can_take()`, `slot_take()`, `slot_put()`, plus `slot_action_key()` / `slot_activate()` pour une case qui déclenche une action au lieu de contenir un objet (choisir une recette). La case porte un `payload` opaque et ne décide de rien.
 ### Flux de localisation
 - `translations/strings.csv` = source unique de tout texte affiché. Rangé en sections (une par namespace de clé), alphabétique à l'intérieur. Les lignes de titre ont une **première colonne vide** : Godot les ignore à l'import.
 - Convention de clés : `namespace.section.key` (`interact.prompt.chop`, `resource.wood.name`).
 - Les `.tres` et les `.tscn` ne portent que des clés : `ResourceDef`/`ToolDef`/`BuildingDef`/`RecipeDef.name_key`, `Interactable.prompt_key`.
-- **Le `tr()` ne se fait qu'aux points d'affichage — quatre dans tout le projet** :
+- **Le `tr()` ne se fait qu'aux points d'affichage — trois dans tout le projet** :
   - `PlayerHud.show_prompt()` — tous les prompts d'interaction
   - `Hotbar._slot_label()` — noms en ceinture et en poche
-  - `ItemSlot.set_content()` — noms dans les cases d'inventaire, tous panneaux confondus
-  - `ItemSlot._make_preview()` — libellé de l'aperçu de drag
+  - `PanelSlot._refresh_display()` — noms dans les cases, tous panneaux confondus
   Tout nouveau `tr()` ailleurs signale une string qui aurait dû transiter par une clé.
+- Les cases de recette n'affichent **aucun texte** : elles montrent l'icône du plat produit. C'est délibéré — ça évite un quatrième point de traduction.
 - ⚠️ Les clés de cache d'icônes (`Hotbar`, `ResourceRegistry.get_tool_icon()`) sont bâties sur `ToolDef.id` / `ResourceDef.id`, **jamais** sur un nom affiché — sinon le cache se casse au changement de langue.
 ### Flux de construction
 - `BuildModeController` (B) : lit la liste des `BuildingDef` disponibles, instancie le blueprint, tourne à la molette, `Shift` désactive le snap, check collision via `BuildingDef.collision_shape` (+ `collision_shape_local_transform()`).
 - Placement validé → spawn d'un `ConstructionSite` (Interactable).
-- `ConstructionSite` : lit `BuildingDef.costs` (Array[`ResourceCost`]), réceptionne les livraisons de `ResourcePickup` (via `interact()` avec ressource en main), à complétion → `queue_free` + spawn de la `built_scene` (ex : `Campfire`).
-- `Campfire` : bâtiment fini, `Timer` de combustion, `flame_light_flicker` anime le Light3D de la flamme.
-- **Le mode construction n'est pas un état de l'`ActionStateMachine`** (décision documentée dans STATE). Son exclusivité passe désormais par `UIPanelController` : `_enter_build_mode()` appelle `can_enter_exclusive_mode()`, et `InteractionController` se tait tant que `is_any_panel_open()` ou `BuildModeController.is_active()`.
+- `ConstructionSite` : lit `BuildingDef.costs` (Array[`ResourceCost`]), réceptionne les livraisons de `ResourcePickup`, à complétion → `queue_free` + spawn de la `built_scene` (ex : `Campfire`).
+- **Le mode construction n'est pas un état de l'`ActionStateMachine`** (décision documentée dans STATE). Son exclusivité passe par `UIPanelController.can_enter_exclusive_mode()`.
 ### Contraintes d'ordre
 - `ForestScatter` doit tourner **avant** le bake de `NavigationRegion3D` (revalidé au Jalon 4 avec le terrain procédural).
 ### Autoload commun

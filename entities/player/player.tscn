@@ -15,7 +15,6 @@
 [ext_resource type="PackedScene" uid="uid://bwdnti672a2j7" path="res://entities/player/hud/player_hud.tscn" id="7_qiwj3"]
 [ext_resource type="Script" uid="uid://ch5bhk78mm7sm" path="res://resources/tool_def.gd" id="8_j3ovn"]
 [ext_resource type="PackedScene" uid="uid://ddwvl4p2drvne" path="res://entities/interactable/backpack_pickup.tscn" id="10_afbqv"]
-[ext_resource type="Script" uid="uid://ben18pb3qln2o" path="res://entities/player/hud/cooking_panel.gd" id="15_yqrof"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_abrql"]
 radius = 0.4
@@ -33,10 +32,11 @@ shape = SubResource("CapsuleShape3D_abrql")
 [node name="Camera3D" type="Camera3D" parent="CharacterBody3D" unique_id=445877674]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5366557, 0)
 
-[node name="UIPanelController" type="Node" parent="CharacterBody3D/Camera3D" unique_id=1775465887 node_paths=PackedStringArray("exclusive_modes", "action_state_machine")]
+[node name="UIPanelController" type="Node" parent="CharacterBody3D/Camera3D" unique_id=1775465887 node_paths=PackedStringArray("exclusive_modes", "action_state_machine", "interaction_controller")]
 script = ExtResource("2_gx6sm")
 exclusive_modes = [NodePath("../BuildModeController")]
 action_state_machine = NodePath("../ActionStateMachine")
+interaction_controller = NodePath("../InteractionController")
 
 [node name="ActionStateMachine" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=1070756714 node_paths=PackedStringArray("tool_controller")]
 script = ExtResource("5_qiwj3")
@@ -59,10 +59,10 @@ ui_panel_controller = NodePath("../UIPanelController")
 [node name="BuildModeController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=2112869161 node_paths=PackedStringArray("carry_controller", "action_state_machine")]
 script = ExtResource("6_7thud")
 building_def = ExtResource("7_a1qjk")
-carry_controller = NodePath("../CarryController")
-action_state_machine = NodePath("../ActionStateMachine")
 ground_mask = 4294901762
 overlap_mask = 4294901764
+carry_controller = NodePath("../CarryController")
+action_state_machine = NodePath("../ActionStateMachine")
 
 [node name="EquipmentController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=1505790904 node_paths=PackedStringArray("tool_controller", "carry_controller", "build_mode_controller", "hud", "hand_anchor")]
 script = ExtResource("7_7thud")
@@ -86,13 +86,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6640453, -0.35318947)
 script = ExtResource("3_bls4j")
 
 [node name="PlayerHud" parent="." unique_id=1238662632 instance=ExtResource("7_qiwj3")]
-
-[node name="CookingPanel" type="Control" parent="PlayerHud" unique_id=1157462309]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-script = ExtResource("15_yqrof")
 
 [node name="DebugCameraSwitch" type="Node3D" parent="." unique_id=1778962938]
 script = ExtResource("2_sglur")

@@ -61,9 +61,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if not _active:
 		return
-	if event.is_action_pressed("cancel_build_mode"):
-		_exit_build_mode()
-	elif event.is_action_pressed("rotate_ghost"):
+	if event.is_action_pressed("rotate_ghost"):
 		_rotation_y += deg_to_rad(ROTATION_STEP_DEG)
 	elif event.is_action_pressed("rotate_ghost_reverse"):
 		_rotation_y -= deg_to_rad(ROTATION_STEP_DEG)

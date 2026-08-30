@@ -1,5 +1,6 @@
 keys,en,fr
 ,=== INTERACTION PROMPTS ===,
+interact.prompt.choose,Choose,Choisir
 interact.prompt.chop,Chop,Couper
 interact.prompt.cook,Cook,Cuire
 interact.prompt.deliver,Deliver,Livrer
@@ -10,6 +11,8 @@ interact.prompt.interact,Interact,Interagir
 interact.prompt.light_fire,Light,Allumer
 interact.prompt.open_backpack,Open backpack,Ouvrir le sac
 interact.prompt.pickup,Pick up,Ramasser
+interact.prompt.put,Put,Poser
+interact.prompt.take,Take,Prendre
 ,,
 ,=== RESOURCES ===,
 resource.grilled_mushroom.name,Grilled mushroom,Champignon grillé

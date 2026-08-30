@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ddwvl4p2drvne"]
 
 [ext_resource type="Script" uid="uid://b5d1qykxvy831" path="res://entities/interactable/backpack_pickup.gd" id="1_jq4x4"]
+[ext_resource type="PackedScene" path="res://entities/interactable/panel/backpack_panel.tscn" id="2_hro0i"]
 [ext_resource type="PackedScene" uid="uid://rffcdxo2vhuu" path="res://assets/survival/Backpack.fbx" id="2_plvx0"]
 
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_hro0i"]
@@ -10,6 +11,7 @@ points = PackedVector3Array(-0.0029458096, 0.0010160427, -0.0073624942, -0.00266
 transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0.29327014, 0)
 script = ExtResource("1_jq4x4")
 ground_offset = 0.2
+panel_scene = ExtResource("2_hro0i")
 
 [node name="Backpack" parent="." unique_id=822795537 instance=ExtResource("2_plvx0")]
 

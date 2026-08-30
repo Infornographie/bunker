@@ -21,6 +21,7 @@ class_name Campfire
 @export var burn_duration: float = 120.0
 @export var flame_visual: Node3D
 @export var transformation: TransformationSite
+@export var panel_scene: PackedScene
 
 var _lit: bool = false
 var _burn_timer: Timer
@@ -70,8 +71,7 @@ func get_prompt_key(interactor: Node) -> String:
 ## Atteint uniquement quand rien n'est proposé : les livraisons passent par
 ## receive_resource(), appelé en amont par InteractionController.
 func interact(interactor: Node) -> void:
-	if interactor.has_method("open_cooking_panel"):
-		interactor.call("open_cooking_panel", self)
+	interactor.open_object_panel(self, panel_scene)
 
 
 func receive_resource(resource: ResourceDef, amount: int) -> bool:

@@ -74,7 +74,7 @@ sdfgi_use_occlusion = true
 [node name="Player" parent="." unique_id=135155471 instance=ExtResource("20_yox6t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.40666503, 0.3546083, 12.82237)
 
-[node name="InteractionController" parent="Player/CharacterBody3D/Camera3D" parent_id_path=PackedInt32Array(135155471, 445877674) index="2" unique_id=718804829]
+[node name="InteractionController" parent="Player/CharacterBody3D/Camera3D" parent_id_path=PackedInt32Array(135155471, 445877674) index="3" unique_id=718804829]
 interaction_range = null
 drop_distance = null
 
