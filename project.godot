@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Bunker"
-run/main_scene="uid://dsugfh8xnse6t"
+run/main_scene="uid://cy1xqwbre3yyu"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 

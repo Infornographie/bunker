@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://cy1xqwbre3yyu"]
+
+[ext_resource type="Script" uid="uid://b03bcm36ffjoe" path="res://world/terrain/terrain_controller.gd" id="1_hr0af"]
+[ext_resource type="Resource" uid="uid://cilr4320h3bo1" path="res://resources/terrain/default_terrain.tres" id="2_kgf1h"]
+[ext_resource type="PackedScene" uid="uid://06k6adpsbv7e" path="res://entities/player/player.tscn" id="3_ff4tk"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_70hql"]
+
+[sub_resource type="Sky" id="Sky_j4d70"]
+sky_material = SubResource("ProceduralSkyMaterial_70hql")
+
+[sub_resource type="Environment" id="Environment_60qbc"]
+background_mode = 2
+sky = SubResource("Sky_j4d70")
+
+[node name="TerrainTest" type="Node3D" unique_id=137881587]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -49.16223, 0)
+script = ExtResource("1_hr0af")
+config = ExtResource("2_kgf1h")
+
+[node name="Player" parent="." unique_id=135155471 instance=ExtResource("3_ff4tk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.726444, 37.19605, 19.68988)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1811964122]
+transform = Transform3D(0.3548448, 0.25081277, 0.9006543, 0.27689698, -0.9483171, 0.15499239, 0.8929799, 0.19439021, -0.40595475, 0, 323.5772, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1145164309]
+environment = SubResource("Environment_60qbc")
+
+[node name="Player2" parent="." unique_id=1871935228 instance=ExtResource("3_ff4tk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 523.48175, 9.738251, 553.2255)

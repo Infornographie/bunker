@@ -8,8 +8,8 @@ Carte de repérage technique : où vit quoi, et qui dépend de quoi. Pas un suiv
 - Scènes `.tscn` : snake_case.
 - Organisation par feature/domaine, pas par type de fichier (scène et script d'une même feature côte à côte).
 - `entities/` = tout ce qui est instanciable individuellement (script de base + scènes concrètes qui en héritent), rangé par comportement.
-- `world/` = scènes qui assemblent des entités dans un lieu (le niveau lui-même).
-- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, `recipes/`, futur `techs/`...), à côté des scripts `*_def.gd` correspondants.
+- `world/` = scènes qui assemblent des entités dans un lieu (le niveau lui-même), et le code qui fabrique ce lieu.
+- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, `recipes/`, `terrain/`, futur `techs/`...), à côté des scripts `*_def.gd` correspondants.
 - `assets/` = ressources brutes tierces (FBX, textures, audio) + quelques scènes wrapper Godot quand l'asset importé demande un pivot correctif (cf. `wooden_axe_grip.tscn`).
 - Un même item peut avoir trois fichiers homonymes dans trois dossiers distincts, un par rôle : sa définition (`resources/resources/x.tres`), sa recette de production (`resources/recipes/x.tres`), sa scène de pickup (`entities/interactable/.../x.tscn`). C'est le cas de `grilled_mushroom`.
 - **Aucun texte affichable dans le code ni dans les `.tres`** : uniquement des clés de traduction (`name_key`, `prompt_key`). Voir § Flux de localisation.
@@ -94,6 +94,7 @@ res://
 │   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, collision_shape, blueprint/built scene), name_key
 │   ├── resource_cost.gd
 │   ├── recipe_def.gd                   — Resource : recette de transformation (inputs/output/durée), name_key
+│   ├── terrain_gen_config.gd           — (@tool) Resource : tous les réglages de génération du terrain + la convention de grille (grid_size(), cell_count(), half_size(), chunks_per_side(), height_index(), world_pos())
 │   ├── resources/                      — instances ResourceDef
 │   │   ├── wood.tres
 │   │   ├── mushroom.tres
@@ -102,15 +103,22 @@ res://
 │   │   └── grilled_mushroom.tres
 │   ├── tools/
 │   │   └── wooden_axe.tres             — instance ToolDef
-│   └── buildings/
-│       ├── campfire.tres               — instance BuildingDef
-│       └── campfire_shape.tres         — Shape3D partagée
+│   ├── buildings/
+│   │   ├── campfire.tres               — instance BuildingDef
+│   │   └── campfire_shape.tres         — Shape3D partagée
+│   └── terrain/
+│       └── default_terrain.tres        — instance TerrainGenConfig ; porte en sous-ressources les 4 FastNoiseLite, le ShaderMaterial du sol et le StandardMaterial3D de l'eau
 └── world/
 	├── bunker/
-	│   └── bunker_exterior_test.tscn   — scène bunker (SciFi MegaKit, ext + int)
+	│   └── bunker_exterior_test.tscn   — scène bunker (SciFi MegaKit, ext + int) — bâtie sur sol plat, périmée par le terrain procédural, conservée comme réserve de pièces
+	├── terrain/
+	│   ├── heightmap_generator.gd      — (@tool) RefCounted : tirage du massif, relief, niveau d'eau, clairière, rivière. Publie heights / cave_position / cave_forward / water_level
+	│   ├── terrain_mesh_builder.gd     — (@tool) RefCounted, statique : build_chunk() → StaticBody3D (MeshInstance3D + CollisionShape3D trimesh)
+	│   ├── terrain_controller.gd       — (@tool) Node3D : orchestrateur, boutons Régénérer/Effacer, crée Chunks / Water / CaveSite
+	│   └── terrain.gdshader            — sol coloré par altitude et pente (herbe → roche → paroi)
 	└── forest/
-		├── forest_test.tscn            — scène de test (sol + scatter + freecam + bunker)
-		└── forest_scatter.gd           — placement jitter/poisson-disque, zone d'exclusion bunker
+		├── forest_test.tscn            — scène de test historique (sol plat + scatter + freecam + bunker)
+		└── forest_scatter.gd           — placement jitter/poisson-disque, zone d'exclusion bunker — sera étendu aux cartes de biome en passe B du Jalon 4
 ```
  
 Hors `res://` scripts, à noter :
@@ -118,6 +126,16 @@ Hors `res://` scripts, à noter :
 - `assets/characters/tools/wooden_axe_grip.tscn` — wrapper `Node3D` pour rattraper le pivot du FBX hache (protocole détaillé dans STATE §Apprentissages). Convention à répliquer pour les prochains outils.
 ## Dépendances transversales clés
  
+### Flux de génération du terrain
+- Sens de la dépendance : `TerrainController` (le seul nœud de la scène) appelle `HeightmapGenerator.generate(config)` puis `TerrainMeshBuilder.build_chunk(config, heights, cx, cz)` pour chaque chunk. Les deux générateurs sont des `RefCounted` sans état persistant et ne connaissent ni la scène ni le contrôleur.
+- **`TerrainGenConfig` est la source unique de la convention de grille** : `height_index(ix, iz)` et `world_pos(ix, iz)` ne sont réimplémentés nulle part. Générateur et mesh builder les appellent, y compris dans leurs boucles chaudes.
+- Ordre de génération dans `HeightmapGenerator.generate()`, et il compte : tirage du massif → relief → niveau de l'eau → clairière → rivière. La rivière se trace sur un relief déjà complet (elle descend les pentes) ; la vallée est creusée **avant** (elle est ce qui empêche la descente de gradient de s'échouer).
+- **Tout le relief se calcule dans le repère du massif** (`along` le long de l'axe, `side` en travers), pas dans le repère du monde. C'est ce qui permet de tirer l'orientation au hasard : vallée, pente d'écoulement et rivière s'alignent dessus sans rien savoir de l'angle.
+- Contrainte de placement : la bouche de grotte est à l'origine du monde, et l'axe du massif est **résolu** pour que le pied de sa falaise y tombe. Il n'existe donc aucun réglage de position de massif.
+- `TerrainController` publie ce que le reste du jeu doit savoir du terrain : le nœud `CaveSite` (`Marker3D`, -Z tourné vers l'extérieur) et le plan `Water` à `water_level`.
+- **Les nœuds générés n'ont pas d'owner** : ils ne sont jamais sérialisés dans le `.tscn` et ne partent pas dans le dépôt. Le terrain se régénère, il ne se sauvegarde pas.
+- Les normales des chunks sont calculées par différences centrées sur le **tableau global** de hauteurs, pas sur les faces du chunk : deux chunks voisins lisent les mêmes sommets et se raccordent sans couture, sans code de recollement.
+- ⚠️ Toute la chaîne est `@tool`. Le `@tool` ne s'hérite pas et ne se transmet pas : un script non-`@tool` instancié ou référencé par un script `@tool` devient une coquille sans méthodes dans l'éditeur (« placeholder instance »).
 ### Flux d'action (swing outil)
 - Sens de la dépendance : `ActionStateMachine.use_tool_on(target, on_impact, reach_distance)` appelle `ToolController.swing()` et écoute son signal `swing_impact` en retour. La SM pilote le controller, jamais l'inverse.
 - Au `swing_impact`, la SM exécute le `Callable` fourni par l'appelant — typiquement `receive_tool_hit()` sur la cible verrouillée par l'`InteractionController` — uniquement si la cible est encore valide.
@@ -155,7 +173,9 @@ Hors `res://` scripts, à noter :
 - `ConstructionSite` : lit `BuildingDef.costs` (Array[`ResourceCost`]), réceptionne les livraisons de `ResourcePickup`, à complétion → `queue_free` + spawn de la `built_scene` (ex : `Campfire`).
 - **Le mode construction n'est pas un état de l'`ActionStateMachine`** (décision documentée dans STATE). Son exclusivité passe par `UIPanelController.can_enter_exclusive_mode()`.
 ### Contraintes d'ordre
-- `ForestScatter` doit tourner **avant** le bake de `NavigationRegion3D` (revalidé au Jalon 4 avec le terrain procédural).
+- `HeightmapGenerator` avant `TerrainMeshBuilder` : le mesh lit le tableau de hauteurs terminé.
+- Le scatter doit tourner **après** le terrain et **avant** le bake de `NavigationRegion3D`.
+- La carte d'ouverture (passe B) se calcule **entre** la strate canopée et la strate sol : elle dépend de ce que la canopée a effectivement posé.
 ### Autoload commun
 - `SoundManager` (autoload) : appelé par tout ce qui produit un SFX positionné (aujourd'hui `Choppable`, plus tard `Campfire`, `ConstructionSite` livraison, etc.).
 ### Flux d'équipement

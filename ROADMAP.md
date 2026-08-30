@@ -22,6 +22,7 @@
 	  traverse le plan de sol
 - [x] Nav mesh du bunker bakée (reparenté sous le NavigationRegion3D
 	  existant de la forêt)
+> **Périmé par le Jalon 4.** `bunker_exterior_test.tscn` a été construit sur un sol plat ; le terrain procédural fournit désormais un site de grotte à l'origine du monde, et le bunker sera rebâti là. La scène actuelle sert de réserve de pièces, pas de livrable.
 ### Dette Jalon 2
 - Jointures entre pièces SciFi non scellées (pas de chevauchement appliqué
   partout) → fuites de lumière SDFGI visibles aux angles du toit, et le
@@ -103,18 +104,42 @@
 - Une case ne contient qu'un objet et ne s'échange pas : sans glisser-déposer, poser sur une case occupée est refusé au lieu de permuter. Simple, peut-être trop — à réévaluer si ça gêne à l'usage.
 - Pas de feedback sonore ni d'animation à l'ouverture d'un panneau ni au transfert d'un objet. À traiter avec le FX/audio général.
 ## Jalon 4 — Terrain procédural
-- [ ] `terrain_gen_config.gd` (Resource) : seed, taille de zone, refs `FastNoiseLite` par couche, rayon/falloff bunker partagé (flatten + exclusion scatter)
-- [ ] `heightmap_generator.gd` : bruit macro → masque relief → ridge noise (escarpement) → domain warp → flatten bunker → tracé + creusement rivière
-- [ ] `biome_map_generator.gd` : carte de pente (exposition solaire + zones cultivables), carte d'humidité (biome marais), masque sol métallifère (filtré par pente faible) — séparé du relief, ne recalcule rien de déjà calculé
-- [ ] `terrain_mesh_builder.gd` : hauteurs → `ArrayMesh`/`SurfaceTool` + `HeightMapShape3D` à partir du même tableau de hauteurs (pas de double source)
-- [ ] `terrain_controller.gd` : orchestrateur, ordre de génération, seul point d'entrée de la scène
-- [ ] Bake `NavigationRegion3D` après le mesh (même contrainte d'ordre que Jalon 1)
-- [ ] `ForestScatter.gd` étendu pour lire les cartes de biome/pente/humidité plutôt que la seule zone d'exclusion codée en dur (dette Jalon 1 à traiter ici) ; les biomes doivent porter les tags exploités au Jalon 10
-- [ ] Grotte d'entrée : feature fixe intégrée au masque relief + scène séparée modulaire (mycoculture, Jalon 11) reliée par téléportation, même principe que le sous-sol bunker
-### Dette anticipée Jalon 4
-- Perf de génération à valider en pratique — piste si besoin : `WorkerThreadPool` ou split sur plusieurs frames, pas un problème tant que non mesuré.
-- Résolution/taille de zone (300-500m, pas 1-2m envisagés) à confirmer par un premier test en jeu plutôt qu'en théorie.
-- Le step-up et le saut sont calibrés sur du sol plat/marches SciFi : à revalider sur terrain irrégulier une fois la heightmap en place.
+> Découpé en passes testables. La passe A remplace le sol plat : tout ce qui suit se pose dessus.
+ 
+### Passe A — relief jouable ✅
+- [x] `terrain_gen_config.gd` (Resource) : graine, taille de zone, fourchettes de massif, refs `FastNoiseLite` par couche, réglages vallée/rivière/lac/clairière. Porte aussi la convention de grille (`grid_size()`, `height_index()`, `world_pos()`) — source unique des coordonnées pour toute la chaîne.
+- [x] `heightmap_generator.gd` : tirage du massif à la graine → relief (vallonnement + pente d'écoulement + massif + falaise + vallée) → niveau de l'eau → clairière du bunker → tracé et creusement de la rivière. Publie `heights`, `cave_position`/`cave_forward`, `water_level`.
+- [x] Massif paramétrique : orientation, longueur, largeur et hauteur tirées de la graine dans des fourchettes réglables. Chaîne traversante, pic ou massif directionnel sont le même code, selon le rapport longueur/largeur.
+- [x] `terrain_mesh_builder.gd` : hauteurs → chunks `ArrayMesh` + collision, normales calculées sur le tableau global (chunks raccordés sans couture ni code de recollement)
+- [x] `terrain_controller.gd` : orchestrateur `@tool`, boutons Régénérer / Effacer, nœuds générés sans owner (jamais sérialisés dans le `.tscn`)
+- [x] `terrain.gdshader` : habillage par altitude et pente (herbe → roche → paroi nue), sans donnée supplémentaire
+- [x] Lac : niveau d'eau déduit du fond de vallée au rivage choisi, plan d'eau plus large que la zone. Le rivage n'est pas tracé, c'est ce qui dépasse.
+- [x] Perf mesurée : **1361 ms** pour 1200 m × cellule 3 m (161 000 sommets, 320 000 triangles, 169 chunks)
+### Passe B — biomes et végétation
+- [ ] `biome_map_generator.gd` : **poids** de biome par cellule (jamais d'identifiant — c'est ce qui donne les dégradés sans code de frontière), carte de pente, carte d'humidité, distances de lisière
+- [ ] Carte d'ouverture calculée **après** la strate canopée (densité d'arbres locale + ombre du relief) : c'est elle qui pilote la strate sol. Corollaire visé : déboiser fait pousser l'herbe.
+- [ ] `BiomeDef` et `PatchDef` en `.tres` — le scatter ne référence aucun asset en dur. Les biomes portent les tags exploités au Jalon 10, les patchs (coin à champignons, bosquet fleuri, éboulis, clairière) sont posés par-dessus.
+- [ ] Scatter en strates (canopée → arbustive → sol → épiphyte sur troncs et rochers), par chunk
+- [ ] `MultiMeshInstance3D` pour tout le décoratif non interactif ; arbres instanciés (`Choppable`) seulement dans un rayon autour du joueur, multimesh sans collision au-delà
+- [ ] Biomes disponibles avec le pack Pro : forêt claire, forêt sombre (conifères), forêt d'automne, aride. Bosquet en fleurs et clairières traités en patchs, pas en biomes.
+- [ ] Bake `NavigationRegion3D` après le scatter (même contrainte d'ordre que Jalon 1) ; rivière et falaise déclarées infranchissables, gué praticable
+- [ ] Corriger dette Jalon 1 (navmesh/branches) avant le déplacement des pawns
+### Passe C — grotte, falaise et lointain
+- [ ] Grotte d'entrée : porche posé sur le site publié par le générateur (`CaveSite`, à l'origine du monde), scène séparée reliée par téléportation — même principe que le sous-sol bunker. C'est là que le bunker sera rebâti.
+- [ ] Rochers du pack posés sur l'escarpement : le relief donne la pente, les meshes donnent la paroi. Une heightmap ne fait pas de vertical.
+- [ ] Bordure de zone sur les côtés non noyés par le lac
+- [ ] Chaîne lointaine hors zone jouable : maillage grossier, sans collision, sans végétation, sans navmesh. C'est elle qui porte l'échelle « montagne » (500 à 1000 m) que la zone jouable ne peut pas porter.
+- [ ] Cascade, en feature du biome montagne rejoignant la rivière — pas en propriété du relief
+### Dette Jalon 4
+- **Collision terrain en `ConcavePolygonShape3D`** (trimesh issu du mesh de chunk) et non `HeightMapShape3D` comme prévu : ce dernier échantillonne à 1 unité fixe, incompatible avec une cellule de 3 m sans scaler le `CollisionShape3D` de façon non uniforme, ce que Godot supporte mal. Le trimesh sort de la même `ArrayMesh`, donc pas de double source. Repasser dessus si le coût des requêtes physiques se voit au Jalon 5.
+- **Eau sans collision** : on traverse le plan d'eau. À traiter quand le gué comptera vraiment (Jalon 5, déplacement des pawns) ou au Jalon 6 avec l'énergie.
+- **Seuils du shader en mètres absolus** (roche 70→125 m, paroi 30°→44°) alors que la hauteur du massif est tirée entre 160 et 260 m : la roche monte plus ou moins haut en proportion selon la graine. À exprimer en fraction de la hauteur tirée si ça se remarque.
+- **Fond de vallée lisse** : l'atténuation du vallonnement y est à 0,85, nécessaire pour que la descente de gradient de la rivière ne s'échoue pas dans une cuvette fermée. Devrait disparaître sous la végétation en passe B ; sinon descendre à 0,7 et compenser par la pente d'écoulement.
+- **Le tracé de rivière est guidé**, pas érosif : attirance de 0,35 vers l'axe de vallée. C'est ce qui garantit la topologie 2/3 – 1/3 quelle que soit la graine. Une vraie érosion hydraulique serait plus juste et beaucoup plus chère — pas au programme.
+- **Un seul massif par carte.** Des buttes secondaires seraient le même code appelé plusieurs fois ; pas avant d'en avoir le besoin.
+- **Génération monofil dans la frame** (1,4 s). Sans conséquence tant qu'on régénère à la main ; à découper (`WorkerThreadPool` ou étalement sur plusieurs frames) si ça arrive en cours de partie. Levier principal identifié si besoin : le calcul des normales dans `terrain_mesh_builder.gd`, pas la heightmap.
+- **Step-up et saut pas revalidés sur pente irrégulière** — dette reprise du Jalon 3, toujours ouverte : ils sont calibrés sur du plat et des marches SciFi.
+- Le vallonnement s'efface sur la falaise pour garder une paroi lisse. Le masque déborde et s'éteint progressivement, faute de quoi il creuse une rainure sur toute la hauteur (bug rencontré et corrigé) — ne jamais le repasser en binaire.
 ## Jalon 5 — Réveil de pawn + ordres directs
 - [ ] Pawn dormant scripté (état sommeil → réveil via interaction robot)
 - [ ] `ActionStateMachine` pawn (idle / se_deplacer / tâche_courante) via `NavigationAgent3D` — prépare les états `EVALUATING`/`INTERRUPTED` utilisés au Jalon 8
@@ -187,6 +212,11 @@
 - Sous-sol du bunker (complexe cryo à grande échelle) via téléportation
   vers une scène séparée depuis le bas de l'escalier — c'est aussi là que
   les dormants du Jalon 5 sont susceptibles d'être réveillés
+- Chemins qui se tracent au passage du joueur et des pawns : carte de piétinement
+  (un float par cellule, décroissance lente) modulant la couleur du sol et
+  supprimant l'herbe au-dessus d'un seuil. Prévue comme couche du terrain dès
+  le Jalon 4 — le découpage en chunks est ce qui la rendra possible sans
+  régénérer toute la carte.
 - Pistes solarpunk T3+ à préciser (bio-photovoltaïque, apiculture, culture d'algues, rouissage des fibres en rivière)
 - Langues supplémentaires (au-delà de EN/FR) — l'infrastructure J3.5 est prête pour n'importe quelle colonne CSV en plus
 ## Décisions à trancher (avec jalon cible)
