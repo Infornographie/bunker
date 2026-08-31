@@ -59,10 +59,10 @@ ui_panel_controller = NodePath("../UIPanelController")
 [node name="BuildModeController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=2112869161 node_paths=PackedStringArray("carry_controller", "action_state_machine")]
 script = ExtResource("6_7thud")
 building_def = ExtResource("7_a1qjk")
-ground_mask = 4294901762
-overlap_mask = 4294901764
 carry_controller = NodePath("../CarryController")
 action_state_machine = NodePath("../ActionStateMachine")
+ground_mask = 4294901762
+overlap_mask = 4294901764
 
 [node name="EquipmentController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=1505790904 node_paths=PackedStringArray("tool_controller", "carry_controller", "build_mode_controller", "hud", "hand_anchor")]
 script = ExtResource("7_7thud")

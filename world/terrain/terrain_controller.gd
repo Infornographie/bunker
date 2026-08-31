@@ -14,6 +14,11 @@ extends Node3D
 const CHUNKS_NODE := "Chunks"
 const CAVE_NODE := "CaveSite"
 const WATER_NODE := "Water"
+const FOLIAGE_NODE := "Foliage"
+
+## Hauteurs de la carte courante, publiées pour tout ce qui a besoin de savoir
+## où est le sol : `TerrainGenConfig.sample_height()` les interroge.
+var heights: PackedFloat32Array
 
 @export var config: TerrainGenConfig
 
@@ -37,6 +42,7 @@ func generate() -> void:
 
 	var heightmap := HeightmapGenerator.new()
 	heightmap.generate(config)
+	heights = heightmap.heights
 
 	var chunks := Node3D.new()
 	chunks.name = CHUNKS_NODE
@@ -59,22 +65,36 @@ func generate() -> void:
 	add_child(water)
 	water.position = Vector3(0.0, heightmap.water_level, 0.0)
 
+	var scatter := FoliageScatter.new()
+	var foliage_started := Time.get_ticks_msec()
+	var foliage := scatter.scatter(config, heights, heightmap.clearings, heightmap.river_path, heightmap.water_level)
+	var foliage_elapsed := Time.get_ticks_msec() - foliage_started
+	foliage.name = FOLIAGE_NODE
+	add_child(foliage)
+
 	var cave := Marker3D.new()
 	cave.name = CAVE_NODE
 	add_child(cave)
 	cave.position = heightmap.cave_position
 	cave.look_at(heightmap.cave_position + heightmap.cave_forward, Vector3.UP)
 
-	print("Terrain généré en %d ms — %d chunks, %d sommets, eau à %.1f m." % [
+	print("Terrain généré en %d ms — %d chunks, %d sommets, eau à %.1f m, %d clairières." % [
 		Time.get_ticks_msec() - started,
 		chunks.get_child_count(),
-		heightmap.heights.size(),
+		heights.size(),
 		heightmap.water_level,
+		heightmap.clearings.size(),
+	])
+	print("Feuillage semé en %d ms — %d chunks, %d instances." % [
+		foliage_elapsed,
+		foliage.get_child_count(),
+		scatter.placed_count,
 	])
 
 
 func clear() -> void:
-	for node_name in [CHUNKS_NODE, WATER_NODE, CAVE_NODE]:
+	heights = PackedFloat32Array()
+	for node_name in [CHUNKS_NODE, WATER_NODE, FOLIAGE_NODE, CAVE_NODE]:
 		var existing := get_node_or_null(NodePath(node_name))
 		if existing != null:
 			existing.free()

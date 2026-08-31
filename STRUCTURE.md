@@ -4,182 +4,169 @@ Carte de repérage technique : où vit quoi, et qui dépend de quoi. Pas un suiv
  
 ## Conventions
  
-- Fichiers `.gd` : snake_case (convention officielle Godot). `class_name` interne en PascalCase si besoin.
+- Fichiers `.gd` : snake_case. `class_name` interne en PascalCase si besoin.
 - Scènes `.tscn` : snake_case.
-- Organisation par feature/domaine, pas par type de fichier (scène et script d'une même feature côte à côte).
-- `entities/` = tout ce qui est instanciable individuellement (script de base + scènes concrètes qui en héritent), rangé par comportement.
-- `world/` = scènes qui assemblent des entités dans un lieu (le niveau lui-même), et le code qui fabrique ce lieu.
-- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, `recipes/`, `terrain/`, futur `techs/`...), à côté des scripts `*_def.gd` correspondants.
-- `assets/` = ressources brutes tierces (FBX, textures, audio) + quelques scènes wrapper Godot quand l'asset importé demande un pivot correctif (cf. `wooden_axe_grip.tscn`).
-- Un même item peut avoir trois fichiers homonymes dans trois dossiers distincts, un par rôle : sa définition (`resources/resources/x.tres`), sa recette de production (`resources/recipes/x.tres`), sa scène de pickup (`entities/interactable/.../x.tscn`). C'est le cas de `grilled_mushroom`.
-- **Aucun texte affichable dans le code ni dans les `.tres`** : uniquement des clés de traduction (`name_key`, `prompt_key`). Voir § Flux de localisation.
-## Autoloads (globaux, accessibles partout sans référence)
+- Organisation par feature/domaine, pas par type de fichier.
+- `entities/` = tout ce qui est instanciable individuellement, rangé par comportement.
+- `world/` = scènes qui assemblent des entités dans un lieu, et le code qui fabrique ce lieu.
+- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, `recipes/`, `terrain/`, `foliage/`, futur `techs/`), à côté des scripts de définition correspondants.
+- `assets/` = ressources brutes tierces. **Le nom d'un dossier dit à quoi la ressource sert dans le jeu, jamais de quel pack elle vient** : la provenance vit dans ATTRIBUTION.md.
+- Un même item peut avoir trois fichiers homonymes dans trois dossiers, un par rôle : sa définition (`resources/resources/x.tres`), sa recette (`resources/recipes/x.tres`), sa scène de pickup (`entities/interactable/.../x.tscn`). C'est le cas de `grilled_mushroom`.
+- **Aucun texte affichable dans le code ni dans les `.tres`** : uniquement des clés de traduction. Voir § Flux de localisation.
+## Autoloads
  
 Déclarés dans `project.godot` § `[autoload]` — cette liste doit correspondre exactement :
  
-- `SoundManager` → `autoloads/sound_manager.gd` — pool d'`AudioStreamPlayer3D` réutilisables pour SFX ponctuels positionnés.
+- `SoundManager` → `autoloads/sound_manager.gd` — pool d'`AudioStreamPlayer3D` pour SFX ponctuels positionnés.
 - `ResourceRegistry` → `autoloads/resource_registry.gd` — table `ResourceDef` → `PackedScene`, scan auto au boot, sert aussi les icônes.
-- `Locale` → `autoloads/locale.gd` — wrapper `TranslationServer` : `get_locale()`, `set_locale()`, signal `locale_changed`, fallback `en`. Porte aussi sa bascule debug (F10).
+- `Locale` → `autoloads/locale.gd` — wrapper `TranslationServer`, fallback `en`, bascule debug F10.
 `autoloads/icon_generator.gd` vit dans le même dossier mais **n'est pas** un autoload : il est instancié par `ResourceRegistry`.
 ## Couches de collision
  
-- **Couche 5 — « UI 3D »** : cases des panneaux du monde (`PanelSlot`). Vue par le raycast d'interaction (qui n'a pas de masque), et retirée de trois masques : le `collision_mask` du `CharacterBody3D` joueur, `ground_mask` et `overlap_mask` de `BuildModeController`. Sans ça on se cogne dans ses propres cases et on pose des bâtiments dessus.
+- **Couche 5 — « UI 3D »** : cases des panneaux du monde (`PanelSlot`). Vue par le raycast d'interaction, et retirée de trois masques : le `collision_mask` du joueur, `ground_mask` et `overlap_mask` de `BuildModeController`.
 ## Arborescence
  
 ```
 res://
-├── .editorconfig, .gitattributes, .gitignore
 ├── project.godot                        — config moteur, autoloads, input map (→ INPUTS.md), locale fallback
-├── icon.svg
 ├── autoloads/
-│   ├── sound_manager.gd                — pool d'AudioStreamPlayer3D, SFX positionnés
-│   ├── resource_registry.gd            — (autoload) table ResourceDef → PackedScene, scan auto de entities/interactable/ au boot, sert aussi les icônes
-│   ├── locale.gd                       — (autoload) wrapper TranslationServer, bascule debug EN ↔ FR (F10)
-│   └── icon_generator.gd               — rendu d'un modèle 3D → Texture2D, un SubViewport jetable par icône, cache par clé, instancié par ResourceRegistry (pas un autoload)
+│   ├── sound_manager.gd
+│   ├── resource_registry.gd            — (autoload) ResourceDef → PackedScene, scan auto au boot
+│   ├── locale.gd                       — (autoload) wrapper TranslationServer
+│   └── icon_generator.gd               — modèle 3D → Texture2D, un SubViewport jetable par icône (pas un autoload)
 ├── translations/
-│   └── strings.csv                     — source unique des textes affichés (colonnes `keys`, `en`, `fr`) ; Godot compile en .translation à l'import
+│   └── strings.csv                     — source unique des textes affichés (`keys`, `en`, `fr`)
+├── assets/
+│   ├── nature/                         — Quaternius Stylized Nature MegaKit [Pro+]
+│   │   ├── models/                     — glTF + textures
+│   │   ├── materials/                  — shaders de feuillage et de vent, matériaux MI_*
+│   │   └── meshes/                     — une scène par modèle ; c'est de là que le scatter extrait les meshes
+│   ├── scifi/                          — Quaternius Modular Sci-Fi MegaKit
+│   ├── props/                          — KayKit Resource Bits
+│   └── characters/                     — outils et personnages (dont tools/wooden_axe_grip.tscn)
 ├── debug/
 │   ├── debug_camera_switch.gd          — bascule cam player ↔ freecam (F7)
-│   └── freecam_controller.gd           — caméra libre noclip
+│   └── freecam_controller.gd
 ├── entities/
 │   ├── interactable/
 │   │   ├── interactable.gd             — base PhysicsBody3D : can_interact(), interact(), get_prompt_key(), receive_resource(), receive_tool_hit()
 │   │   ├── choppable.gd                — hérite Interactable : HP, type d'outil, depleted → 3× pickup
-│   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D) : objet ramassable, lit ResourceDef
-│   │   ├── construction_site.gd        — hérite Interactable : blueprint posé, réceptionne les livraisons
-│   │   ├── construction_site.tscn
-│   │   ├── tool_pickup.gd              — outil posé au sol (Interactable, créé dynamiquement par EquipmentController)
-│   │   ├── backpack_pickup.gd          — sac à dos dans le monde, porte le BackpackData et sa panel_scene, snap au sol au drop
-│   │   ├── backpack_pickup.tscn
+│   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D), lit ResourceDef
+│   │   ├── construction_site.gd / .tscn
+│   │   ├── tool_pickup.gd              — outil posé au sol, créé dynamiquement par EquipmentController
+│   │   ├── backpack_pickup.gd / .tscn
 │   │   ├── panel/                      — panneaux posés dans le monde (voir § Flux des panneaux)
-│   │   │   ├── world_panel.gd          — base : suivi de l'ancre, billboard axe Y, ouverture/fermeture, contrat de case
-│   │   │   ├── panel_slot.gd           — case, hérite Interactable : icône Sprite3D, nom traduit en repli, prendre/poser/activer
-│   │   │   ├── panel_slot.tscn         — StaticBody3D + CollisionShape3D + Background + Icon + Label (tout dimensionné au code)
-│   │   │   ├── panel_gauge.gd          — barre de remplissage, deux quads non éclairés, construite au code
-│   │   │   ├── backpack_panel.gd       — panneau du sac posé : 3x3 stockage + 3 poches
-│   │   │   ├── backpack_panel.tscn
-│   │   │   ├── cooking_panel.gd        — panneau d'un site de transformation : recettes, ingrédients, combustible, jauges
-│   │   │   └── cooking_panel.tscn      — porte ses réglages (anchor_offset 1.6m, slot_size 0.26, close_distance 4m)
+│   │   │   ├── world_panel.gd          — suivi d'ancre, billboard axe Y, contrat de case
+│   │   │   ├── panel_slot.gd / .tscn   — case, hérite Interactable
+│   │   │   ├── panel_gauge.gd
+│   │   │   ├── backpack_panel.gd / .tscn
+│   │   │   └── cooking_panel.gd / .tscn
 │   │   ├── buildings/
-│   │   │   ├── campfire.gd             — bâtiment fini, allumage/entretien, combustion Timer, E contextuel
-│   │   │   ├── campfire.tscn
+│   │   │   ├── campfire.gd / .tscn
 │   │   │   ├── transformation_site.gd
-│   │   │   └── flame_light_flicker.gd  — script d'ambiance sur le Light3D de la flamme
-│   │   ├── food/
-│   │   │   └── grilled_mushroom.tscn   — pickup du champignon grillé (sortie de TransformationSite)
+│   │   │   └── flame_light_flicker.gd
+│   │   ├── food/grilled_mushroom.tscn
 │   │   └── forest/
-│   │       ├── mushroom_pickup.tscn    — premier petit objet (CarryType.SMALL)
-│   │       ├── oak_choppable.tscn      — instance concrète de Choppable (chêne)
-│   │       └── resource_pickup_wood.tscn — instance concrète de ResourcePickup (bois)
+│   │       ├── mushroom_pickup.tscn
+│   │       ├── oak_choppable.tscn
+│   │       └── resource_pickup_wood.tscn
 │   └── player/
-│       ├── player.tscn                 — scène joueur assemblée
-│       ├── player_controller.gd        — CharacterBody3D, locomotion, marches auto (step_height 0.35m), sprint (Shift) + saut (Espace) avec coyote time et kick de FOV
-│       ├── action_state_machine.gd     — IDLE / USING_TOOL, découple timing swing/dégâts
-│       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, E → interact/carry, ouverture des panneaux, take_into_hand()
-│       ├── carry_controller.gd         — point unique "en main", reparent → HandAnchor, désactive collision + freeze
-│       ├── build_mode_controller.gd    — mode construction (B), blueprint, molette (rotation), Shift (free placing), spawn ConstructionSite
-│       ├── equipment_controller.gd     — ceinture (2 outils) + sac à dos (BackpackData), hotbar actif, routage ramassage, drop (G → ToolPickup dynamique)
-│       ├── ui_panel_controller.gd      — arbitre des panneaux : registre des ouverts, touche de fermeture, exclusivité avec les autres modes joueur
-│       ├── hud/
-│       │   ├── player_hud.tscn         — CanvasLayer HUD
-│       │   ├── player_hud.gd           — réticule + prompt + hotbar, rien de manipulable
-│       │   ├── crosshair.gd            — crosshair dessiné en code
-│       │   └── hotbar.gd               — hotbar dessiné en code (2 belt + 3 poches si sac équipé), dimming quand mains occupées
-│       └── tools/
-│           └── tool_controller.gd      — viewmodel 1re personne, swing() tween 3 phases, piloté par EquipmentController
+│       ├── player.tscn
+│       ├── player_controller.gd        — CharacterBody3D, locomotion, marches auto, sprint + saut
+│       ├── action_state_machine.gd     — IDLE / USING_TOOL
+│       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, take_into_hand()
+│       ├── carry_controller.gd         — point unique "en main"
+│       ├── build_mode_controller.gd    — mode construction (B)
+│       ├── equipment_controller.gd     — ceinture + sac à dos, routage ramassage, drop (G)
+│       ├── ui_panel_controller.gd      — arbitre des panneaux
+│       ├── hud/                        — player_hud, crosshair, hotbar
+│       └── tools/tool_controller.gd    — viewmodel 1re personne, swing()
 ├── resources/
-│   ├── resource_def.gd                 — Resource : définition d'item (CarryType: HAND/SMALL/TOOL), name_key
-│   ├── tool_def.gd                     — Resource : définition data-driven d'un outil, name_key
-│   ├── backpack_data.gd                — Resource : contenu d'un sac à dos (3 poches + 9 stockage), vit sur l'objet sac
-│   ├── building_def.gd                 — Resource : définition d'un bâtiment (coûts, collision_shape, blueprint/built scene), name_key
+│   ├── resource_def.gd                 — Resource : item (CarryType), name_key
+│   ├── tool_def.gd                     — Resource : outil data-driven
+│   ├── backpack_data.gd                — Resource : contenu d'un sac
+│   ├── building_def.gd                 — Resource : bâtiment (coûts, collision_shape, scènes)
 │   ├── resource_cost.gd
-│   ├── recipe_def.gd                   — Resource : recette de transformation (inputs/output/durée), name_key
-│   ├── terrain_gen_config.gd           — (@tool) Resource : tous les réglages de génération du terrain + la convention de grille (grid_size(), cell_count(), half_size(), chunks_per_side(), height_index(), world_pos())
-│   ├── resources/                      — instances ResourceDef
-│   │   ├── wood.tres
-│   │   ├── mushroom.tres
-│   │   └── grilled_mushroom.tres
+│   ├── recipe_def.gd                   — Resource : recette de transformation
+│   ├── terrain_gen_config.gd           — (@tool) Resource : réglages de génération + convention de grille (grid_size, cell_count, half_size, chunks_per_side, height_index, world_pos, sample_height)
+│   ├── foliage_def.gd                  — (@tool) Resource : une essence (id, model, scale_range, random_yaw, max_slope_degrees, embed_depth, weight)
+│   ├── resources/                      — instances ResourceDef (wood, mushroom, grilled_mushroom)
 │   ├── recipes/                        — instances RecipeDef
-│   │   └── grilled_mushroom.tres
-│   ├── tools/
-│   │   └── wooden_axe.tres             — instance ToolDef
-│   ├── buildings/
-│   │   ├── campfire.tres               — instance BuildingDef
-│   │   └── campfire_shape.tres         — Shape3D partagée
-│   └── terrain/
-│       └── default_terrain.tres        — instance TerrainGenConfig ; porte en sous-ressources les 4 FastNoiseLite, le ShaderMaterial du sol et le StandardMaterial3D de l'eau
+│   ├── tools/wooden_axe.tres
+│   ├── buildings/                      — campfire.tres, campfire_shape.tres
+│   ├── terrain/default_terrain.tres    — instance TerrainGenConfig ; porte en sous-ressources les FastNoiseLite, le ShaderMaterial du sol et le matériau de l'eau
+│   └── foliage/                        — instances FoliageDef, une par essence
 └── world/
-	├── bunker/
-	│   └── bunker_exterior_test.tscn   — scène bunker (SciFi MegaKit, ext + int) — bâtie sur sol plat, périmée par le terrain procédural, conservée comme réserve de pièces
+	├── bunker/bunker_exterior_test.tscn — bâtie sur sol plat, périmée par le terrain procédural, conservée comme réserve de pièces
 	├── terrain/
-	│   ├── heightmap_generator.gd      — (@tool) RefCounted : tirage du massif, relief, niveau d'eau, clairière, rivière. Publie heights / cave_position / cave_forward / water_level
-	│   ├── terrain_mesh_builder.gd     — (@tool) RefCounted, statique : build_chunk() → StaticBody3D (MeshInstance3D + CollisionShape3D trimesh)
-	│   ├── terrain_controller.gd       — (@tool) Node3D : orchestrateur, boutons Régénérer/Effacer, crée Chunks / Water / CaveSite
-	│   └── terrain.gdshader            — sol coloré par altitude et pente (herbe → roche → paroi)
+	│   ├── heightmap_generator.gd      — (@tool) RefCounted : massif, relief, eau, clairières, rivière. Publie heights / cave_position / cave_forward / water_level / clearings / river_path
+	│   ├── terrain_mesh_builder.gd     — (@tool) RefCounted statique : build_chunk() → StaticBody3D (mesh + collision trimesh)
+	│   ├── foliage_scatter.gd          — (@tool) RefCounted : scatter() → Node3D de chunks de MultiMeshInstance3D ; expose placed_count
+	│   ├── terrain_controller.gd       — (@tool) Node3D : orchestrateur, boutons Régénérer/Effacer, crée Chunks / Water / Foliage / CaveSite, publie heights
+	│   └── terrain.gdshader            — sol coloré par altitude, pente et bruit de teinte
 	└── forest/
-		├── forest_test.tscn            — scène de test historique (sol plat + scatter + freecam + bunker)
-		└── forest_scatter.gd           — placement jitter/poisson-disque, zone d'exclusion bunker — sera étendu aux cartes de biome en passe B du Jalon 4
+		├── forest_test.tscn            — scène de test historique (sol plat) — seule scène où les mécaniques de jeu sont montées
+		└── forest_scatter.gd           — scatter du Jalon 1, périmé, supprimé avec forest_test.tscn
 ```
- 
-Hors `res://` scripts, à noter :
- 
-- `assets/characters/tools/wooden_axe_grip.tscn` — wrapper `Node3D` pour rattraper le pivot du FBX hache (protocole détaillé dans STATE §Apprentissages). Convention à répliquer pour les prochains outils.
 ## Dépendances transversales clés
  
 ### Flux de génération du terrain
-- Sens de la dépendance : `TerrainController` (le seul nœud de la scène) appelle `HeightmapGenerator.generate(config)` puis `TerrainMeshBuilder.build_chunk(config, heights, cx, cz)` pour chaque chunk. Les deux générateurs sont des `RefCounted` sans état persistant et ne connaissent ni la scène ni le contrôleur.
-- **`TerrainGenConfig` est la source unique de la convention de grille** : `height_index(ix, iz)` et `world_pos(ix, iz)` ne sont réimplémentés nulle part. Générateur et mesh builder les appellent, y compris dans leurs boucles chaudes.
-- Ordre de génération dans `HeightmapGenerator.generate()`, et il compte : tirage du massif → relief → niveau de l'eau → clairière → rivière. La rivière se trace sur un relief déjà complet (elle descend les pentes) ; la vallée est creusée **avant** (elle est ce qui empêche la descente de gradient de s'échouer).
-- **Tout le relief se calcule dans le repère du massif** (`along` le long de l'axe, `side` en travers), pas dans le repère du monde. C'est ce qui permet de tirer l'orientation au hasard : vallée, pente d'écoulement et rivière s'alignent dessus sans rien savoir de l'angle.
-- Contrainte de placement : la bouche de grotte est à l'origine du monde, et l'axe du massif est **résolu** pour que le pied de sa falaise y tombe. Il n'existe donc aucun réglage de position de massif.
-- `TerrainController` publie ce que le reste du jeu doit savoir du terrain : le nœud `CaveSite` (`Marker3D`, -Z tourné vers l'extérieur) et le plan `Water` à `water_level`.
-- **Les nœuds générés n'ont pas d'owner** : ils ne sont jamais sérialisés dans le `.tscn` et ne partent pas dans le dépôt. Le terrain se régénère, il ne se sauvegarde pas.
-- Les normales des chunks sont calculées par différences centrées sur le **tableau global** de hauteurs, pas sur les faces du chunk : deux chunks voisins lisent les mêmes sommets et se raccordent sans couture, sans code de recollement.
-- ⚠️ Toute la chaîne est `@tool`. Le `@tool` ne s'hérite pas et ne se transmet pas : un script non-`@tool` instancié ou référencé par un script `@tool` devient une coquille sans méthodes dans l'éditeur (« placeholder instance »).
+- Sens de la dépendance : `TerrainController` (seul nœud de la scène) appelle `HeightmapGenerator.generate(config)`, puis `TerrainMeshBuilder.build_chunk(...)` par chunk, puis `FoliageScatter.scatter(...)`. Les trois sont des `RefCounted` sans état persistant et ne connaissent ni la scène ni le contrôleur.
+- **`TerrainGenConfig` est la source unique de la convention de grille** : `height_index()`, `world_pos()` et `sample_height()` ne sont réimplémentés nulle part. Générateur et scatter les appellent, y compris dans leurs boucles chaudes.
+- Ordre dans `HeightmapGenerator.generate()`, et il compte : tirage du massif → relief → niveau de l'eau → clairières → rivière. La rivière se trace sur un relief complet ; la vallée est creusée **avant** parce qu'elle est ce qui empêche la descente de gradient de s'échouer.
+- **Tout le relief se calcule dans le repère du massif** (`along` le long de l'axe, `side` en travers). C'est ce qui permet de tirer l'orientation au hasard : vallée, pente d'écoulement et rivière s'alignent dessus sans rien savoir de l'angle.
+- Contrainte de placement : la bouche de grotte est à l'origine du monde, et l'axe du massif est **résolu** pour que le pied de sa falaise y tombe. Il n'existe aucun réglage de position de massif.
+- Le générateur publie ce que la suite doit savoir : `heights`, `water_level`, `clearings` (centre + rayon), `river_path`, `cave_position`/`cave_forward`. Le contrôleur republie `heights` pour la scène.
+- **Les nœuds générés n'ont pas d'owner** : jamais sérialisés dans le `.tscn`, jamais versionnés. Le terrain se régénère, il ne se sauvegarde pas.
+- Les normales des chunks sont calculées par différences centrées sur le **tableau global** : deux chunks voisins lisent les mêmes sommets et se raccordent sans couture, sans code de recollement.
+- ⚠️ Toute la chaîne est `@tool`. Le `@tool` ne s'hérite pas : un script non-`@tool` instancié par un script `@tool` devient une coquille sans méthodes dans l'éditeur.
+### Flux de semis (végétation)
+- `FoliageScatter.scatter(cfg, heights, clearings, river, water_level)` construit un `Node3D` par chunk, contenant un `MultiMeshInstance3D` par essence **et par partie de modèle** — les modèles du pack ne sont pas toujours d'un seul tenant, et chaque partie garde son décalage local.
+- Les meshes sont **extraits** de la scène du modèle, une fois par essence et mis en cache. Les matériaux posés en surcharge de surface sur le `MeshInstance3D` sont recopiés dans le mesh : un multimesh ne connaît que les matériaux du mesh lui-même.
+- Répartition en grille jitterée globale, parcourue par chunk. **Les deux bornes de la grille s'arrondissent au supérieur**, et la fin d'un chunk est la même expression que le début du suivant — sinon une colonne de plantation se perd à chaque frontière et la grille se voit dans la canopée.
+- Rejets, dans cet ordre : sous l'eau, dans une clairière (probabilité croissante sur la distance d'adoucissement — la lisière n'est pas dessinée, elle est le dégradé), dans le lit de la rivière, puis pente trop forte pour l'essence tirée.
+- **Le choix d'essence se fait au point, jamais au chunk.** Chaque essence a son champ de bruit propre ; son poids local est son poids propre modulé par ce champ élevé à `stand_sharpness`. Une sélection par chunk produirait une couture rectiligne à chaque frontière.
+- Le gain de performance vient de la même mécanique : au cœur d'un peuplement, les autres essences ne sont jamais tirées, donc leur multimesh n'existe pas dans ce chunk.
+- `foliage_view_distance` et `foliage_fade_margin` sont posés sur chaque `MultiMeshInstance3D`. Ils se règlent **de pair avec le brouillard de profondeur** du `WorldEnvironment` : c'est la brume qui doit masquer la coupure.
 ### Flux d'action (swing outil)
-- Sens de la dépendance : `ActionStateMachine.use_tool_on(target, on_impact, reach_distance)` appelle `ToolController.swing()` et écoute son signal `swing_impact` en retour. La SM pilote le controller, jamais l'inverse.
-- Au `swing_impact`, la SM exécute le `Callable` fourni par l'appelant — typiquement `receive_tool_hit()` sur la cible verrouillée par l'`InteractionController` — uniquement si la cible est encore valide.
-- `Choppable.receive_tool_hit()` : vérifie le type d'outil via `ToolDef`, décrémente HP, émet `depleted` → spawn 3 `ResourcePickup` physiques, hook `chop_sound` → `SoundManager` (asset non branché).
+- `ActionStateMachine.use_tool_on(target, on_impact, reach_distance)` appelle `ToolController.swing()` et écoute son signal `swing_impact` en retour. La SM pilote le controller, jamais l'inverse.
+- Au `swing_impact`, la SM exécute le `Callable` fourni par l'appelant, uniquement si la cible est encore valide.
+- `Choppable.receive_tool_hit()` : vérifie le type d'outil, décrémente HP, émet `depleted` → spawn 3 `ResourcePickup`, hook `chop_sound` → `SoundManager`.
 ### Flux d'interaction / portage
-- `InteractionController` : raycast vers un `Interactable`, gère le prompt (fix `tree_exiting` sur la cible, pas `is_instance_valid()` seul). Le prompt vient de `Interactable.get_prompt_key(interactor)`, surchargeable — c'est ce qui rend le verbe contextuel (le feu dit « Cuire » avec un champi, « Alimenter » avec une bûche).
-- Ordre des branches sur E, et il compte : objet lourd en main → livraison ou dépose ; petit objet en poche active → livraison ; sinon `interact()`. Une cible interactive qui **refuse** la ressource proposée rend la main à la branche suivante au lieu de faire tomber l'objet au sol.
+- `InteractionController` : raycast vers un `Interactable`, gère le prompt (fix `tree_exiting` sur la cible). Le prompt vient de `Interactable.get_prompt_key(interactor)`, surchargeable — c'est ce qui rend le verbe contextuel.
+- Ordre des branches sur E, et il compte : objet lourd en main → livraison ou dépose ; petit objet en poche active → livraison ; sinon `interact()`. Une cible qui **refuse** rend la main à la branche suivante au lieu de faire tomber l'objet.
 - `CarryController` ↔ `ResourcePickup` : le pickup lit son `ResourceDef.CarryType` pour valider le portage main.
-- Miroir : `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` quand les mains sont occupées.
+- `InteractionController` masque/remontre l'outil via `ToolController.set_tool_visible()` quand les mains sont occupées.
 - `PlayerController` lit `CarryController.is_carrying()` pour brider sprint et saut — seule dépendance locomotion → portage.
-- `TransformationSite` (enfant d'un bâtiment) : `Campfire.receive_resource()` route le combustible vers lui-même et tout le reste vers `try_insert()`. Sortie en `ResourcePickup` via `ResourceRegistry`.
+- `Campfire.receive_resource()` route le combustible vers lui-même et le reste vers `TransformationSite.try_insert()`. Sortie en `ResourcePickup` via `ResourceRegistry`.
 ### Flux des panneaux
-- Un panneau est un objet du monde, pas un élément de HUD : `WorldPanel` (Node3D) suit son ancre et pivote sur l'axe Y pour lui faire face. Ses cases sont des `PanelSlot`, qui héritent d'`Interactable`.
-- **Conséquence structurante : il n'existe aucun système de visée, de survol ni de transfert propre à l'UI.** Le réticule est le pointeur, le raycast d'interaction touche les cases comme il touche un rondin, et E prend, pose ou active. C'est le même chemin de code que tout le reste du jeu.
+- Un panneau est un objet du monde : `WorldPanel` (Node3D) suit son ancre et pivote sur l'axe Y. Ses cases sont des `PanelSlot`, qui héritent d'`Interactable`.
+- **Conséquence structurante : il n'existe aucun système de visée, de survol ni de transfert propre à l'UI.** Le réticule est le pointeur, le raycast touche les cases comme il touche un rondin, et E prend, pose ou active.
 - `UIPanelController.open_panel(panel, anchor)` est le seul chemin d'ouverture. Il refuse si un mode exclusif tourne ou si l'`ActionStateMachine` n'est pas `IDLE`.
-- `InteractionController.open_object_panel(source, panel_scene)` **bascule** : E sur l'objet ouvre, E à nouveau ferme. Le panneau est instancié à l'ouverture, branché par `bind()`, détruit à la fermeture — un exemplaire par ancre, jamais rebranché.
-- Le panneau est enfant de la **scène**, pas de son ancre : les assets du projet ont des échelles arbitraires et un panneau enfant les hériterait.
-- `exclusive_modes: Array[Node]` — tout nœud exposant `is_active() -> bool` bloque l'ouverture (duck typing). L'arbitre ne cite aucun type de mode : c'est ce qui lui permet d'être référencé *par* eux sans cycle de `class_name`. Réciproquement, un mode appelle `can_enter_exclusive_mode()`.
-- Plusieurs panneaux peuvent être ouverts ensemble : l'exclusivité est entre *modes*, pas entre panneaux. Passer un objet d'un panneau à l'autre ne demande aucun code — on le prend en main d'un côté, on le pose de l'autre.
-- Contrat de case, implémenté par le panneau propriétaire : `slot_content()`, `slot_accepts()`, `slot_can_take()`, `slot_take()`, `slot_put()`, plus `slot_action_key()` / `slot_activate()` pour une case qui déclenche une action au lieu de contenir un objet (choisir une recette). La case porte un `payload` opaque et ne décide de rien.
+- `InteractionController.open_object_panel(source, panel_scene)` **bascule**. Le panneau est instancié à l'ouverture, branché par `bind()`, détruit à la fermeture — un exemplaire par ancre.
+- Le panneau est enfant de la **scène**, pas de son ancre : les assets du projet ont des échelles arbitraires.
+- `exclusive_modes: Array[Node]` — duck typing (`is_active()`), sans citer aucun type : c'est ce qui évite le cycle de `class_name`.
+- Contrat de case, implémenté par le panneau propriétaire : `slot_content()`, `slot_accepts()`, `slot_can_take()`, `slot_take()`, `slot_put()`, plus `slot_action_key()` / `slot_activate()`. La case porte un `payload` opaque et ne décide de rien.
 ### Flux de localisation
-- `translations/strings.csv` = source unique de tout texte affiché. Rangé en sections (une par namespace de clé), alphabétique à l'intérieur. Les lignes de titre ont une **première colonne vide** : Godot les ignore à l'import.
-- Convention de clés : `namespace.section.key` (`interact.prompt.chop`, `resource.wood.name`).
-- Les `.tres` et les `.tscn` ne portent que des clés : `ResourceDef`/`ToolDef`/`BuildingDef`/`RecipeDef.name_key`, `Interactable.prompt_key`.
+- `translations/strings.csv` = source unique de tout texte affiché. Les lignes de titre ont une **première colonne vide** : Godot les ignore à l'import.
+- Convention de clés : `namespace.section.key`.
 - **Le `tr()` ne se fait qu'aux points d'affichage — trois dans tout le projet** :
-  - `PlayerHud.show_prompt()` — tous les prompts d'interaction
-  - `Hotbar._slot_label()` — noms en ceinture et en poche
-  - `PanelSlot._refresh_display()` — noms dans les cases, tous panneaux confondus
+  - `PlayerHud.show_prompt()`
+  - `Hotbar._slot_label()`
+  - `PanelSlot._refresh_display()`
   Tout nouveau `tr()` ailleurs signale une string qui aurait dû transiter par une clé.
-- Les cases de recette n'affichent **aucun texte** : elles montrent l'icône du plat produit. C'est délibéré — ça évite un quatrième point de traduction.
-- ⚠️ Les clés de cache d'icônes (`Hotbar`, `ResourceRegistry.get_tool_icon()`) sont bâties sur `ToolDef.id` / `ResourceDef.id`, **jamais** sur un nom affiché — sinon le cache se casse au changement de langue.
+- Les cases de recette n'affichent **aucun texte** : elles montrent l'icône du plat produit, ce qui évite un quatrième point de traduction.
+- ⚠️ Les clés de cache d'icônes sont bâties sur les `id`, **jamais** sur un nom affiché.
 ### Flux de construction
-- `BuildModeController` (B) : lit la liste des `BuildingDef` disponibles, instancie le blueprint, tourne à la molette, `Shift` désactive le snap, check collision via `BuildingDef.collision_shape` (+ `collision_shape_local_transform()`).
-- Placement validé → spawn d'un `ConstructionSite` (Interactable).
-- `ConstructionSite` : lit `BuildingDef.costs` (Array[`ResourceCost`]), réceptionne les livraisons de `ResourcePickup`, à complétion → `queue_free` + spawn de la `built_scene` (ex : `Campfire`).
-- **Le mode construction n'est pas un état de l'`ActionStateMachine`** (décision documentée dans STATE). Son exclusivité passe par `UIPanelController.can_enter_exclusive_mode()`.
+- `BuildModeController` (B) : lit les `BuildingDef` disponibles, instancie le blueprint, molette pour tourner, `Shift` désactive le snap, check collision via `BuildingDef.collision_shape`.
+- Placement validé → spawn d'un `ConstructionSite`, qui lit `BuildingDef.costs`, réceptionne les livraisons, et à complétion spawn la `built_scene`.
+- **Le mode construction n'est pas un état de l'`ActionStateMachine`.** Son exclusivité passe par `UIPanelController.can_enter_exclusive_mode()`.
 ### Contraintes d'ordre
-- `HeightmapGenerator` avant `TerrainMeshBuilder` : le mesh lit le tableau de hauteurs terminé.
+- `HeightmapGenerator` avant `TerrainMeshBuilder` et `FoliageScatter` : les deux lisent le tableau de hauteurs terminé.
 - Le scatter doit tourner **après** le terrain et **avant** le bake de `NavigationRegion3D`.
-- La carte d'ouverture (passe B) se calcule **entre** la strate canopée et la strate sol : elle dépend de ce que la canopée a effectivement posé.
-### Autoload commun
-- `SoundManager` (autoload) : appelé par tout ce qui produit un SFX positionné (aujourd'hui `Choppable`, plus tard `Campfire`, `ConstructionSite` livraison, etc.).
+- La carte d'ouverture (passe B2) se calcule **entre** la strate canopée et la strate sol : elle dépend de ce que la canopée a effectivement posé.
 ### Flux d'équipement
-- `EquipmentController` : ceinture 2 slots (`ToolDef`) + ref `BackpackData` (poches + stockage). Pilote `ToolController.equip()`/`unequip()` selon le slot actif. Sélection via molette/1-5.
-- Drop (G) : retire du slot, spawn un `ToolPickup` dynamique (StaticBody3D + mesh + BoxShape3D, raycast sol). `ToolPickup.interact()` → retour en ceinture via `EquipmentController.try_store_tool()`.
-- Priorité affichage : Main (CarryController) > Hotbar actif. Hotbar dimmed quand mains occupées.
-- `BackpackData` vit sur l'objet sac (pas sur le joueur) — prêt pour pawns avec leur propre sac.
+- `EquipmentController` : ceinture 2 slots (`ToolDef`) + ref `BackpackData`. Pilote `ToolController.equip()`/`unequip()` selon le slot actif.
+- Drop (G) : spawn un `ToolPickup` dynamique ; `interact()` le renvoie en ceinture via `try_store_tool()`.
+- Priorité affichage : Main > Hotbar actif. Hotbar dimmed quand mains occupées.
+- `BackpackData` vit sur l'objet sac, pas sur le joueur — prêt pour des pawns avec leur propre sac.

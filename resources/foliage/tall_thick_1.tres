@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FoliageDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/foliage_def.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://assets/nature/meshes/TallThick_1.tscn" id="2_model"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"tall_thick_1"
+model = ExtResource("2_model")
+scale_range = Vector2(0.9, 1.15)
+random_yaw = true
+max_slope_degrees = 35.0
+weight = 0.6

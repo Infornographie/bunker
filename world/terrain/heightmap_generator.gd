@@ -7,7 +7,7 @@ extends RefCounted
 ##   1. tirage du massif à la graine (orientation, longueur, largeur, hauteur)
 ##   2. relief : vallonnement + pente de drainage + massif + vallée
 ##   3. niveau de l'eau, lu sur le fond de vallée en aval
-##   4. clairière du bunker, aplanie au pied de la falaise
+##   4. clairières : celle du bunker, puis les replats tirés à la graine
 ##   5. tracé de la rivière par descente de gradient, puis creusement du lit
 ##
 ## La rivière se trace sur un relief déjà complet : elle a besoin de connaître
@@ -33,11 +33,20 @@ var cave_position: Vector3
 var cave_forward: Vector3
 ## Altitude de la surface de l'eau. Tout ce qui est plus bas est noyé.
 var water_level: float
+## Replats aplanis, en (centre.x, centre.z, rayon). Le premier est celui du
+## bunker. Lu par le scatter, qui n'y pose pas de canopée.
+var clearings: PackedVector3Array
+## Tracé de la rivière, en points monde successifs. Lu par le scatter, qui ne
+## plante pas dans le lit.
+var river_path: PackedVector2Array
 
 const _SEED_MACRO := 0
 const _SEED_WOBBLE := 977
 const _SEED_PROFILE := 1451
 const _SEED_VALLEY := 2129
+const _SEED_CLEARING := 3313
+## Tentatives de placement par clairière avant abandon.
+const _CLEARING_TRIES := 12
 ## Descente minimale imposée entre deux points du tracé, en mètres. Empêche la
 ## ligne d'eau de stagner dans un creux et de remonter.
 const _RIVER_MIN_DROP := 0.05
@@ -71,9 +80,9 @@ func generate(cfg: TerrainGenConfig) -> void:
 	_draw_massif()
 	_build_relief()
 	_compute_water_level()
-	_flatten_clearing()
+	_flatten_clearings()
 	_carve_river()
-	cave_position = Vector3(0.0, _height_at(Vector2.ZERO), 0.0)
+	cave_position = Vector3(0.0, _cfg.sample_height(heights, Vector2.ZERO), 0.0)
 	cave_forward = Vector3(_side.x, 0.0, _side.y)
 
 
@@ -135,24 +144,27 @@ func _build_relief() -> void:
 			var valley := _valley_at(along, side)
 			var macro := _macro.get_noise_2d(wp.x, wp.y) * _cfg.macro_amplitude
 			# Le vallonnement s'efface sur la falaise (on y tient à une paroi
-			# lisse) et s'atténue au fond de la vallée (pas de cuvette fermée).
+			# lisse), s'atténue au fond de la vallée (pas de cuvette fermée) et
+			# se calme en plaine (on y construit).
 			macro *= 1.0 - massif.y
 			macro *= 1.0 - _cfg.valley_macro_damping * valley.y
+			macro *= lerpf(_cfg.plain_macro_scale, 1.0, massif.z)
 			heights[_cfg.height_index(ix, iz)] = massif.x + valley.x + macro - along * _drainage_slope
 
 
-## Retourne (hauteur du massif, masque de falaise) en coordonnées locales.
-## Les deux sortent du même calcul de profil, d'où le Vector2 plutôt que deux
-## passes identiques.
-func _massif_at(along: float, side: float) -> Vector2:
+## Retourne (hauteur du massif, masque de falaise, influence) en coordonnées
+## locales. Les trois sortent du même calcul de profil, d'où le Vector3 plutôt
+## que trois passes identiques. L'influence vaut 1 sur l'axe et 0 hors du
+## massif : c'est la mesure de « à quel point on est en montagne ».
+func _massif_at(along: float, side: float) -> Vector3:
 	var taper := 1.0 - smoothstep(0.0, 1.0, absf(along) / _half_length)
 	if taper <= 0.0:
-		return Vector2.ZERO
+		return Vector3.ZERO
 
 	var across := side - _axis_side_base - _wobble_at(along)
 	var t := 1.0 - absf(across) / _half_width
 	if t <= 0.0:
-		return Vector2.ZERO
+		return Vector3.ZERO
 
 	var c := _cfg.cliff_position
 	var band := minf(_cfg.cliff_band_ratio, (1.0 - c) * 0.9)
@@ -180,7 +192,7 @@ func _massif_at(along: float, side: float) -> Vector2:
 		var outside := maxf(maxf(c - t, t - c - band), 0.0)
 		cliff_mask = (1.0 - smoothstep(0.0, band, outside)) * taper
 
-	return Vector2(shape * taper * _amplitude_at(along), cliff_mask)
+	return Vector3(shape * taper * _amplitude_at(along), cliff_mask, shape * taper)
 
 
 ## Retourne (creusement de la vallée, masque de fond de vallée).
@@ -212,40 +224,78 @@ func _amplitude_at(along: float) -> float:
 func _compute_water_level() -> void:
 	var along := _cfg.lake_shore_along_ratio * _cfg.half_size()
 	var shore := _axis * along + _side * (_valley_offset + _valley_wobble_at(along))
-	water_level = _height_at(shore)
+	water_level = _cfg.sample_height(heights, shore)
 
 
-# --- Clairière -----------------------------------------------------------------
+# --- Clairières ----------------------------------------------------------------
 
-## Aplanit le replat devant la grotte. L'aplanissement renonce là où le terrain
-## s'écarte trop de la cible : sans ça, le disque taillerait une marche nette
-## dans la falaise qui domine la clairière.
-func _flatten_clearing() -> void:
-	var target := heights[_cfg.height_index(_n / 2, _n / 2)]
-	var r := _cfg.bunker_radius
-	var outer := r + _cfg.bunker_falloff
-	for iz in _n:
-		for ix in _n:
-			var wp := _cfg.world_pos(ix, iz)
-			var dist := wp.length()
+## La clairière du bunker et les replats dispersés sont la même chose : des
+## disques aplanis. Les seconds servent deux fois — une trouée dans la canopée
+## à la passe suivante, et un terrain constructible tout de suite.
+func _flatten_clearings() -> void:
+	# La clairière du bunker est le socle d'une construction : elle, on la veut
+	# vraiment plane. Les replats de forêt gardent leur micro-relief.
+	_flatten_disc(Vector2.ZERO, _cfg.bunker_radius, _cfg.bunker_falloff, _cfg.bunker_max_delta, 1.0)
+	clearings.append(Vector3(0.0, 0.0, _cfg.bunker_radius))
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _cfg.world_seed + _SEED_CLEARING
+	var half := _cfg.half_size()
+	for _i in _cfg.clearing_count:
+		var radius := rng.randf_range(_cfg.clearing_radius_range.x, _cfg.clearing_radius_range.y)
+		var margin := half - radius - _cfg.clearing_falloff
+		for _try in _CLEARING_TRIES:
+			var candidate := Vector2(rng.randf_range(-margin, margin), rng.randf_range(-margin, margin))
+			if not _accepts_clearing(candidate, radius):
+				continue
+			_flatten_disc(candidate, radius, _cfg.clearing_falloff, _cfg.clearing_max_delta, _cfg.clearing_flatten_strength)
+			clearings.append(Vector3(candidate.x, candidate.y, radius))
+			break
+
+
+## Un replat se refuse en montagne (il y taillerait une terrasse), sous l'eau,
+## et sur la clairière du bunker qui a déjà été aplanie à ses propres réglages.
+func _accepts_clearing(centre: Vector2, radius: float) -> bool:
+	if centre.length() < _cfg.bunker_radius + _cfg.bunker_falloff + radius:
+		return false
+	var massif := _massif_at(centre.dot(_axis), centre.dot(_side))
+	if massif.z > _cfg.clearing_max_massif_influence:
+		return false
+	return _cfg.sample_height(heights, centre) > water_level + _cfg.clearing_min_above_water
+
+
+## Aplanit un disque sur la hauteur de son centre. L'aplanissement renonce là où
+## le terrain s'écarte trop de la cible : sans ça, le disque taillerait une
+## marche nette dès qu'il mord sur un relief qui le domine.
+func _flatten_disc(centre: Vector2, radius: float, falloff: float, max_delta: float, strength: float) -> void:
+	var target := _cfg.sample_height(heights, centre)
+	var outer := radius + falloff
+	var half := _cfg.half_size()
+	var ix0 := clampi(int(floor((centre.x - outer + half) / _cfg.cell_size)), 0, _n - 1)
+	var ix1 := clampi(int(ceil((centre.x + outer + half) / _cfg.cell_size)), 0, _n - 1)
+	var iz0 := clampi(int(floor((centre.y - outer + half) / _cfg.cell_size)), 0, _n - 1)
+	var iz1 := clampi(int(ceil((centre.y + outer + half) / _cfg.cell_size)), 0, _n - 1)
+
+	for iz in range(iz0, iz1 + 1):
+		for ix in range(ix0, ix1 + 1):
+			var dist := _cfg.world_pos(ix, iz).distance_to(centre)
 			if dist >= outer:
 				continue
 			var idx := _cfg.height_index(ix, iz)
 			var h := heights[idx]
-			var w := 1.0 - smoothstep(r, outer, dist)
-			var delta := absf(h - target)
-			w *= 1.0 - smoothstep(_cfg.bunker_max_delta, _cfg.bunker_max_delta * 2.0, delta)
+			var w := strength * (1.0 - smoothstep(radius, outer, dist))
+			w *= 1.0 - smoothstep(max_delta, max_delta * 2.0, absf(h - target))
 			heights[idx] = lerpf(h, target, w)
 
 
 # --- Rivière -------------------------------------------------------------------
 
 func _carve_river() -> void:
-	var path := _trace_river()
-	if path.size() < 2:
+	river_path = _trace_river()
+	if river_path.size() < 2:
 		push_warning("HeightmapGenerator : tracé de rivière vide, rien à creuser.")
 		return
-	_carve_channel(path, _water_line(path))
+	_carve_channel(river_path, _water_line(river_path))
 
 
 ## Descente de gradient dans la plaine, tenue par l'axe de vallée. Le gradient
@@ -304,7 +354,7 @@ func _water_line(path: PackedVector2Array) -> PackedFloat32Array:
 	water.resize(path.size())
 	var previous := INF
 	for i in path.size():
-		var level := minf(_height_at(path[i]), previous - _RIVER_MIN_DROP)
+		var level := minf(_cfg.sample_height(heights, path[i]), previous - _RIVER_MIN_DROP)
 		water[i] = level
 		previous = level
 	return water
@@ -348,22 +398,8 @@ func _carve_channel(path: PackedVector2Array, water: PackedFloat32Array) -> void
 
 # --- Échantillonnage -----------------------------------------------------------
 
-## Hauteur interpolée en un point monde quelconque.
-func _height_at(p: Vector2) -> float:
-	var half := _cfg.half_size()
-	var fx := (p.x + half) / _cfg.cell_size
-	var fz := (p.y + half) / _cfg.cell_size
-	var ix := clampi(int(floor(fx)), 0, _n - 2)
-	var iz := clampi(int(floor(fz)), 0, _n - 2)
-	var tx := clampf(fx - ix, 0.0, 1.0)
-	var tz := clampf(fz - iz, 0.0, 1.0)
-	var low := lerpf(heights[_cfg.height_index(ix, iz)], heights[_cfg.height_index(ix + 1, iz)], tx)
-	var high := lerpf(heights[_cfg.height_index(ix, iz + 1)], heights[_cfg.height_index(ix + 1, iz + 1)], tx)
-	return lerpf(low, high, tz)
-
-
 func _gradient_at(p: Vector2) -> Vector2:
 	var e := _cfg.cell_size
-	var dx := _height_at(p + Vector2(e, 0.0)) - _height_at(p - Vector2(e, 0.0))
-	var dz := _height_at(p + Vector2(0.0, e)) - _height_at(p - Vector2(0.0, e))
+	var dx := _cfg.sample_height(heights, p + Vector2(e, 0.0)) - _cfg.sample_height(heights, p - Vector2(e, 0.0))
+	var dz := _cfg.sample_height(heights, p + Vector2(0.0, e)) - _cfg.sample_height(heights, p - Vector2(0.0, e))
 	return Vector2(dx, dz) / (2.0 * e)
