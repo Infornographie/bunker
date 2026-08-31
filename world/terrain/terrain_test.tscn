@@ -27,10 +27,11 @@ fog_depth_curve = 2.000001
 fog_depth_begin = 80.0
 fog_depth_end = 600.0
 
-[node name="TerrainTest" type="Node3D" unique_id=137881587]
+[node name="TerrainTest" type="Node3D" unique_id=137881587 node_paths=PackedStringArray("sun")]
 transform = Transform3D(-0.5153874, 0, 0.8569575, 0, 1, 0, -0.8569575, 0, -0.5153874, 0, -49.16223, 0)
 script = ExtResource("1_hr0af")
 config = ExtResource("2_kgf1h")
+sun = NodePath("DirectionalLight3D")
 
 [node name="Player" parent="." unique_id=135155471 instance=ExtResource("3_ff4tk")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.726444, 37.19605, 19.68988)

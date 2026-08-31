@@ -88,7 +88,7 @@ res://
 │   ├── building_def.gd                 — Resource : bâtiment (coûts, collision_shape, scènes)
 │   ├── resource_cost.gd
 │   ├── recipe_def.gd                   — Resource : recette de transformation
-│   ├── terrain_gen_config.gd           — (@tool) Resource : réglages de génération + convention de grille (grid_size, cell_count, half_size, chunks_per_side, height_index, world_pos, sample_height)
+│   ├── terrain_gen_config.gd           — (@tool) Resource : réglages de génération + convention de grille (grid_size, cell_count, half_size, chunks_per_side, height_index, world_pos, sample_height, chunk_area)
 │   ├── foliage_def.gd                  — (@tool) Resource : une essence (id, model, scale_range, random_yaw, max_slope_degrees, embed_depth, weight)
 │   ├── resources/                      — instances ResourceDef (wood, mushroom, grilled_mushroom)
 │   ├── recipes/                        — instances RecipeDef
@@ -101,8 +101,9 @@ res://
 	├── terrain/
 	│   ├── heightmap_generator.gd      — (@tool) RefCounted : massif, relief, eau, clairières, rivière. Publie heights / cave_position / cave_forward / water_level / clearings / river_path
 	│   ├── terrain_mesh_builder.gd     — (@tool) RefCounted statique : build_chunk() → StaticBody3D (mesh + collision trimesh)
-	│   ├── foliage_scatter.gd          — (@tool) RefCounted : scatter() → Node3D de chunks de MultiMeshInstance3D ; expose placed_count
-	│   ├── terrain_controller.gd       — (@tool) Node3D : orchestrateur, boutons Régénérer/Effacer, crée Chunks / Water / Foliage / CaveSite, publie heights
+	│   ├── foliage_scatter.gd          — (@tool) RefCounted : scatter() → Node3D de chunks de MultiMeshInstance3D ; expose placed_count et CHUNK_AREA_META
+	│   ├── foliage_proximity.gd        — (@tool) Node : setup(foliage_root, sun, canopy_height) ; coupe cast_shadow des chunks dont l'ombre n'atterrit pas dans les cascades
+	│   ├── terrain_controller.gd       — (@tool) Node3D : orchestrateur, boutons Régénérer/Effacer, crée Chunks / Water / Foliage (+ Proximity) / CaveSite, publie heights ; expose config et sun
 	│   └── terrain.gdshader            — sol coloré par altitude, pente et bruit de teinte
 	└── forest/
 		├── forest_test.tscn            — scène de test historique (sol plat) — seule scène où les mécaniques de jeu sont montées
@@ -127,6 +128,8 @@ res://
 - Rejets, dans cet ordre : sous l'eau, dans une clairière (probabilité croissante sur la distance d'adoucissement — la lisière n'est pas dessinée, elle est le dégradé), dans le lit de la rivière, puis pente trop forte pour l'essence tirée.
 - **Le choix d'essence se fait au point, jamais au chunk.** Chaque essence a son champ de bruit propre ; son poids local est son poids propre modulé par ce champ élevé à `stand_sharpness`. Une sélection par chunk produirait une couture rectiligne à chaque frontière.
 - Le gain de performance vient de la même mécanique : au cœur d'un peuplement, les autres essences ne sont jamais tirées, donc leur multimesh n'existe pas dans ce chunk.
+- `FoliageScatter` pose sur chaque nœud de chunk la métadonnée `chunk_area` (`Rect2`, valeur de `TerrainGenConfig.chunk_area()`). C'est par elle que `FoliageProximity` connaît la position d'un chunk : ni le nom du nœud ni la boîte englobante du multimesh ne sont une seconde source de vérité.
+- `FoliageProximity` est le point unique où le feuillage réagit à la distance. Tout s'y calcule **dans le repère du nœud de feuillage**, celui des emprises publiées — le nœud de terrain peut être tourné et déplacé dans sa scène.
 - `foliage_view_distance` et `foliage_fade_margin` sont posés sur chaque `MultiMeshInstance3D`. Ils se règlent **de pair avec le brouillard de profondeur** du `WorldEnvironment` : c'est la brume qui doit masquer la coupure.
 ### Flux d'action (swing outil)
 - `ActionStateMachine.use_tool_on(target, on_impact, reach_distance)` appelle `ToolController.swing()` et écoute son signal `swing_impact` en retour. La SM pilote le controller, jamais l'inverse.

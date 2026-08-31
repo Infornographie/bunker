@@ -2,7 +2,7 @@
  
 ## État au 31/08/2026
  
-- **Jalon courant** : 4 — Terrain procédural. Passes A (relief, falaise, vallée, rivière, lac) et B1 (canopée) closes ; passe B2 en cours — strates basses, biomes, carte d'ouverture.
+- **Jalon courant** : 4 — Terrain procédural. Passes A (relief, falaise, vallée, rivière, lac), B1 (canopée) et B1-bis (coupure d'ombre par proximité) closes ; passe B2 en cours — strates basses, biomes, carte d'ouverture.
 - **Jalon suivant** : 5 — Réveil de pawn + ordres directs.
 Socle : Godot 4.7.2, renderer Forward+. Avancement détaillé → ROADMAP.md.
 ## Décisions de conception
@@ -39,6 +39,7 @@ Choix retenus actuellement pour guider le développement — pas gravés dans le
 - **C'est le brouillard qui porte la profondeur, pas la géométrie lointaine.** Au-delà de la distance d'affichage, la végétation cesse d'être dessinée et le relief nu porte les silhouettes de crêtes, teintées par la perspective aérienne. Distance d'affichage et densité de brume se règlent **de pair** : si on voit les arbres disparaître, c'est la brume qu'il faut épaissir, pas la distance qu'il faut pousser.
 - **Répartition en grille jitterée**, pas en poisson-disque : à ce volume, le second coûte cher pour un résultat que l'œil ne distingue pas une fois les troncs posés.
 - **Une plante s'enfonce d'autant plus que la pente est forte** : la hauteur est lue au centre du modèle, or la base d'un tronc est un disque dont le bord aval s'écarte du point de mesure.
+- **L'ombre d'un arbre n'est pas sous l'arbre.** Trier les chunks qui projettent une ombre par leur distance au spectateur est un critère faux : avec un soleil à 9° d'élévation, un arbre de 25 m jette son ombre à 160 m de son tronc, et couper « au-delà de ce qu'on voit » efface les ombres qui tombent sous nos pieds. Le critère est l'endroit où l'ombre **atterrit**. La portée se lit sur la lumière (`directional_shadow_max_distance`) plutôt que de se régler à côté : deux valeurs à tenir de pair finissent par diverger, et celle-ci reste juste toute seule au cycle jour/nuit.
 - **Brouillard de hauteur écarté** : sur une carte qui descend de +200 à −40, une couche basse suit le joueur quand il descend. La brume de profondeur suffit.
 ### Joueur, actions, interfaces
 - **Joueur** : franchissement automatique de marches basses (step_height 0.35m, ajustable, via test_move). Course (Shift, ×1.6) et saut (Espace, coyote time 0.12s) implantés dans `player_controller.gd`. Les deux sont bloqués quand `CarryController` tient un objet lourd. Kick de FOV pendant la course, lissé au `lerpf` par frame plutôt qu'en `Tween`. Valeurs de feeling exposées à l'inspecteur, pas encore réglées finement. Course et saut gratuits — dette énergie rattachée au Jalon 6.
@@ -60,6 +61,9 @@ Choix retenus actuellement pour guider le développement — pas gravés dans le
  
 Bugs rencontrés et leur fix — pas des décisions de conception, des gotchas techniques à ne pas retomber dedans.
  
+- **Un repère local comparé à une position globale ne lève aucune erreur.** Le nœud de terrain de la scène de test est tourné de 121° et descendu de 49 m ; les emprises de chunks sont en coordonnées locales. Comparées à `camera.global_position`, elles donnaient des distances sans aucun sens — et donc les trois quarts des ombres coupées, sans un message. Tout calcul de distance sur des données publiées par le générateur se fait dans le repère du nœud qui les porte (`to_local()`, et la basis inverse pour les directions).
+- **Une AABB de `MultiMesh` n'est pas disponible à la sortie du semis** : `get_aabb()` sur un `MultiMeshInstance3D` fraîchement rempli peut renvoyer une boîte vide, le calcul étant paresseux côté serveur de rendu. Ce qui connaît la géométrie d'un chunk, c'est celui qui l'a construit : il pose l'information, il ne la fait pas redeviner.
+- **`Node3D.global_transform` avant l'entrée dans l'arbre** : renvoie l'identité et hurle en boucle, une fois par appel. Symptôme : un spam d'erreurs « Condition "!is_inside_tree()" is true ». Tout recensement de nœuds générés se fait après `add_child()`.
 - **Les `Packed*Array` sont des valeurs à copie sur écriture.** Passer un `PackedFloat32Array` à une fonction pour qu'elle le remplisse ne marche pas : l'écriture crée une copie locale et l'appelant garde son tableau d'origine. Aucune erreur, aucun avertissement — juste des zéros. Un tableau se **retourne**, il ne se remplit pas par référence.
 - **`@tool` ne se transmet pas** : un script non-`@tool` instancié ou référencé par un script `@tool` devient une coquille sans méthodes dans l'éditeur. Symptôme : « Attempt to call a method on a placeholder instance ». Toute la chaîne appelée depuis un outil d'éditeur doit être marquée, ressources de config comprises.
 - **Écraser des scripts `@tool` à chaud met Godot dans un état bâtard** : « Nonexistent function 'new' in base 'GDScript' », ou une classe globale qui ne résout plus alors que les fichiers sont justes. Recharger le projet ; si ça résiste, supprimer `.godot/`.

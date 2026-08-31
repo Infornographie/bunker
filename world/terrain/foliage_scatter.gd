@@ -33,6 +33,8 @@ extends RefCounted
 const _CHUNK_SEED_X := 73856093
 const _CHUNK_SEED_Z := 19349663
 const _SEED_STAND := 4211
+## Métadonnée portant l'emprise au sol d'un chunk de feuillage.
+const CHUNK_AREA_META := &"chunk_area"
 ## Décalage d'échantillonnage entre deux essences : elles lisent le même bruit à
 ## des endroits assez éloignés pour que leurs champs soient indépendants.
 const _STAND_SPREAD := Vector2(977.0, -613.0)
@@ -103,8 +105,9 @@ func _scatter_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array, clearing
 		river: PackedVector2Array, water_level: float, defs: Array[FoliageDef],
 		stands: FastNoiseLite, cx: int, cz: int) -> Node3D:
 	var half := cfg.half_size()
-	var chunk_span := cfg.chunk_cells * cfg.cell_size
-	var origin := Vector2(-half + cx * chunk_span, -half + cz * chunk_span)
+	var area := cfg.chunk_area(cx, cz)
+	var origin := area.position
+	var chunk_span := area.size.x
 	var spacing := cfg.foliage_spacing
 
 	var rng := RandomNumberGenerator.new()
@@ -124,7 +127,7 @@ func _scatter_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array, clearing
 	# s'arrêtent en haut de talus. On ne retient que les segments qui passent
 	# dans ce chunk, sinon chaque candidat testerait tout le cours d'eau.
 	var river_margin := cfg.river_width * 0.5 + cfg.river_bank
-	var nearby := _river_segments_near(river, Rect2(origin, Vector2(chunk_span, chunk_span)), river_margin)
+	var nearby := _river_segments_near(river, area, river_margin)
 
 	var placements: Array[Array] = []
 	placements.resize(defs.size())
@@ -165,7 +168,7 @@ func _scatter_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array, clearing
 			placements[index].append(Transform3D(basis, Vector3(point.x, height - _sink(def, slope), point.y)))
 			placed_count += 1
 
-	return _build_chunk_node(cfg, defs, placements, cx, cz)
+	return _build_chunk_node(cfg, defs, placements, area, cx, cz)
 
 
 ## Densité de canopée admise en ce point : nulle au cœur d'une clairière, pleine
@@ -230,7 +233,8 @@ func _pick_def(weights: PackedFloat32Array, roll: float) -> int:
 
 # --- Construction des nœuds ----------------------------------------------------
 
-func _build_chunk_node(cfg: TerrainGenConfig, defs: Array[FoliageDef], placements: Array[Array], cx: int, cz: int) -> Node3D:
+func _build_chunk_node(cfg: TerrainGenConfig, defs: Array[FoliageDef], placements: Array[Array],
+		area: Rect2, cx: int, cz: int) -> Node3D:
 	var chunk: Node3D = null
 	for i in defs.size():
 		var transforms: Array = placements[i]
@@ -239,6 +243,10 @@ func _build_chunk_node(cfg: TerrainGenConfig, defs: Array[FoliageDef], placement
 		if chunk == null:
 			chunk = Node3D.new()
 			chunk.name = "foliage_%d_%d" % [cx, cz]
+			# Emprise posée par celui qui la connaît. Tout ce qui raisonne par
+			# distance la lit ici plutôt que de la redéduire d'une boîte
+			# englobante ou du nom du nœud.
+			chunk.set_meta(CHUNK_AREA_META, area)
 		for part in _parts_of(defs[i]):
 			chunk.add_child(_build_multimesh(cfg, defs[i], part, transforms))
 	return chunk

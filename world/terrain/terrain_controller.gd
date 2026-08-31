@@ -15,12 +15,16 @@ const CHUNKS_NODE := "Chunks"
 const CAVE_NODE := "CaveSite"
 const WATER_NODE := "Water"
 const FOLIAGE_NODE := "Foliage"
+const PROXIMITY_NODE := "Proximity"
 
 ## Hauteurs de la carte courante, publiées pour tout ce qui a besoin de savoir
 ## où est le sol : `TerrainGenConfig.sample_height()` les interroge.
 var heights: PackedFloat32Array
 
 @export var config: TerrainGenConfig
+## Soleil de la scène. `FoliageProximity` y lit la portée des ombres et la
+## direction d'éclairage pour trier les chunks qui projettent une ombre utile.
+@export var sun: DirectionalLight3D
 
 @export_tool_button("Régénérer") var regenerate_action: Callable = generate
 @export_tool_button("Effacer") var clear_action: Callable = clear
@@ -72,6 +76,11 @@ func generate() -> void:
 	foliage.name = FOLIAGE_NODE
 	add_child(foliage)
 
+	var proximity := FoliageProximity.new()
+	proximity.name = PROXIMITY_NODE
+	foliage.add_child(proximity)
+	proximity.setup(foliage, sun, config.canopy_height)
+
 	var cave := Marker3D.new()
 	cave.name = CAVE_NODE
 	add_child(cave)
@@ -87,7 +96,7 @@ func generate() -> void:
 	])
 	print("Feuillage semé en %d ms — %d chunks, %d instances." % [
 		foliage_elapsed,
-		foliage.get_child_count(),
+		foliage.get_child_count() - 1,
 		scatter.placed_count,
 	])
 

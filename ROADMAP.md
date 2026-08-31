@@ -109,16 +109,27 @@
 - [x] Distance d'affichage + fondu, réglés de pair avec le brouillard de profondeur du `WorldEnvironment`
 - [x] Perf mesurée : **~500 ms** de semis, 23 000 instances, ~160 chunks de feuillage
 ### Passe B1-bis — proximité
-- [ ] Composant piloté par la position du joueur, un seul pour deux usages : couper `cast_shadow` sur les chunks lointains, et basculer les arbres proches en instances abattables
+- [x] `foliage_proximity.gd` : composant piloté par la caméra courante, point unique de réaction du feuillage à la distance
+- [x] Coupure de `cast_shadow` par chunk, sur le critère de l'endroit où l'ombre **atterrit** (chunk translaté le long du soleil de `canopy_height / tan(élévation)`), comparé au `directional_shadow_max_distance` lu sur la lumière
+- [x] `TerrainGenConfig.chunk_area()` : emprise d'un chunk, publiée en métadonnée par le semis
+- [ ] Bascule des arbres proches en instances abattables — au Jalon 5, avec les pawns qui les récoltent
 - [ ] `FoliageDef` gagne ses champs de récolte (PV, type d'outil, `drop_resource`) — écrits quand il y a quelqu'un pour les lire
 ### Passe B2 — strates basses et biomes
+> Découpée en sous-passes. `ScatterOccupancy` en premier : c'est elle qui empêche les strates de se traverser et qui produit la carte d'ouverture.
+
 - [ ] Strate arbustive : les `CommonTree` redescendent là où ils appartiennent, plus buissons et fougères. C'est elle qui bouche la vue à trente mètres et donne la profondeur de Compiègne.
 - [ ] Strate sol : herbes, fleurs, cailloux, champignons
 - [ ] Strate épiphyte : champignons de tronc, posés sur les troncs et les rochers
 - [ ] `biome_map_generator.gd` : **poids** de biome par cellule (jamais d'identifiant — c'est ce qui donne les dégradés sans code de frontière), carte de pente, carte d'humidité, distances de lisière
-- [ ] Carte d'ouverture calculée **après** la canopée : c'est elle qui pilote la strate sol. Corollaire visé : déboiser fait pousser l'herbe.
+- [ ] `scatter_occupancy.gd` : deux grilles à cellule ~2 m. `blocked` = disques durs au rayon de base, refus binaire (rien ne pousse dans un tronc). `cover` = disques doux au rayon de feuillage, module une **densité**. Confondre les deux fait qu'aucune strate basse ne pousse : à 7 m d'espacement, des disques de feuillage de 6 m couvrent la carte à plus de 100 %.
+- [ ] `FoliageDef` gagne `base_radius`, `cover_radius`, `cover_amount`, `cover_preference` (l'herbe veut du clair, les champignons de l'ombre) et `persistent`
+- [ ] `FoliageScatter` passe de la liste unique de canopée à des strates ordonnées, chacune semée **sur toute la carte** avant la suivante : un arbre déborde chez le voisin, l'occupation doit être complète avant que la strate d'en dessous ne la lise
+- [ ] Carte d'ouverture = `cover` laissée par la canopée. Elle sert trois fois : densité des strates basses, couleur de sommet du sol, et plus tard le déboisement qui fait pousser l'herbe. Corollaire visé : déboiser fait pousser l'herbe.
+- [ ] Strate sol **streamée par chunk** autour du joueur, via `FoliageProximity` : à 1 m d'espacement sur 1200 m, c'est 1,44 M de candidats et ~100 Mo de multimesh — non semable au boot
 - [ ] `BiomeDef` et `PatchDef` en `.tres`. Biomes ouverts en premier : forêt claire, forêt sombre (conifères), berge. Patchs : clairière, coin à champignons, bosquet rose.
-- [ ] Les couleurs de biome s'ajoutent au shader du sol en couleur de sommet, sans remplacer le calcul altitude/pente
+- [ ] Les couleurs de biome **et l'ouverture** s'ajoutent au shader du sol en couleur de sommet, sans remplacer le calcul altitude/pente. C'est ce qui fait exister une clairière lointaine : sans elle, une trouée vue d'une hauteur est une tache de sol nu dans le vert.
+- [ ] Le mesh de terrain se construit **après** le semis de canopée, puisqu'il lit `cover` — le sol se colore de ce qui pousse dessus
+- [ ] Végétation `persistent` de clairière (touffes hautes, buissons fleuris, bouquets) semée au boot comme la canopée : ce qui doit se voir de loin ne se stream pas
 - [ ] Bake `NavigationRegion3D` après le scatter ; rivière et falaise infranchissables, gué praticable
 - [ ] Corriger dette Jalon 1 (navmesh/branches)
 ### Passe C — grotte, falaise et lointain
@@ -129,7 +140,6 @@
 - [ ] Cascade, en feature du biome montagne rejoignant la rivière
 - [ ] Gorge : passage encaissé entre deux parois sur une portion du cours — feature de relief, pas de végétation
 ### Dette Jalon 4
-- **Ombres : tous les chunks projettent la leur**, y compris à 600 m, alors que l'ombre directionnelle ne porte que sur quelques dizaines de mètres. C'est le premier facteur de coût avec ombres allumées. Correctif prévu en passe B1-bis.
 - **Pas de LOD sur la végétation.** Partiellement payé par la distance d'affichage : on ne simplifie pas les arbres lointains, on cesse de les dessiner. Un vrai LOD ou des imposteurs restent à faire si la distance d'affichage devient insuffisante.
 - **`foliage_view_distance` masque le feuillage dans l'éditeur** dès qu'on recule la caméra pour voir la carte. Ce n'est pas un bug, mais ça surprend : monter la valeur temporairement pour inspecter la carte de haut.
 - **Le fondu de visibilité dépend du shader du pack** : s'il ne prend pas le tramage, les chunks disparaissent d'un coup. Mettre la marge de fondu à 0 et laisser la brume masquer la coupure.

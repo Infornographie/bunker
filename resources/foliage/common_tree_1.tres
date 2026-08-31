@@ -8,4 +8,3 @@ script = ExtResource("1_def")
 id = &"common_tree_1"
 model = ExtResource("2_model")
 scale_range = Vector2(0.85, 1.25)
-embed_depth = null

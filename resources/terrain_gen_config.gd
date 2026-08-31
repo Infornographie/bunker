@@ -166,6 +166,10 @@ extends Resource
 ## Distance d'effacement progressif avant la limite, en mètres. À 0, la
 ## disparition est nette.
 @export_range(0.0, 300.0, 5.0) var foliage_fade_margin: float = 80.0
+## Hauteur de canopée retenue pour estimer la longueur des ombres, en mètres.
+## Sert au seul tri des chunks qui projettent une ombre utile : la portée, elle,
+## est lue sur la lumière. Voir `FoliageProximity`.
+@export_range(2.0, 80.0, 1.0) var canopy_height: float = 25.0
 
 @export_group("Rendu")
 @export var terrain_material: Material
@@ -212,6 +216,15 @@ func sample_height(heights: PackedFloat32Array, p: Vector2) -> float:
 	var low := lerpf(heights[height_index(ix, iz)], heights[height_index(ix + 1, iz)], tx)
 	var high := lerpf(heights[height_index(ix, iz + 1)], heights[height_index(ix + 1, iz + 1)], tx)
 	return lerpf(low, high, tz)
+
+
+## Emprise au sol d'un chunk. La convention de grille vit ici : le semis, le
+## mesh et tout ce qui raisonne par chunk lisent la même écriture. Le dernier
+## chunk d'une rangée peut dépasser la zone — sans conséquence, rien ne s'y sème.
+func chunk_area(cx: int, cz: int) -> Rect2:
+	var span := chunk_cells * cell_size
+	var half := half_size()
+	return Rect2(Vector2(-half + cx * span, -half + cz * span), Vector2(span, span))
 
 
 ## Position monde (plan XZ) d'un sommet de la grille.
