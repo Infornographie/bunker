@@ -48,16 +48,6 @@ func generate() -> void:
 	heightmap.generate(config)
 	heights = heightmap.heights
 
-	var chunks := Node3D.new()
-	chunks.name = CHUNKS_NODE
-	add_child(chunks)
-	var side := config.chunks_per_side()
-	for cz in side:
-		for cx in side:
-			var chunk := TerrainMeshBuilder.build_chunk(config, heightmap.heights, cx, cz)
-			if chunk != null:
-				chunks.add_child(chunk)
-
 	# Un seul plan pour toute l'eau : le rivage n'est pas dessiné, il est ce qui
 	# dépasse. Le lac déborde de la zone parce que le plan est plus large qu'elle.
 	var water := MeshInstance3D.new()
@@ -69,6 +59,8 @@ func generate() -> void:
 	add_child(water)
 	water.position = Vector3(0.0, heightmap.water_level, 0.0)
 
+	# Le semis passe avant le mesh : celui-ci lit la carte d'ouverture pour
+	# colorer le sol de ce qui pousse dessus.
 	var scatter := FoliageScatter.new()
 	var foliage_started := Time.get_ticks_msec()
 	var foliage := scatter.scatter(config, heights, heightmap.clearings, heightmap.river_path, heightmap.water_level)
@@ -76,10 +68,20 @@ func generate() -> void:
 	foliage.name = FOLIAGE_NODE
 	add_child(foliage)
 
+	var chunks := Node3D.new()
+	chunks.name = CHUNKS_NODE
+	add_child(chunks)
+	var side := config.chunks_per_side()
+	for cz in side:
+		for cx in side:
+			var chunk := TerrainMeshBuilder.build_chunk(config, heights, scatter.occupancy, cx, cz)
+			if chunk != null:
+				chunks.add_child(chunk)
+
 	var proximity := FoliageProximity.new()
 	proximity.name = PROXIMITY_NODE
 	foliage.add_child(proximity)
-	proximity.setup(foliage, sun, config.canopy_height)
+	proximity.setup(scatter, config, foliage, sun)
 
 	var cave := Marker3D.new()
 	cave.name = CAVE_NODE
@@ -94,10 +96,14 @@ func generate() -> void:
 		heightmap.water_level,
 		heightmap.clearings.size(),
 	])
-	print("Feuillage semé en %d ms — %d chunks, %d instances." % [
+	var per_layer := PackedStringArray()
+	for index in scatter.placed_per_layer.size():
+		per_layer.append("%s %d" % [config.layers[index].id, scatter.placed_per_layer[index]])
+	print("Feuillage semé en %d ms — %d chunks, %d instances (%s)." % [
 		foliage_elapsed,
 		foliage.get_child_count() - 1,
 		scatter.placed_count,
+		", ".join(per_layer),
 	])
 
 

@@ -9,10 +9,18 @@ render_mode diffuse_burley;
 // Sans elle, une pente régulière est un aplat de couleur unique, et le sol a
 // l'air d'être en plastique quel que soit son relief.
 //
-// Les couleurs de biome viendront s'ajouter en couleur de sommet, sans
-// remplacer ce calcul : la pente restera de la roche quel que soit le biome.
+// La couleur de sommet porte la couverture végétale (canal rouge) : sous un
+// couvert fermé le sol est une litière brune, dans les trouées c'est de l'herbe.
+// C'est ce qui donne à une clairière lointaine une couleur au lieu d'un trou, et
+// c'est le même tableau qui décidera de la densité des strates basses. Les
+// couleurs de biome viendront s'ajouter dans les autres canaux, sans remplacer
+// ce calcul : la pente restera de la roche quel que soit le biome.
 
 uniform vec3 grass_color : source_color = vec3(0.36, 0.42, 0.26);
+// Sol de sous-bois : feuilles mortes et humus, là où le couvert est fermé.
+uniform vec3 litter_color : source_color = vec3(0.28, 0.22, 0.14);
+// Couverture à partir de laquelle le sol est franchement de la litière.
+uniform float litter_cover_full : hint_range(0.05, 1.0) = 0.55;
 uniform vec3 rock_color : source_color = vec3(0.42, 0.34, 0.24);
 uniform vec3 cliff_color : source_color = vec3(0.48, 0.48, 0.46);
 
@@ -59,7 +67,8 @@ void fragment() {
 	vec3 n = normalize(world_normal);
 	float slope = degrees(acos(clamp(n.y, -1.0, 1.0)));
 
-	vec3 base = mix(grass_color, rock_color, smoothstep(rock_height_start, rock_height_end, world_position.y));
+	vec3 ground_color = mix(grass_color, litter_color, smoothstep(0.0, litter_cover_full, COLOR.r));
+	vec3 base = mix(ground_color, rock_color, smoothstep(rock_height_start, rock_height_end, world_position.y));
 	vec3 albedo = mix(base, cliff_color, smoothstep(cliff_slope_start, cliff_slope_end, slope));
 
 	// Deux échelles : les grandes taches donnent les zones, la seconde casse

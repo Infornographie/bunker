@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="FoliagePatch" format=3 uid="uid://ddfe8geik2dmf"]
+
+[ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="1_patch"]
+[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="2_def"]
+[ext_resource type="Resource" uid="uid://bh2cw5xku7gqi" path="res://resources/foliage/mushroom_common.tres" id="3_mushroom_common"]
+[ext_resource type="Resource" uid="uid://binyt3tril0wl" path="res://resources/foliage/mushroom_redcap.tres" id="4_mushroom_redcap"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_gate"]
+frequency = 0.035
+fractal_octaves = 2
+
+[resource]
+script = ExtResource("1_patch")
+id = &"mushroom_spot"
+noise = SubResource("FastNoiseLite_gate")
+threshold = 0.82
+min_slope_degrees = null
+max_slope_degrees = null
+density = 0.45
+defs = Array[ExtResource("2_def")]([ExtResource("3_mushroom_common"), ExtResource("4_mushroom_redcap")])

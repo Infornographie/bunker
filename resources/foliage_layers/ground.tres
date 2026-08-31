@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="FoliageLayer" format=3 uid="uid://l8jt03qmfspv"]
+
+[ext_resource type="Script" uid="uid://c5smwg870yhrm" path="res://resources/foliage_layer.gd" id="1_layer"]
+[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="2_def"]
+[ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="2_patch"]
+[ext_resource type="Resource" uid="uid://bph8qpprgjefd" path="res://resources/foliage/grass_common_short.tres" id="3_grass_common_short"]
+[ext_resource type="Resource" uid="uid://b6ejtjjng4geg" path="res://resources/foliage/grass_common_tall.tres" id="4_grass_common_tall"]
+[ext_resource type="Resource" uid="uid://yursgi8xsq13" path="res://resources/foliage/grass_wide_short.tres" id="5_grass_wide_short"]
+[ext_resource type="Resource" uid="uid://dosgenlgpa6e5" path="res://resources/foliage/grass_wide_tall.tres" id="6_grass_wide_tall"]
+[ext_resource type="Resource" uid="uid://dmdcbu4mljagl" path="res://resources/foliage/grass_wispy_short.tres" id="7_grass_wispy_short"]
+[ext_resource type="Resource" uid="uid://n8c7xuqheqti" path="res://resources/foliage/grass_wispy_tall.tres" id="8_grass_wispy_tall"]
+[ext_resource type="Resource" uid="uid://b0gvtn1x61br5" path="res://resources/foliage/clover_1.tres" id="9_clover_1"]
+[ext_resource type="Resource" uid="uid://civepxrf52iek" path="res://resources/foliage/clover_2.tres" id="10_clover_2"]
+[ext_resource type="Resource" uid="uid://6njivhvkf1a1" path="res://resources/foliage/plant_1.tres" id="11_plant_1"]
+[ext_resource type="Resource" uid="uid://cfmgnxebhb4ds" path="res://resources/foliage/plant_5.tres" id="12_plant_5"]
+[ext_resource type="Resource" uid="uid://ded83mxpquwai" path="res://resources/foliage/pebble_round_1.tres" id="13_pebble_round_1"]
+[ext_resource type="Resource" uid="uid://br8wj1o0mvxvw" path="res://resources/foliage/pebble_round_2.tres" id="14_pebble_round_2"]
+[ext_resource type="Resource" uid="uid://c5nv08csipdu2" path="res://resources/foliage/pebble_round_3.tres" id="15_pebble_round_3"]
+[ext_resource type="Resource" uid="uid://douxv5svimjbc" path="res://resources/foliage_patches/scree.tres" id="16_scree"]
+[ext_resource type="Resource" uid="uid://ddfe8geik2dmf" path="res://resources/foliage_patches/mushroom_spot.tres" id="17_mushroom_spot"]
+[ext_resource type="Resource" uid="uid://c5nega15yvuag" path="res://resources/foliage_patches/flower_violet.tres" id="18_flower_violet"]
+[ext_resource type="Resource" uid="uid://dofhopo0p8dhq" path="res://resources/foliage_patches/flower_white.tres" id="19_flower_white"]
+[ext_resource type="Resource" uid="uid://lqyo0annxwnr" path="res://resources/foliage_patches/flower_yellow.tres" id="20_flower_yellow"]
+[ext_resource type="Resource" uid="uid://cfm38gq824yst" path="res://resources/foliage_patches/flower_pink.tres" id="21_flower_pink"]
+[ext_resource type="Resource" uid="uid://cxmr8a4pmsmy4" path="res://resources/foliage_patches/grass_bed.tres" id="22_grass_bed"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_stand"]
+frequency = 0.02
+fractal_octaves = 2
+
+[resource]
+script = ExtResource("1_layer")
+id = &"ground"
+spacing = 0.8
+jitter = 1.0
+streamed = true
+stand_noise = SubResource("FastNoiseLite_stand")
+stand_blend = 0.06
+clearing_uniform = true
+patches = Array[ExtResource("2_patch")]([ExtResource("16_scree"), ExtResource("17_mushroom_spot"), ExtResource("18_flower_violet"), ExtResource("19_flower_white"), ExtResource("20_flower_yellow"), ExtResource("21_flower_pink"), ExtResource("22_grass_bed")])
+defs = Array[ExtResource("2_def")]([ExtResource("3_grass_common_short"), ExtResource("4_grass_common_tall"), ExtResource("5_grass_wide_short"), ExtResource("6_grass_wide_tall"), ExtResource("7_grass_wispy_short"), ExtResource("8_grass_wispy_tall"), ExtResource("9_clover_1"), ExtResource("10_clover_2"), ExtResource("11_plant_1"), ExtResource("12_plant_5"), ExtResource("13_pebble_round_1"), ExtResource("14_pebble_round_2"), ExtResource("15_pebble_round_3")])

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="FoliageDef" format=3 uid="uid://bpdvqn1kee2ap"]
+
+[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="1_def"]
+[ext_resource type="PackedScene" uid="uid://ckd5tyta3huyi" path="res://assets/nature/meshes/Bush_Common_Dry.tscn" id="2_model"]
+
+[sub_resource type="Curve" id="Curve_response"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.3), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[resource]
+script = ExtResource("1_def")
+id = &"bush_common_dry"
+model = ExtResource("2_model")
+scale_range = Vector2(0.7, 1.2)
+max_slope_degrees = 42.0
+embed_depth = 0.2
+base_radius = 0.8
+cover_amount = 0.0
+cover_response = SubResource("Curve_response")

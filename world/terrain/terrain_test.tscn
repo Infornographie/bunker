@@ -45,5 +45,5 @@ directional_shadow_max_distance = 60.0
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1145164309]
 environment = SubResource("Environment_60qbc")
 
-[node name="Player2" parent="." unique_id=1907588528 instance=ExtResource("3_ff4tk")]
-transform = Transform3D(-0.51538724, 0, -0.8569572, 0, 1, 0, 0.8569572, 0, -0.51538724, -185.6992, 70.79934, 30.839195)
+[node name="Player2" parent="." unique_id=1963134520 instance=ExtResource("3_ff4tk")]
+transform = Transform3D(-0.51538724, 0, -0.8569572, 0, 1, 0, 0.8569572, 0, -0.51538724, -5.935262, 46.154602, -3.016308)

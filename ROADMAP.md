@@ -117,15 +117,20 @@
 ### Passe B2 — strates basses et biomes
 > Découpée en sous-passes. `ScatterOccupancy` en premier : c'est elle qui empêche les strates de se traverser et qui produit la carte d'ouverture.
 
-- [ ] Strate arbustive : les `CommonTree` redescendent là où ils appartiennent, plus buissons et fougères. C'est elle qui bouche la vue à trente mètres et donne la profondeur de Compiègne.
-- [ ] Strate sol : herbes, fleurs, cailloux, champignons
-- [ ] Strate épiphyte : champignons de tronc, posés sur les troncs et les rochers
+- [x] Quatre strates : `canopy` (TallThick), `understory` (CommonTree), `shrub` (buissons, fougères), `ground` (herbes, trèfles, cailloux)
+- [x] Roue de peuplement : un seul appel de bruit par candidat quel que soit le nombre d'essences, et des plaques d'une même espèce
+- [x] `FoliagePatch` : taches où la composition change entièrement — `scree`, `grass_bed`, `mushroom_spot`, et quatre taches de fleurs **monochromes**
+- [x] `clearing_response` (Curve) par strate : les buissons font une **couronne** en lisière, l'herbe ignore la clairière
+- [x] `clearing_uniform` : dans une clairière, palette et essence se tirent au centre — la clairière est une unité, pas un morceau de forêt sans arbres
+- [x] Habillage des pentes : `min_slope_degrees` sur les essences et sur les taches, `scree` réservé au-delà de 16°
+- [ ] Strate épiphyte : `Mushroom_Oyster` et `Laetiporus`, posés sur les troncs et les rochers. Sortis des strates de sol en attendant — ce sont des champignons d'arbre.
+- [ ] Troncs tombés et souches (`DeadTree`) : demande un mode de pose couché (rotation autour de X/Z) que `FoliageDef` ne sait pas exprimer
 - [ ] `biome_map_generator.gd` : **poids** de biome par cellule (jamais d'identifiant — c'est ce qui donne les dégradés sans code de frontière), carte de pente, carte d'humidité, distances de lisière
-- [ ] `scatter_occupancy.gd` : deux grilles à cellule ~2 m. `blocked` = disques durs au rayon de base, refus binaire (rien ne pousse dans un tronc). `cover` = disques doux au rayon de feuillage, module une **densité**. Confondre les deux fait qu'aucune strate basse ne pousse : à 7 m d'espacement, des disques de feuillage de 6 m couvrent la carte à plus de 100 %.
-- [ ] `FoliageDef` gagne `base_radius`, `cover_radius`, `cover_amount`, `cover_preference` (l'herbe veut du clair, les champignons de l'ombre) et `persistent`
-- [ ] `FoliageScatter` passe de la liste unique de canopée à des strates ordonnées, chacune semée **sur toute la carte** avant la suivante : un arbre déborde chez le voisin, l'occupation doit être complète avant que la strate d'en dessous ne la lise
-- [ ] Carte d'ouverture = `cover` laissée par la canopée. Elle sert trois fois : densité des strates basses, couleur de sommet du sol, et plus tard le déboisement qui fait pousser l'herbe. Corollaire visé : déboiser fait pousser l'herbe.
-- [ ] Strate sol **streamée par chunk** autour du joueur, via `FoliageProximity` : à 1 m d'espacement sur 1200 m, c'est 1,44 M de candidats et ~100 Mo de multimesh — non semable au boot
+- [x] `scatter_occupancy.gd` : deux grilles à cellule ~2 m. `blocked` = disques durs au rayon de base, refus binaire (rien ne pousse dans un tronc). `cover` = disques doux au rayon de feuillage, module une **densité**. Confondre les deux fait qu'aucune strate basse ne pousse : à 7 m d'espacement, des disques de feuillage de 6 m couvrent la carte à plus de 100 %.
+- [x] `FoliageDef` gagne `base_radius`, `cover_radius`, `cover_amount`, `cover_response` (une `Curve` : l'herbe veut du clair, les champignons de l'ombre) et `min_slope_degrees`
+- [x] `FoliageScatter` passe de la liste unique de canopée à des strates ordonnées, chacune semée **sur toute la carte** avant la suivante : un arbre déborde chez le voisin, l'occupation doit être complète avant que la strate d'en dessous ne la lise
+- [x] Carte d'ouverture = `cover` laissée par la canopée. Elle sert trois fois : densité des strates basses, couleur de sommet du sol, et plus tard le déboisement qui fait pousser l'herbe. Corollaire visé : déboiser fait pousser l'herbe.
+- [x] Strates `shrub` et `ground` **streamées par chunk** autour du joueur, via `FoliageProximity` : à 1 m d'espacement sur 1200 m, c'est 1,44 M de candidats et ~100 Mo de multimesh — non semable au boot
 - [ ] `BiomeDef` et `PatchDef` en `.tres`. Biomes ouverts en premier : forêt claire, forêt sombre (conifères), berge. Patchs : clairière, coin à champignons, bosquet rose.
 - [ ] Les couleurs de biome **et l'ouverture** s'ajoutent au shader du sol en couleur de sommet, sans remplacer le calcul altitude/pente. C'est ce qui fait exister une clairière lointaine : sans elle, une trouée vue d'une hauteur est une tache de sol nu dans le vert.
 - [ ] Le mesh de terrain se construit **après** le semis de canopée, puisqu'il lit `cover` — le sol se colore de ce qui pousse dessus
@@ -140,6 +145,11 @@
 - [ ] Cascade, en feature du biome montagne rejoignant la rivière
 - [ ] Gorge : passage encaissé entre deux parois sur une portion du cours — feature de relief, pas de végétation
 ### Dette Jalon 4
+- **`cover_amount` dépend de l'espacement de la strate.** À 7 m avec un rayon de 7,5 m, chaque point reçoit l'ombre de ~3,5 arbres : au-delà de 0,42 la couverture sature à 1 partout et la carte d'ouverture perd toute dynamique. À reprendre si l'espacement de la canopée change.
+- **Le coût des taches est linéaire en leur nombre** : chaque candidat teste le bruit de chaque tache avant de retomber sur la base — sept gates sur la strate sol. Fusionner les quatre taches de fleurs en une seule dont un second bruit choisit la couleur ramènerait sept à quatre.
+- **La pente se calcule pour tous les candidats** depuis qu'elle sert à choisir la tache, et plus seulement pour ceux qui passent les filtres. À ne calculer que si une tache de la strate en dépend, si le semis d'un chunk devient sensible.
+- **`clearing_uniform` tire dans la palette entière** : si l'essence désignée au centre est marginale, le tapis est clairsemé sans être vide. Le correctif propre est une palette dédiée aux clairières plutôt qu'un rattrapage de poids.
+- **`tint` sur `FoliageDef` pas encore posé.** Tant que les essences ne portent pas leur couleur dans un vocabulaire fermé, un `BiomeDef` ne peut pas composer ses taches tout seul et il faut monter les patchs à la main, biome par biome. À poser en même temps que `BiomeDef`, pas avant : un champ que personne ne lit est du poids mort. `ASSETS.md` tient l'inventaire en attendant.
 - **Pas de LOD sur la végétation.** Partiellement payé par la distance d'affichage : on ne simplifie pas les arbres lointains, on cesse de les dessiner. Un vrai LOD ou des imposteurs restent à faire si la distance d'affichage devient insuffisante.
 - **`foliage_view_distance` masque le feuillage dans l'éditeur** dès qu'on recule la caméra pour voir la carte. Ce n'est pas un bug, mais ça surprend : monter la valeur temporairement pour inspecter la carte de haut.
 - **Le fondu de visibilité dépend du shader du pack** : s'il ne prend pas le tramage, les chunks disparaissent d'un coup. Mettre la marge de fondu à 0 et laisser la brume masquer la coupure.

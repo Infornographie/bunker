@@ -2,12 +2,11 @@
 
 [ext_resource type="Script" uid="uid://cgr78oi5viv6v" path="res://resources/terrain_gen_config.gd" id="1_config"]
 [ext_resource type="Shader" uid="uid://d1hk4oi75x8p6" path="res://world/terrain/terrain.gdshader" id="2_shader"]
-[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="3_foliage_def"]
-[ext_resource type="Resource" path="res://resources/foliage/tall_thick_1.tres" id="9_tall_thick_1"]
-[ext_resource type="Resource" path="res://resources/foliage/tall_thick_2.tres" id="10_tall_thick_2"]
-[ext_resource type="Resource" path="res://resources/foliage/tall_thick_3.tres" id="11_tall_thick_3"]
-[ext_resource type="Resource" path="res://resources/foliage/tall_thick_4.tres" id="12_tall_thick_4"]
-[ext_resource type="Resource" path="res://resources/foliage/tall_thick_5.tres" id="13_tall_thick_5"]
+[ext_resource type="Script" uid="uid://c5smwg870yhrm" path="res://resources/foliage_layer.gd" id="3_layer"]
+[ext_resource type="Resource" uid="uid://ctvsruqvytdxu" path="res://resources/foliage_layers/canopy.tres" id="4_canopy"]
+[ext_resource type="Resource" uid="uid://bcskrhi73ac7d" path="res://resources/foliage_layers/understory.tres" id="5_understory"]
+[ext_resource type="Resource" uid="uid://b4ekd0iy1yyss" path="res://resources/foliage_layers/shrub.tres" id="6_shrub"]
+[ext_resource type="Resource" uid="uid://l8jt03qmfspv" path="res://resources/foliage_layers/ground.tres" id="7_ground"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_macro"]
 frequency = 0.006
@@ -24,14 +23,12 @@ fractal_octaves = 2
 frequency = 0.0025
 fractal_octaves = 2
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_stand"]
-frequency = 0.005
-fractal_octaves = 2
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ground"]
 render_priority = 0
 shader = ExtResource("2_shader")
 shader_parameter/grass_color = Color(0.36, 0.42, 0.26, 1)
+shader_parameter/litter_color = Color(0.28, 0.22, 0.14, 1)
+shader_parameter/litter_cover_full = 0.55
 shader_parameter/rock_color = Color(0.42, 0.34, 0.24, 1)
 shader_parameter/cliff_color = Color(0.48, 0.48, 0.46, 1)
 shader_parameter/rock_height_start = 70.0
@@ -54,7 +51,7 @@ roughness = 0.1
 
 [resource]
 script = ExtResource("1_config")
-world_seed = 1667
+world_seed = 1
 macro_noise = SubResource("FastNoiseLite_macro")
 drainage_drop = 90.0
 massif_wobble_noise = SubResource("FastNoiseLite_massif_wobble")
@@ -66,8 +63,6 @@ clearing_falloff = 18.0
 valley_wobble_noise = SubResource("FastNoiseLite_valley_wobble")
 valley_macro_damping = 0.85
 river_valley_pull = 0.35
-foliage_spacing = 7.0
-canopy = Array[ExtResource("3_foliage_def")]([ExtResource("9_tall_thick_1"), ExtResource("10_tall_thick_2"), ExtResource("11_tall_thick_3"), ExtResource("12_tall_thick_4"), ExtResource("13_tall_thick_5")])
-stand_noise = SubResource("FastNoiseLite_stand")
+layers = Array[ExtResource("3_layer")]([ExtResource("4_canopy"), ExtResource("5_understory"), ExtResource("6_shrub"), ExtResource("7_ground")])
 terrain_material = SubResource("ShaderMaterial_ground")
 water_material = SubResource("StandardMaterial3D_water")

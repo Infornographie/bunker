@@ -139,24 +139,18 @@ extends Resource
 @export_range(0.0, 1.0) var lake_shore_along_ratio: float = 0.45
 
 @export_group("Végétation")
-## Distance entre deux candidats de la grille de semis, en mètres. C'est le
-## réglage de densité : 6 m donne environ 280 arbres à l'hectare.
-@export_range(2.0, 30.0, 0.5) var foliage_spacing: float = 6.0
-## Décalage aléatoire de chaque candidat, en fraction de l'espacement. À 0 la
-## forêt est un verger.
-@export_range(0.0, 1.0) var foliage_jitter: float = 0.85
 ## Hauteur minimale au-dessus de l'eau pour qu'une plante pousse.
 @export var foliage_water_margin: float = 1.5
-## Essences de canopée. Migrera dans les `BiomeDef` quand les biomes arriveront.
-@export var canopy: Array[FoliageDef] = []
-## Bruit qui décide quelle essence domine où. Sa fréquence donne la taille des
-## peuplements.
-@export var stand_noise: FastNoiseLite
-## Netteté des peuplements. À 0 les essences se mélangent uniformément ; plus
-## haut, une seule domine au cœur d'un peuplement et le mélange se resserre sur
-## les lisières. C'est aussi ce qui tient le nombre d'objets de dessin : une
-## essence absente d'un chunk n'y coûte aucun multimesh.
-@export_range(0.0, 12.0, 0.5) var stand_sharpness: float = 5.0
+## Strates de végétation, **dans l'ordre de semis**. Chacune lit l'occupation
+## laissée par les précédentes ; l'ordre n'est donc pas cosmétique.
+@export var layers: Array[FoliageLayer] = []
+## Distance autour du point de vue où les strates streamées sont semées, en
+## mètres. Au-delà, leurs chunks sont libérés. À tenir sous
+## `foliage_view_distance` : semer ce qui n'est pas dessiné ne sert à rien.
+@export_range(20.0, 400.0, 5.0) var stream_distance: float = 90.0
+## Côté d'une cellule de la carte d'occupation, en mètres. Elle enregistre les
+## bases posées et la couverture du feuillage — voir `ScatterOccupancy`.
+@export_range(0.25, 8.0, 0.25) var occupancy_cell_size: float = 1.0
 ## Distance au-delà de laquelle la végétation cesse d'être dessinée, en mètres.
 ## Ce n'est pas un aveu de faiblesse : au-delà, c'est le brouillard qui doit
 ## porter la profondeur et le relief nu qui doit porter la silhouette. Régler de

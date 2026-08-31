@@ -89,20 +89,26 @@ res://
 │   ├── resource_cost.gd
 │   ├── recipe_def.gd                   — Resource : recette de transformation
 │   ├── terrain_gen_config.gd           — (@tool) Resource : réglages de génération + convention de grille (grid_size, cell_count, half_size, chunks_per_side, height_index, world_pos, sample_height, chunk_area)
-│   ├── foliage_def.gd                  — (@tool) Resource : une essence (id, model, scale_range, random_yaw, max_slope_degrees, embed_depth, weight)
+│   ├── foliage_def.gd                  — (@tool) Resource : une essence (id, model, scale_range, random_yaw, min/max_slope_degrees, embed_depth, weight, base_radius, cover_radius, cover_amount, cover_response)
+│   ├── foliage_layer.gd                — (@tool) Resource : une strate (id, spacing, jitter, streamed, stand_noise, stand_blend, clearing_response, clearing_uniform, patches, defs)
+│   ├── foliage_patch.gd                — (@tool) Resource : une tache de composition (id, noise, threshold, min/max_slope_degrees, density, defs)
+│   │   → la couleur, le port et l'emploi de chaque famille du pack sont dans ASSETS.md
 │   ├── resources/                      — instances ResourceDef (wood, mushroom, grilled_mushroom)
 │   ├── recipes/                        — instances RecipeDef
 │   ├── tools/wooden_axe.tres
 │   ├── buildings/                      — campfire.tres, campfire_shape.tres
 │   ├── terrain/default_terrain.tres    — instance TerrainGenConfig ; porte en sous-ressources les FastNoiseLite, le ShaderMaterial du sol et le matériau de l'eau
-│   └── foliage/                        — instances FoliageDef, une par essence
+│   ├── foliage/                        — instances FoliageDef, une par essence
+│   ├── foliage_layers/                 — instances FoliageLayer : canopy, understory, shrub, ground
+│   └── foliage_patches/                — instances FoliagePatch : scree, grass_bed, mushroom_spot, flower_violet/white/yellow/pink
 └── world/
 	├── bunker/bunker_exterior_test.tscn — bâtie sur sol plat, périmée par le terrain procédural, conservée comme réserve de pièces
 	├── terrain/
 	│   ├── heightmap_generator.gd      — (@tool) RefCounted : massif, relief, eau, clairières, rivière. Publie heights / cave_position / cave_forward / water_level / clearings / river_path
 	│   ├── terrain_mesh_builder.gd     — (@tool) RefCounted statique : build_chunk() → StaticBody3D (mesh + collision trimesh)
-	│   ├── foliage_scatter.gd          — (@tool) RefCounted : scatter() → Node3D de chunks de MultiMeshInstance3D ; expose placed_count et CHUNK_AREA_META
-	│   ├── foliage_proximity.gd        — (@tool) Node : setup(foliage_root, sun, canopy_height) ; coupe cast_shadow des chunks dont l'ombre n'atterrit pas dans les cascades
+	│   ├── foliage_scatter.gd          — (@tool) RefCounted : scatter() sème les strates permanentes, stream_chunk(cx, cz) les strates streamées ; expose placed_count, placed_per_layer, occupancy, chunk_nodes
+	│   ├── scatter_occupancy.gd        — (@tool) RefCounted : is_blocked(point, radius), cover_at(point), mark(point, base_radius, cover_radius, cover_amount)
+	│   ├── foliage_proximity.gd        — (@tool) Node : setup(scatter, cfg, space, sun) ; coupe cast_shadow et sème/libère les strates streamées
 	│   ├── terrain_controller.gd       — (@tool) Node3D : orchestrateur, boutons Régénérer/Effacer, crée Chunks / Water / Foliage (+ Proximity) / CaveSite, publie heights ; expose config et sun
 	│   └── terrain.gdshader            — sol coloré par altitude, pente et bruit de teinte
 	└── forest/
@@ -128,7 +134,10 @@ res://
 - Rejets, dans cet ordre : sous l'eau, dans une clairière (probabilité croissante sur la distance d'adoucissement — la lisière n'est pas dessinée, elle est le dégradé), dans le lit de la rivière, puis pente trop forte pour l'essence tirée.
 - **Le choix d'essence se fait au point, jamais au chunk.** Chaque essence a son champ de bruit propre ; son poids local est son poids propre modulé par ce champ élevé à `stand_sharpness`. Une sélection par chunk produirait une couture rectiligne à chaque frontière.
 - Le gain de performance vient de la même mécanique : au cœur d'un peuplement, les autres essences ne sont jamais tirées, donc leur multimesh n'existe pas dans ce chunk.
-- `FoliageScatter` pose sur chaque nœud de chunk la métadonnée `chunk_area` (`Rect2`, valeur de `TerrainGenConfig.chunk_area()`). C'est par elle que `FoliageProximity` connaît la position d'un chunk : ni le nom du nœud ni la boîte englobante du multimesh ne sont une seconde source de vérité.
+- `FoliageScatter.chunk_nodes` (`Vector2i` → `Node3D`) est le point d'entrée de `FoliageProximity` vers les chunks. Ni le nom du nœud ni la boîte englobante du multimesh ne sont une seconde source de vérité : le premier se périme au renommage, la seconde n'est pas calculée à la sortie du semis.
+- **Les strates se sèment l'une après l'autre, chacune sur toute la carte**, parce qu'une strate lit l'occupation laissée par les précédentes et qu'un arbre déborde chez le chunk voisin.
+- **Une strate `streamed` lit l'occupation permanente et n'y écrit jamais.** Elle tient la sienne, locale au chunk et jetée avec lui — sans quoi un aller-retour du joueur laisserait le sol marqué par une herbe disparue.
+- L'essence se tire sur une **roue** : un champ de bruit désigne une position, chaque essence occupe un secteur proportionnel à son poids. Un seul appel de bruit par candidat quel que soit leur nombre.
 - `FoliageProximity` est le point unique où le feuillage réagit à la distance. Tout s'y calcule **dans le repère du nœud de feuillage**, celui des emprises publiées — le nœud de terrain peut être tourné et déplacé dans sa scène.
 - `foliage_view_distance` et `foliage_fade_margin` sont posés sur chaque `MultiMeshInstance3D`. Ils se règlent **de pair avec le brouillard de profondeur** du `WorldEnvironment` : c'est la brume qui doit masquer la coupure.
 ### Flux d'action (swing outil)

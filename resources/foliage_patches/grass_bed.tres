@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="FoliagePatch" format=3 uid="uid://cxmr8a4pmsmy4"]
+
+[ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="1_patch"]
+[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="2_def"]
+[ext_resource type="Resource" uid="uid://b6ejtjjng4geg" path="res://resources/foliage/grass_common_tall.tres" id="3_grass_common_tall"]
+[ext_resource type="Resource" uid="uid://dosgenlgpa6e5" path="res://resources/foliage/grass_wide_tall.tres" id="4_grass_wide_tall"]
+[ext_resource type="Resource" uid="uid://n8c7xuqheqti" path="res://resources/foliage/grass_wispy_tall.tres" id="5_grass_wispy_tall"]
+[ext_resource type="Resource" uid="uid://b0gvtn1x61br5" path="res://resources/foliage/clover_1.tres" id="6_clover_1"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_gate"]
+fractal_octaves = 2
+
+[resource]
+script = ExtResource("1_patch")
+id = &"grass_bed"
+noise = SubResource("FastNoiseLite_gate")
+threshold = 0.6
+min_slope_degrees = null
+max_slope_degrees = null
+defs = Array[ExtResource("2_def")]([ExtResource("3_grass_common_tall"), ExtResource("4_grass_wide_tall"), ExtResource("5_grass_wispy_tall"), ExtResource("6_clover_1")])

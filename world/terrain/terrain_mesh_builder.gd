@@ -10,10 +10,18 @@ extends RefCounted
 ## Les normales sont calculées par différences centrées sur le tableau global,
 ## pas sur les faces du chunk : deux chunks voisins lisent les mêmes sommets et
 ## se raccordent donc sans couture, sans code de recollement.
+##
+## La couleur de sommet porte la **couverture végétale** (canal rouge), lue sur
+## la carte d'ouverture que le semis vient de remplir. C'est ce qui met de la
+## litière sous les arbres et de l'herbe dans les trouées, et ce qui fait qu'une
+## clairière lointaine existe comme une tache claire plutôt que comme un rond de
+## sol nu. Le mesh se construit donc **après** le semis : le sol se colore de ce
+## qui pousse dessus. Les biomes viendront s'ajouter dans les autres canaux.
 
 ## Construit un chunk, ou null si le découpage ne laisse rien à construire à
 ## ces coordonnées (dernier chunk d'une grille non multiple de chunk_cells).
-static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array, cx: int, cz: int) -> StaticBody3D:
+static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array,
+		occupancy: ScatterOccupancy, cx: int, cz: int) -> StaticBody3D:
 	var cells := cfg.cell_count()
 	var x0 := cx * cfg.chunk_cells
 	var z0 := cz * cfg.chunk_cells
@@ -29,9 +37,11 @@ static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array, cx: 
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var uvs := PackedVector2Array()
+	var colors := PackedColorArray()
 	vertices.resize(wide * deep)
 	normals.resize(wide * deep)
 	uvs.resize(wide * deep)
+	colors.resize(wide * deep)
 
 	for iz in range(z0, z1 + 1):
 		for ix in range(x0, x1 + 1):
@@ -41,6 +51,7 @@ static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array, cx: 
 			vertices[local] = Vector3(wp.x - origin.x, h, wp.y - origin.y)
 			normals[local] = _normal_at(cfg, heights, ix, iz)
 			uvs[local] = wp * cfg.uv_scale
+			colors[local] = Color(occupancy.cover_at(wp), 0.0, 0.0, 1.0)
 
 	var indices := PackedInt32Array()
 	indices.resize((wide - 1) * (deep - 1) * 6)
@@ -66,6 +77,7 @@ static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array, cx: 
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_COLOR] = colors
 	arrays[Mesh.ARRAY_INDEX] = indices
 
 	var mesh := ArrayMesh.new()

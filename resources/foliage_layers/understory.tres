@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FoliageLayer" format=3 uid="uid://bcskrhi73ac7d"]
+
+[ext_resource type="Script" uid="uid://c5smwg870yhrm" path="res://resources/foliage_layer.gd" id="1_layer"]
+[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="2_def"]
+[ext_resource type="Resource" uid="uid://vakftrtyffq7" path="res://resources/foliage/common_tree_1.tres" id="3_common_tree_1"]
+[ext_resource type="Resource" uid="uid://dyf7yqtd8yhya" path="res://resources/foliage/common_tree_2.tres" id="4_common_tree_2"]
+[ext_resource type="Resource" uid="uid://cd33552u34sho" path="res://resources/foliage/common_tree_3.tres" id="5_common_tree_3"]
+[ext_resource type="Resource" uid="uid://bqborqddplqj7" path="res://resources/foliage/common_tree_4.tres" id="6_common_tree_4"]
+[ext_resource type="Resource" uid="uid://grv47s6osbc2" path="res://resources/foliage/common_tree_5.tres" id="7_common_tree_5"]
+[ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="7_hftvs"]
+
+[sub_resource type="Curve" id="Curve_clearing"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.5, 0.45), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_stand"]
+frequency = 0.0045
+fractal_octaves = 2
+
+[resource]
+script = ExtResource("1_layer")
+id = &"understory"
+spacing = 4.5
+jitter = 0.9
+stand_noise = SubResource("FastNoiseLite_stand")
+stand_blend = 0.12
+clearing_response = SubResource("Curve_clearing")
+defs = Array[ExtResource("2_def")]([ExtResource("3_common_tree_1"), ExtResource("4_common_tree_2"), ExtResource("5_common_tree_3"), ExtResource("6_common_tree_4"), ExtResource("7_common_tree_5")])

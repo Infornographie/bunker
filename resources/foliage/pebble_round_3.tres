@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FoliageDef" format=3 uid="uid://c5nv08csipdu2"]
+
+[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="1_def"]
+[ext_resource type="PackedScene" uid="uid://filu7mxhryq2" path="res://assets/nature/meshes/Pebble_Round_3.tscn" id="2_model"]
+
+[resource]
+script = ExtResource("1_def")
+id = &"pebble_round_3"
+model = ExtResource("2_model")
+scale_range = Vector2(0.6, 1.4)
+min_slope_degrees = 6.0
+max_slope_degrees = 50.0
+embed_depth = 0.15
+weight = 0.6
+base_radius = 0.3
+cover_amount = 0.0
