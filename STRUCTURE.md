@@ -41,9 +41,10 @@ res://
 │   │   ├── models/                     — glTF + textures
 │   │   ├── materials/                  — shaders de feuillage et de vent, matériaux MI_*
 │   │   └── meshes/                     — une scène par modèle ; c'est de là que le scatter extrait les meshes
-│   ├── scifi/                          — Quaternius Modular Sci-Fi MegaKit
-│   ├── props/                          — KayKit Resource Bits
-│   └── characters/                     — outils et personnages (dont tools/wooden_axe_grip.tscn)
+│   ├── sci_fi/                         — Quaternius Modular SciFi MegaKit
+│   ├── survival/                       — KayKit Resource Bits (survival) : sac à dos, feu de camp
+│   ├── characters/tools/                — KayKit, dix outils en bois (un seul câblé, voir ASSETS.md)
+│   └── sounds/                         — non inventorié (contenu à documenter)
 ├── debug/
 │   ├── debug_camera_switch.gd          — bascule cam player ↔ freecam (F7)
 │   └── freecam_controller.gd
@@ -102,7 +103,7 @@ res://
 │   ├── foliage_layers/                 — instances FoliageLayer : canopy, understory, shrub, ground
 │   └── foliage_patches/                — instances FoliagePatch : scree, grass_bed, mushroom_spot, flower_violet/white/yellow/pink
 └── world/
-	├── bunker/bunker_exterior_test.tscn — bâtie sur sol plat, périmée par le terrain procédural, conservée comme réserve de pièces
+	├── bunker/bunker_exterior_test.tscn — scène morte-née : bunker bâti à la main directement dedans, jamais repris ailleurs, jamais de partie intérieure. À supprimer — le bunker est intégralement à refaire (→ ASSETS.md § Sci-fi)
 	├── terrain/
 	│   ├── heightmap_generator.gd      — (@tool) RefCounted : massif, relief, eau, clairières, rivière. Publie heights / cave_position / cave_forward / water_level / clearings / river_path
 	│   ├── terrain_mesh_builder.gd     — (@tool) RefCounted statique : build_chunk() → StaticBody3D (mesh + collision trimesh)
