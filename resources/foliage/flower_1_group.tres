@@ -10,7 +10,6 @@ model = ExtResource("2_model")
 scale_range = Vector2(0.8, 1.25)
 max_slope_degrees = 28.0
 embed_depth = 0.06
-weight = 2.0
 base_radius = 0.45
 cover_radius = 0.0
 cover_amount = 0.0

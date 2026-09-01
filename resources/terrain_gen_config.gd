@@ -143,11 +143,24 @@ extends Resource
 @export var foliage_water_margin: float = 1.5
 ## Strates de végétation, **dans l'ordre de semis**. Chacune lit l'occupation
 ## laissée par les précédentes ; l'ordre n'est donc pas cosmétique.
+##
+## Une strate porte la grille et la réponse au lieu ; ce qui y pousse vient des
+## biomes ci-dessous.
 @export var layers: Array[FoliageLayer] = []
+## Biomes de la carte. Leur ordre n'a qu'une conséquence : le premier sert de
+## recours là où aucun autre ne revendique un point. Ils ne se départagent pas
+## par priorité mais par poids — voir `BiomeMap`.
+@export var biomes: Array[BiomeDef] = []
 ## Distance autour du point de vue où les strates streamées sont semées, en
-## mètres. Au-delà, leurs chunks sont libérés. À tenir sous
+## mètres. Au-delà, leurs tuiles sont libérées. À tenir sous
 ## `foliage_view_distance` : semer ce qui n'est pas dessiné ne sert à rien.
 @export_range(20.0, 400.0, 5.0) var stream_distance: float = 90.0
+## Côté d'une tuile de streaming, en cellules. **Rien à voir avec `chunk_cells`,
+## et c'est le but** : un chunk de terrain porte le culling et les ombres, une
+## tuile porte le semis à la demande. Au grain du chunk, une tuile de sol tient
+## seize mille candidats et son semis bloque la frame ; le coût d'une tuile va
+## comme le carré de son côté, donc la diviser par quatre le divise par seize.
+@export_range(2, 64) var stream_tile_cells: int = 8
 ## Côté d'une cellule de la carte d'occupation, en mètres. Elle enregistre les
 ## bases posées et la couverture du feuillage — voir `ScatterOccupancy`.
 @export_range(0.25, 8.0, 0.25) var occupancy_cell_size: float = 1.0
@@ -195,10 +208,17 @@ func height_index(ix: int, iz: int) -> int:
 	return iz * grid_size() + ix
 
 
-## Hauteur interpolée en un point monde quelconque. Vit ici parce que la
-## convention de grille vit ici : le générateur et le scatter l'appellent tous
-## les deux, et il n'en existe donc qu'une écriture.
+## Hauteur interpolée en un point monde quelconque. Cas particulier de
+## `sample_grid()` : une heightmap est une grandeur par sommet comme une autre.
 func sample_height(heights: PackedFloat32Array, p: Vector2) -> float:
+	return sample_grid(heights, p)
+
+
+## Valeur interpolée d'une grandeur quelconque définie par sommet de la grille —
+## hauteur du sol, poids de biome. Vit ici parce que la convention de grille vit
+## ici : il n'existe qu'une écriture de cette interpolation, et tout ce qui est
+## calculé par sommet peut être lu au point sans en réécrire une seconde.
+func sample_grid(values: PackedFloat32Array, p: Vector2) -> float:
 	var n := grid_size()
 	var half := half_size()
 	var fx := (p.x + half) / cell_size
@@ -207,8 +227,8 @@ func sample_height(heights: PackedFloat32Array, p: Vector2) -> float:
 	var iz := clampi(int(floor(fz)), 0, n - 2)
 	var tx := clampf(fx - ix, 0.0, 1.0)
 	var tz := clampf(fz - iz, 0.0, 1.0)
-	var low := lerpf(heights[height_index(ix, iz)], heights[height_index(ix + 1, iz)], tx)
-	var high := lerpf(heights[height_index(ix, iz + 1)], heights[height_index(ix + 1, iz + 1)], tx)
+	var low := lerpf(values[height_index(ix, iz)], values[height_index(ix + 1, iz)], tx)
+	var high := lerpf(values[height_index(ix, iz + 1)], values[height_index(ix + 1, iz + 1)], tx)
 	return lerpf(low, high, tz)
 
 
@@ -216,9 +236,26 @@ func sample_height(heights: PackedFloat32Array, p: Vector2) -> float:
 ## mesh et tout ce qui raisonne par chunk lisent la même écriture. Le dernier
 ## chunk d'une rangée peut dépasser la zone — sans conséquence, rien ne s'y sème.
 func chunk_area(cx: int, cz: int) -> Rect2:
-	var span := chunk_cells * cell_size
+	return _grid_area(cx, cz, chunk_cells)
+
+
+## Emprise au sol d'une tuile de streaming. Même convention que les chunks, à un
+## autre grain : les deux découpages partagent l'origine de la zone, donc une
+## tuile ne chevauche jamais deux chunks tant que `chunk_cells` est un multiple
+## de `stream_tile_cells`.
+func stream_tile_area(tx: int, tz: int) -> Rect2:
+	return _grid_area(tx, tz, stream_tile_cells)
+
+
+## Nombre de tuiles de streaming par côté de la zone.
+func stream_tiles_per_side() -> int:
+	return int(ceil(float(cell_count()) / float(stream_tile_cells)))
+
+
+func _grid_area(gx: int, gz: int, cells: int) -> Rect2:
+	var span := cells * cell_size
 	var half := half_size()
-	return Rect2(Vector2(-half + cx * span, -half + cz * span), Vector2(span, span))
+	return Rect2(Vector2(-half + gx * span, -half + gz * span), Vector2(span, span))
 
 
 ## Position monde (plan XZ) d'un sommet de la grille.

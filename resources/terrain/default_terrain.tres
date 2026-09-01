@@ -7,6 +7,9 @@
 [ext_resource type="Resource" uid="uid://bcskrhi73ac7d" path="res://resources/foliage_layers/understory.tres" id="5_understory"]
 [ext_resource type="Resource" uid="uid://b4ekd0iy1yyss" path="res://resources/foliage_layers/shrub.tres" id="6_shrub"]
 [ext_resource type="Resource" uid="uid://l8jt03qmfspv" path="res://resources/foliage_layers/ground.tres" id="7_ground"]
+[ext_resource type="Resource" uid="uid://dvelcjfqxesdx" path="res://resources/biomes/conifer_highland.tres" id="biome_conifer"]
+[ext_resource type="Resource" uid="uid://coqdb8bmikm8o" path="res://resources/biomes/forest_light.tres" id="biome_forest_light"]
+[ext_resource type="Script" uid="uid://p3l2rq65m6a8" path="res://resources/biome_def.gd" id="biome_script"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_macro"]
 frequency = 0.006
@@ -64,5 +67,6 @@ valley_wobble_noise = SubResource("FastNoiseLite_valley_wobble")
 valley_macro_damping = 0.85
 river_valley_pull = 0.35
 layers = Array[ExtResource("3_layer")]([ExtResource("4_canopy"), ExtResource("5_understory"), ExtResource("6_shrub"), ExtResource("7_ground")])
+biomes = Array[ExtResource("biome_script")]([ExtResource("biome_forest_light"), ExtResource("biome_conifer")])
 terrain_material = SubResource("ShaderMaterial_ground")
 water_material = SubResource("StandardMaterial3D_water")

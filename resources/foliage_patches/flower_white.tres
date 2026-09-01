@@ -1,10 +1,25 @@
 [gd_resource type="Resource" script_class="FoliagePatch" format=3 uid="uid://dofhopo0p8dhq"]
 
 [ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="1_patch"]
-[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="2_def"]
 [ext_resource type="Resource" path="res://resources/foliage/flower_1_group.tres" id="3_flower_1_group"]
 [ext_resource type="Resource" uid="uid://b2nbrx15ys0cl" path="res://resources/foliage/flower_1_single.tres" id="4_flower_1_single"]
 [ext_resource type="Resource" path="res://resources/foliage/petal_2.tres" id="5_petal_2"]
+[ext_resource type="Script" uid="uid://bk7tamevhctnm" path="res://resources/foliage_weight.gd" id="w_script"]
+
+[sub_resource type="Resource" id="FoliageWeight_flower_1_group"]
+script = ExtResource("w_script")
+def = ExtResource("3_flower_1_group")
+weight = 2.0
+
+[sub_resource type="Resource" id="FoliageWeight_flower_1_single"]
+script = ExtResource("w_script")
+def = ExtResource("4_flower_1_single")
+weight = 0.5
+
+[sub_resource type="Resource" id="FoliageWeight_petal_2"]
+script = ExtResource("w_script")
+def = ExtResource("5_petal_2")
+weight = 3.0
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_gate"]
 frequency = 0.028
@@ -15,7 +30,5 @@ script = ExtResource("1_patch")
 id = &"flower_white"
 noise = SubResource("FastNoiseLite_gate")
 threshold = 0.82
-min_slope_degrees = null
-max_slope_degrees = null
 density = 0.75
-defs = Array[ExtResource("2_def")]([ExtResource("3_flower_1_group"), ExtResource("4_flower_1_single"), ExtResource("5_petal_2")])
+entries = Array[ExtResource("w_script")]([SubResource("FoliageWeight_flower_1_group"), SubResource("FoliageWeight_flower_1_single"), SubResource("FoliageWeight_petal_2")])

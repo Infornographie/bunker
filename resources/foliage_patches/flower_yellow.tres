@@ -1,13 +1,43 @@
 [gd_resource type="Resource" script_class="FoliagePatch" format=3 uid="uid://lqyo0annxwnr"]
 
 [ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="1_patch"]
-[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="2_def"]
 [ext_resource type="Resource" path="res://resources/foliage/flower_4_group.tres" id="3_flower_4_group"]
 [ext_resource type="Resource" path="res://resources/foliage/flower_4_single.tres" id="4_flower_4_single"]
 [ext_resource type="Resource" path="res://resources/foliage/flower_7_group.tres" id="5_flower_7_group"]
 [ext_resource type="Resource" uid="uid://fr4luvesk7um" path="res://resources/foliage/flower_7_single.tres" id="6_flower_7_single"]
 [ext_resource type="Resource" path="res://resources/foliage/petal_4.tres" id="7_petal_4"]
 [ext_resource type="Resource" path="res://resources/foliage/petal_6.tres" id="8_petal_6"]
+[ext_resource type="Script" uid="uid://bk7tamevhctnm" path="res://resources/foliage_weight.gd" id="w_script"]
+
+[sub_resource type="Resource" id="FoliageWeight_flower_4_group"]
+script = ExtResource("w_script")
+def = ExtResource("3_flower_4_group")
+weight = 2.0
+
+[sub_resource type="Resource" id="FoliageWeight_flower_4_single"]
+script = ExtResource("w_script")
+def = ExtResource("4_flower_4_single")
+weight = 2.0
+
+[sub_resource type="Resource" id="FoliageWeight_flower_7_group"]
+script = ExtResource("w_script")
+def = ExtResource("5_flower_7_group")
+weight = 1.5
+
+[sub_resource type="Resource" id="FoliageWeight_flower_7_single"]
+script = ExtResource("w_script")
+def = ExtResource("6_flower_7_single")
+weight = 0.4
+
+[sub_resource type="Resource" id="FoliageWeight_petal_4"]
+script = ExtResource("w_script")
+def = ExtResource("7_petal_4")
+weight = 3.0
+
+[sub_resource type="Resource" id="FoliageWeight_petal_6"]
+script = ExtResource("w_script")
+def = ExtResource("8_petal_6")
+weight = 2.0
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_gate"]
 frequency = 0.028
@@ -18,7 +48,5 @@ script = ExtResource("1_patch")
 id = &"flower_yellow"
 noise = SubResource("FastNoiseLite_gate")
 threshold = 0.84
-min_slope_degrees = null
-max_slope_degrees = null
 density = 0.75
-defs = Array[ExtResource("2_def")]([ExtResource("3_flower_4_group"), ExtResource("4_flower_4_single"), ExtResource("5_flower_7_group"), ExtResource("6_flower_7_single"), ExtResource("7_petal_4"), ExtResource("8_petal_6")])
+entries = Array[ExtResource("w_script")]([SubResource("FoliageWeight_flower_4_group"), SubResource("FoliageWeight_flower_4_single"), SubResource("FoliageWeight_flower_7_group"), SubResource("FoliageWeight_flower_7_single"), SubResource("FoliageWeight_petal_4"), SubResource("FoliageWeight_petal_6")])

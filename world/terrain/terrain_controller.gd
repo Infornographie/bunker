@@ -59,11 +59,19 @@ func generate() -> void:
 	add_child(water)
 	water.position = Vector3(0.0, heightmap.water_level, 0.0)
 
+	# La carte de biome se calcule entre le relief et le semis : elle se déduit
+	# du premier et n'est lue que par le second. Elle lit l'influence du massif
+	# et non les hauteurs : un étage se déclare sur le relief, pas sur une
+	# altitude que la pente d'écoulement décale d'un bout à l'autre de la carte.
+	var biomes := BiomeMap.new()
+	biomes.generate(config, heightmap.massif_influence)
+
 	# Le semis passe avant le mesh : celui-ci lit la carte d'ouverture pour
 	# colorer le sol de ce qui pousse dessus.
 	var scatter := FoliageScatter.new()
 	var foliage_started := Time.get_ticks_msec()
-	var foliage := scatter.scatter(config, heights, heightmap.clearings, heightmap.river_path, heightmap.water_level)
+	var foliage := scatter.scatter(config, heights, heightmap.clearings, heightmap.river_path,
+			heightmap.water_level, biomes)
 	var foliage_elapsed := Time.get_ticks_msec() - foliage_started
 	foliage.name = FOLIAGE_NODE
 	add_child(foliage)
@@ -99,11 +107,15 @@ func generate() -> void:
 	var per_layer := PackedStringArray()
 	for index in scatter.placed_per_layer.size():
 		per_layer.append("%s %d" % [config.layers[index].id, scatter.placed_per_layer[index]])
-	print("Feuillage semé en %d ms — %d chunks, %d instances (%s)." % [
+	var per_biome := PackedStringArray()
+	for index in scatter.placed_per_biome.size():
+		per_biome.append("%s %d" % [config.biomes[index].id, scatter.placed_per_biome[index]])
+	print("Feuillage semé en %d ms — %d chunks, %d instances (%s) — biomes : %s." % [
 		foliage_elapsed,
 		foliage.get_child_count() - 1,
 		scatter.placed_count,
 		", ".join(per_layer),
+		", ".join(per_biome),
 	])
 
 

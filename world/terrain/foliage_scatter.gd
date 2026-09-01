@@ -1,7 +1,20 @@
 @tool
 class_name FoliageScatter
 extends RefCounted
-## Peuple le terrain à partir de `FoliageLayer`, en `MultiMeshInstance3D` par chunk.
+## Peuple le terrain en croisant strates et biomes, en `MultiMeshInstance3D` par
+## chunk.
+##
+## Deux axes qui ne se mélangent pas : une `FoliageLayer` dit **comment** on
+## sème — grille, espacement, réponse aux clairières ; un `BiomeDef` dit **quoi**
+## et **où**. Le semis les croise, et une composition est donc toujours le couple
+## (strate, biome).
+##
+## **Biomes.** La `BiomeMap` donne en chaque point un poids par biome, jamais un
+## identifiant. Le semis tire au sort quel biome décide de ce candidat-là, puis
+## déroule sa roue d'essences inchangée. Là où deux poids se valent, les deux
+## compositions s'entremêlent arbre par arbre — une vraie limite forestière est
+## un mélange qui s'inverse, pas un trait. Mélanger les *poids* aurait donné une
+## moyenne : un arbre à mi-chemin entre deux biomes, qui ne pousse dans aucun.
 ##
 ## Répartition : une grille jitterée par strate, un candidat par cellule, accepté
 ## ou rejeté selon la pente, l'eau, les clairières et ce qui est déjà posé. Pas
@@ -31,8 +44,10 @@ extends RefCounted
 ## voit dans la canopée.
 ##
 ## **Taches.** Un coin à champignons n'est pas un champignon plus probable : les
-## `FoliagePatch` d'une strate remplacent sa palette entière là où leur bruit
-## dépasse un seuil. C'est la différence entre un endroit et un saupoudrage.
+## `FoliagePatch` d'un `BiomeStratum` remplacent sa palette entière là où leur
+## bruit dépasse un seuil. C'est la différence entre un endroit et un
+## saupoudrage — et comme elles appartiennent au biome, une tache peut n'exister
+## que sous les conifères sans qu'aucun code n'ait à l'arbitrer.
 ##
 ## Découpage par chunk, calé sur celui du terrain : c'est ce qui permet de ne
 ## dessiner que le visible et de couper l'ombre au loin (`FoliageProximity`).
@@ -52,6 +67,10 @@ const _SEED_STAND := 4211
 const _SEED_LAYER := 15485863
 ## Décalage de graine entre deux taches d'une même strate.
 const _SEED_PATCH := 6291469
+## Décalage de graine entre deux biomes : sans lui, deux biomes emploieraient le
+## même champ de peuplement et leurs bosquets se calqueraient les uns sur les
+## autres, ce qui se verrait précisément là où les deux se mélangent.
+const _SEED_BIOME := 2750159
 
 ## Une partie de modèle : son mesh et sa position dans la scène d'origine.
 class Part:
@@ -94,16 +113,26 @@ class Palette:
 		return 0.5 + 0.5 * gate.get_noise_2dv(point) > threshold
 
 var _parts_cache: Dictionary = {}
+## Palettes par index de strate. Les strates streamées reconstruisent un chunk à
+## chaque pas du joueur : recomposer leurs roues à chaque fois serait du travail
+## refait en boucle, et il croît avec le nombre de biomes.
+var _palettes_cache: Dictionary = {}
 ## Nombre d'instances effectivement posées, pour le compte-rendu de génération.
 var placed_count: int = 0
 ## Compte par strate, dans l'ordre de semis. C'est le chiffre qu'on regarde pour
 ## régler un espacement : un total global ne dit pas quelle strate a débordé.
 var placed_per_layer: Array[int] = []
+## Compte par biome, dans l'ordre de `TerrainGenConfig.biomes`. Seul moyen de
+## vérifier qu'un biome existe vraiment sans aller le chercher à pied — un
+## biome dont la bande ne croise jamais le relief tiré rend zéro, en silence.
+var placed_per_biome: Array[int] = []
 ## Ce que le semis a posé et l'ombre qu'il porte. Publié parce que les strates
 ## streamées et la couleur du sol le lisent.
 var occupancy: ScatterOccupancy
-## Nœud de chaque chunk, par coordonnées de grille. C'est là que les strates
-## streamées viennent s'accrocher et se détacher.
+## Nœud de chaque chunk, par coordonnées de grille. C'est le point d'entrée de
+## `FoliageProximity` vers ce qui est semé en permanence, et donc vers les
+## multimeshes dont il coupe l'ombre. Les tuiles streamées ne s'y accrochent
+## pas : elles ont leur propre grain et se parentent à la racine du feuillage.
 var chunk_nodes: Dictionary = {}
 
 # Contexte de la carte courante, retenu pour pouvoir semer un chunk plus tard.
@@ -114,22 +143,31 @@ var _heights: PackedFloat32Array
 var _clearings: PackedVector3Array
 var _river: PackedVector2Array
 var _water_level: float
+var _biomes: BiomeMap
 
 
 ## Construit tout le feuillage. Retourne un Node3D à parenter dans la scène.
 func scatter(cfg: TerrainGenConfig, heights: PackedFloat32Array, clearings: PackedVector3Array,
-		river: PackedVector2Array, water_level: float) -> Node3D:
+		river: PackedVector2Array, water_level: float, biomes: BiomeMap) -> Node3D:
 	_cfg = cfg
 	_heights = heights
 	_clearings = clearings
 	_river = river
 	_water_level = water_level
+	_biomes = biomes
 	placed_count = 0
 	chunk_nodes.clear()
-	# Dimensionné sur la liste de strates et non rempli au fil de l'eau : une
-	# strate ignorée décalerait tous les comptes suivants.
+	# Dimensionnés sur les listes et non remplis au fil de l'eau : une strate ou
+	# un biome ignoré décalerait tous les comptes suivants.
 	placed_per_layer.clear()
 	placed_per_layer.resize(cfg.layers.size())
+	placed_per_biome.clear()
+	placed_per_biome.resize(cfg.biomes.size())
+	_palettes_cache.clear()
+	# Pas de retour anticipé : le terrain a besoin d'une occupation même vide —
+	# c'est elle qui porte la carte d'ouverture et colore le sol.
+	if cfg.biomes.is_empty():
+		push_warning("FoliageScatter : aucun biome déclaré, rien ne poussera.")
 	occupancy = ScatterOccupancy.new(cfg.occupancy_cell_size,
 			Rect2(Vector2(-cfg.half_size(), -cfg.half_size()), Vector2(cfg.size_meters, cfg.size_meters)))
 	var root := Node3D.new()
@@ -152,24 +190,20 @@ func scatter(cfg: TerrainGenConfig, heights: PackedFloat32Array, clearings: Pack
 			continue  # semée à la demande, autour du point de vue
 		var palettes := _palettes_of(layer, index)
 		if palettes.is_empty():
-			push_warning("FoliageScatter : strate « %s » sans essence exploitable." % layer.id)
 			continue
 		var before := placed_count
 		for cz in side:
 			for cx in side:
 				# Le dictionnaire est passé pour être rempli : contrairement aux
 				# `Packed*Array`, il est bien une référence.
-				_scatter_chunk(layer, palettes, index, cx, cz, null, harvest[cz * side + cx])
+				_scatter_area(layer, palettes, index, cfg.chunk_area(cx, cz), Vector2i(cx, cz),
+						null, harvest[cz * side + cx])
 		placed_per_layer[index] = placed_count - before
 
-	# Un nœud est créé même vide dès qu'une strate est streamée : il faut un
-	# point d'accrochage pour l'herbe qui arrivera plus tard, y compris au
-	# milieu d'une clairière où rien de permanent n'a poussé.
-	var keep_empty := _has_streamed_layers()
 	for cz in side:
 		for cx in side:
 			var placements: Dictionary = harvest[cz * side + cx]
-			if placements.is_empty() and not keep_empty:
+			if placements.is_empty():
 				continue
 			var chunk := _build_chunk_node(cfg, placements, cx, cz)
 			root.add_child(chunk)
@@ -177,22 +211,19 @@ func scatter(cfg: TerrainGenConfig, heights: PackedFloat32Array, clearings: Pack
 	return root
 
 
-func _has_streamed_layers() -> bool:
-	for layer in _cfg.layers:
-		if layer != null and layer.streamed:
-			return true
-	return false
-
-
-## Sème les strates streamées d'un chunk. Le nœud retourné est à parenter par
-## l'appelant, qui le libérera quand le chunk s'éloignera.
+## Sème les strates streamées d'une tuile. Le nœud retourné est à parenter par
+## l'appelant, qui le libérera quand la tuile s'éloignera.
+##
+## La tuile est bien plus petite que le chunk de terrain, et c'est tout l'objet :
+## le coût d'un semis va comme le carré du côté, et c'est lui qui doit tenir
+## dans une frame. Le chunk, lui, garde son grain pour le culling et les ombres.
 ##
 ## L'occupation permanente est **lue** et jamais écrite : sans quoi un
-## aller-retour du joueur laisserait le sol marqué par une herbe disparue, et le
-## même chunk ne donnerait pas deux fois la même chose. Les plantes de la strate
+## aller-retour du joueur laisserait le sol marqué par une herbe disparue, et la
+## même tuile ne donnerait pas deux fois la même chose. Les plantes de la strate
 ## ne se gênent qu'entre elles, dans une grille locale jetée avec le nœud.
-func stream_chunk(cx: int, cz: int) -> Node3D:
-	var area := _cfg.chunk_area(cx, cz)
+func stream_tile(tx: int, tz: int) -> Node3D:
+	var area := _cfg.stream_tile_area(tx, tz)
 	var local := ScatterOccupancy.new(_cfg.occupancy_cell_size, area)
 	var placements: Dictionary = {}
 	for index in _cfg.layers.size():
@@ -202,7 +233,7 @@ func stream_chunk(cx: int, cz: int) -> Node3D:
 		var palettes := _palettes_of(layer, index)
 		if palettes.is_empty():
 			continue
-		_scatter_chunk(layer, palettes, index, cx, cz, local, placements)
+		_scatter_area(layer, palettes, index, area, Vector2i(tx, tz), local, placements)
 	var node := Node3D.new()
 	node.name = "streamed"
 	for def: FoliageDef in placements:
@@ -211,103 +242,159 @@ func stream_chunk(cx: int, cz: int) -> Node3D:
 	return node
 
 
-func _usable_defs(source: Array[FoliageDef], owner: StringName) -> Array[FoliageDef]:
-	var defs: Array[FoliageDef] = []
-	for def in source:
-		if def == null or def.model == null:
-			push_warning("FoliageScatter : essence sans modèle dans « %s », ignorée." % owner)
+## Entrées exploitables d'une composition. Une entrée sans essence ou sans
+## modèle est une erreur d'édition : elle se signale, elle ne se devine pas.
+func _usable_entries(source: Array[FoliageWeight], owner: StringName) -> Array[FoliageWeight]:
+	var entries: Array[FoliageWeight] = []
+	for entry in source:
+		if entry == null or entry.def == null or entry.def.model == null:
+			push_warning("FoliageScatter : entrée sans modèle dans « %s », ignorée." % owner)
 			continue
-		defs.append(def)
-	return defs
+		entries.append(entry)
+	return entries
 
 
 # --- Peuplements ---------------------------------------------------------------
 
-## Palettes d'une strate, taches d'abord puis composition de base. L'ordre est
-## celui du test : la première qui répond l'emporte.
-func _palettes_of(layer: FoliageLayer, layer_index: int) -> Array[Palette]:
-	var built: Array[Palette] = []
-	for index in layer.patches.size():
-		var patch: FoliagePatch = layer.patches[index]
-		if patch == null:
+## Palettes d'une strate, par biome. L'index externe suit
+## `TerrainGenConfig.biomes` : un biome qui ne fait rien pousser dans cette
+## strate y laisse une liste vide, et rien ne s'y sèmera — une berge sans
+## canopée est une berge dégagée, pas une erreur.
+func _palettes_of(layer: FoliageLayer, layer_index: int) -> Array:
+	if _palettes_cache.has(layer_index):
+		return _palettes_cache[layer_index]
+	var by_biome: Array = []
+	var any := false
+	for biome_index in _cfg.biomes.size():
+		var biome: BiomeDef = _cfg.biomes[biome_index]
+		var built: Array[Palette] = []
+		by_biome.append(built)
+		if biome == null:
 			continue
-		var palette := _palette(_usable_defs(patch.defs, layer.id), patch.noise,
-				layer.stand_blend, layer_index, index + 1)
-		if palette == null:
-			push_warning("FoliageScatter : tache « %s » sans essence exploitable." % patch.id)
+		var stratum := biome.stratum_for(layer.id)
+		if stratum == null:
 			continue
-		palette.gate = patch.noise.duplicate() if patch.noise != null else FastNoiseLite.new()
-		palette.gate.seed = _cfg.world_seed + _SEED_PATCH * (index + 1)
-		palette.threshold = patch.threshold
-		palette.density = patch.density
-		palette.min_slope = patch.min_slope_degrees
-		palette.max_slope = patch.max_slope_degrees
-		built.append(palette)
-	var base := _palette(_usable_defs(layer.defs, layer.id), layer.stand_noise,
-			layer.stand_blend, layer_index, 0)
-	if base != null:
-		built.append(base)
-	return built
+		var owner := StringName("%s/%s" % [biome.id, layer.id])
+		# Taches d'abord, composition de base ensuite : l'ordre de la liste est
+		# celui du test, et la première qui répond l'emporte.
+		for index in stratum.patches.size():
+			var patch: FoliagePatch = stratum.patches[index]
+			if patch == null:
+				continue
+			var palette := _palette(_usable_entries(patch.entries, owner), patch.noise,
+					layer.stand_blend, layer_index, biome_index, index + 1)
+			if palette == null:
+				push_warning("FoliageScatter : tache « %s » sans essence exploitable dans « %s »."
+						% [patch.id, owner])
+				continue
+			palette.gate = patch.noise.duplicate() if patch.noise != null else FastNoiseLite.new()
+			palette.gate.seed = _cfg.world_seed + _SEED_PATCH * (index + 1) \
+					+ _SEED_BIOME * (biome_index + 1)
+			palette.threshold = patch.threshold
+			palette.density = patch.density
+			palette.min_slope = patch.min_slope_degrees
+			palette.max_slope = patch.max_slope_degrees
+			built.append(palette)
+		var base := _palette(_usable_entries(stratum.entries, owner), layer.stand_noise,
+				layer.stand_blend, layer_index, biome_index, 0)
+		if base == null:
+			push_warning("FoliageScatter : « %s » sans composition de base." % owner)
+		else:
+			built.append(base)
+		any = any or not built.is_empty()
+	if not any:
+		push_warning("FoliageScatter : strate « %s » sans composition dans aucun biome." % layer.id)
+		by_biome = []
+	_palettes_cache[layer_index] = by_biome
+	return by_biome
 
 
-## Construit une roue de secteurs cumulés. Le calcul se fait une fois par strate
-## et non par candidat : c'est ce qui rend le tirage gratuit.
-func _palette(defs: Array[FoliageDef], noise: FastNoiseLite, blend: float,
-		layer_index: int, salt: int) -> Palette:
-	if defs.is_empty():
+## Construit une roue de secteurs cumulés. Le calcul se fait une fois par couple
+## (strate, biome) et non par candidat : c'est ce qui rend le tirage gratuit, et
+## c'est la raison pour laquelle les biomes se départagent au tirage plutôt
+## qu'en additionnant leurs poids d'essences.
+func _palette(entries: Array[FoliageWeight], noise: FastNoiseLite, blend: float,
+		layer_index: int, biome_index: int, salt: int) -> Palette:
+	if entries.is_empty():
 		return null
 	var total := 0.0
-	for def in defs:
-		total += maxf(def.weight, 0.0)
+	for entry in entries:
+		total += maxf(entry.weight, 0.0)
 	if total <= 0.0:
 		return null
 	var palette := Palette.new()
-	palette.defs = defs
+	for entry in entries:
+		palette.defs.append(entry.def)
 	palette.blend = blend
 	palette.noise = noise.duplicate() if noise != null else null
 	if palette.noise != null:
-		palette.noise.seed = _cfg.world_seed + _SEED_STAND + layer_index * _SEED_LAYER + salt * 7919
-	palette.wheel.resize(defs.size())
+		palette.noise.seed = _cfg.world_seed + _SEED_STAND + layer_index * _SEED_LAYER \
+				+ biome_index * _SEED_BIOME + salt * 7919
+	palette.wheel.resize(entries.size())
 	var cursor := 0.0
-	for i in defs.size():
-		cursor += maxf(defs[i].weight, 0.0) / total
+	for i in entries.size():
+		cursor += maxf(entries[i].weight, 0.0) / total
 		palette.wheel[i] = cursor
 	return palette
 
 
+## Biome qui décide de ce candidat. Les poids de la carte somment à 1 en chaque
+## sommet, donc aussi une fois interpolés : le tirage n'a rien à normaliser.
+##
+## Un tirage aléatoire et non un bruit : un bruit ferait des plaques de biome
+## aux bords nets, ce qui reviendrait à dessiner la frontière que la carte de
+## poids sert justement à ne pas avoir.
+func _biome_at(point: Vector2, roll: float) -> int:
+	var count := _biomes.weights.size()
+	if count <= 1:
+		return 0
+	var cursor := 0.0
+	for i in count:
+		cursor += _cfg.sample_grid(_biomes.weights[i], point)
+		if roll <= cursor:
+			return i
+	return count - 1
+
+
 # --- Répartition ---------------------------------------------------------------
 
-func _scatter_chunk(layer: FoliageLayer, palettes: Array[Palette],
-		layer_index: int, cx: int, cz: int, local: ScatterOccupancy, into: Dictionary) -> void:
+## Sème une strate sur une aire rectangulaire. L'aire est un chunk pour les
+## strates permanentes, une tuile de streaming pour les autres : le semis ne
+## connaît qu'un rectangle et une graine, ce qui laisse chaque usage choisir son
+## grain sans que ce code ait à le savoir.
+func _scatter_area(layer: FoliageLayer, palettes_by_biome: Array, layer_index: int,
+		area: Rect2, cell: Vector2i, local: ScatterOccupancy, into: Dictionary) -> void:
 	var cfg := _cfg
 	var heights := _heights
 	var clearings := _clearings
 	var river := _river
 	var water_level := _water_level
 	var half := cfg.half_size()
-	var area := cfg.chunk_area(cx, cz)
 	var origin := area.position
-	var chunk_span := area.size.x
 	var spacing := layer.spacing
 
 	var rng := RandomNumberGenerator.new()
-	rng.seed = cfg.world_seed + cx * _CHUNK_SEED_X + cz * _CHUNK_SEED_Z + layer_index * _SEED_LAYER
+	rng.seed = cfg.world_seed + cell.x * _CHUNK_SEED_X + cell.y * _CHUNK_SEED_Z \
+			+ layer_index * _SEED_LAYER
 
-	# Grille globale, parcourue sur la seule portion qui tombe dans ce chunk : les
-	# cellules ne dépendent pas du découpage. Les deux bornes s'arrondissent au
-	# supérieur et la fin d'un chunk est le début du suivant — sinon, dès que
-	# l'espacement ne divise pas la largeur d'un chunk, une colonne de cellules
-	# se perd à chaque frontière et la grille de chunks se voit dans la canopée.
+	# Grille globale, parcourue sur la seule portion qui tombe dans cette aire :
+	# les cellules ne dépendent pas du découpage. Les deux bornes s'arrondissent
+	# au supérieur et la fin d'une aire est le début de la suivante — sinon, dès
+	# que l'espacement ne divise pas la largeur, une colonne de cellules se perd
+	# à chaque frontière et le découpage se voit dans la végétation.
 	var gx0 := int(ceil((origin.x + half) / spacing))
 	var gz0 := int(ceil((origin.y + half) / spacing))
-	var gx1 := int(ceil((origin.x + chunk_span + half) / spacing))
-	var gz1 := int(ceil((origin.y + chunk_span + half) / spacing))
+	var gx1 := int(ceil((origin.x + area.size.x + half) / spacing))
+	var gz1 := int(ceil((origin.y + area.size.y + half) / spacing))
 
 	# Le lit est écarté de la moitié de sa largeur plus sa berge : les plantes
 	# s'arrêtent en haut de talus. On ne retient que les segments qui passent
 	# dans ce chunk, sinon chaque candidat testerait tout le cours d'eau.
 	var river_margin := cfg.river_width * 0.5 + cfg.river_bank
 	var nearby := _river_segments_near(river, area, river_margin)
+	# Même pré-filtrage pour les clairières : la jitter peut déborder d'une
+	# cellule au-delà de l'aire, d'où la marge.
+	var clearings_near := _clearings_near(clearings, area.grow(spacing))
 
 	for gz in range(gz0, gz1):
 		for gx in range(gx0, gx1):
@@ -322,7 +409,7 @@ func _scatter_chunk(layer: FoliageLayer, palettes: Array[Palette],
 			# La pente sert deux fois : à choisir la tache, puis à filtrer
 			# l'essence. Elle se calcule donc avant la palette, et une seule fois.
 			var slope := _slope_at(cfg, heights, point)
-			var openness := _clearing_openness(cfg, clearings, point)
+			var openness := _clearing_openness(cfg, clearings, clearings_near, point)
 			if layer.clearing_response != null \
 					and rng.randf() > layer.clearing_response.sample(openness):
 				continue
@@ -336,10 +423,18 @@ func _scatter_chunk(layer: FoliageLayer, palettes: Array[Palette],
 			var sample := point
 			var uniform := false
 			if layer.clearing_uniform and openness < 1.0:
-				var index := _clearing_index(clearings, point)
+				var index := _clearing_index(clearings, clearings_near, point)
 				if index >= 0:
 					sample = Vector2(clearings[index].x, clearings[index].y)
 					uniform = true
+
+			# Quel biome décide, et donc dans quelles palettes on cherche. Lu au
+			# point d'échantillonnage : une clairière uniforme appartient à un
+			# seul biome, comme elle n'a qu'une essence.
+			var biome_index := _biome_at(sample, 0.5 if uniform else rng.randf())
+			var palettes: Array = palettes_by_biome[biome_index]
+			if palettes.is_empty():
+				continue  # ce biome ne fait rien pousser dans cette strate
 
 			# La première palette qui couvre le point l'emporte : une tache
 			# remplace la composition, elle ne s'y ajoute pas.
@@ -347,7 +442,10 @@ func _scatter_chunk(layer: FoliageLayer, palettes: Array[Palette],
 			# clairière quand elle est uniforme, sinon sous nos pieds.
 			var gate_slope := slope if not uniform else _slope_at(cfg, heights, sample)
 			var palette: Palette = null
-			for candidate in palettes:
+			# Boucle typée : `palettes` est un `Array` non typé — GDScript ne
+			# sait pas imbriquer les types de tableaux — et affecter son
+			# `Variant` à une variable typée fait échouer la compilation.
+			for candidate: Palette in palettes:
 				if candidate.covers(sample, gate_slope):
 					palette = candidate
 					break
@@ -382,15 +480,31 @@ func _scatter_chunk(layer: FoliageLayer, palettes: Array[Palette],
 			else:
 				occupancy.mark(point, def.base_radius, def.cover_radius, def.cover_amount)
 			placed_count += 1
+			placed_per_biome[biome_index] += 1
+
+
+## Indices des clairières dont le disque, adoucissement compris, recoupe l'aire
+## semée. Sans ce filtre, chaque candidat les teste **toutes** : à vingt-trois
+## clairières et seize mille candidats par tuile de sol, c'est le premier poste
+## de dépense du semis. C'est le service que `_river_segments_near()` rend déjà
+## au cours d'eau — le motif existait dans ce fichier, à l'endroit d'à côté.
+func _clearings_near(clearings: PackedVector3Array, area: Rect2) -> PackedInt32Array:
+	var found := PackedInt32Array()
+	for i in clearings.size():
+		var reach := clearings[i].z + _cfg.clearing_falloff
+		if area.grow(reach).has_point(Vector2(clearings[i].x, clearings[i].y)):
+			found.append(i)
+	return found
 
 
 ## Part de végétation ligneuse admise en ce point : nulle au cœur d'une
 ## clairière, pleine au-delà de son adoucissement. La lisière n'est pas
-## dessinée, elle est le dégradé entre les deux. Chaque strate y est sensible à
-## hauteur de son `clearing_effect`.
-func _clearing_openness(cfg: TerrainGenConfig, clearings: PackedVector3Array, point: Vector2) -> float:
+## dessinée, elle est le dégradé entre les deux.
+func _clearing_openness(cfg: TerrainGenConfig, clearings: PackedVector3Array,
+		nearby: PackedInt32Array, point: Vector2) -> float:
 	var openness := 1.0
-	for clearing in clearings:
+	for i in nearby:
+		var clearing := clearings[i]
 		var dist := point.distance_to(Vector2(clearing.x, clearing.y))
 		openness = minf(openness, smoothstep(clearing.z, clearing.z + cfg.clearing_falloff, dist))
 		if openness <= 0.0:
@@ -403,10 +517,10 @@ func _clearing_openness(cfg: TerrainGenConfig, clearings: PackedVector3Array, po
 ##
 ## Un index plutôt qu'un centre : renvoyer « un Vector2 ou rien » impose un
 ## `Variant`, que l'inférence de type refuse.
-func _clearing_index(clearings: PackedVector3Array, point: Vector2) -> int:
+func _clearing_index(clearings: PackedVector3Array, nearby: PackedInt32Array, point: Vector2) -> int:
 	var found := -1
 	var closest := INF
-	for i in clearings.size():
+	for i in nearby:
 		var dist := point.distance_to(Vector2(clearings[i].x, clearings[i].y))
 		if dist < clearings[i].z + _cfg.clearing_falloff and dist < closest:
 			closest = dist

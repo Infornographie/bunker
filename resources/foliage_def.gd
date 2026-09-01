@@ -4,8 +4,13 @@ extends Resource
 ## Définition data-driven d'une plante posée par le scatter.
 ##
 ## Une essence = un `.tres`, pas une scène montée à la main. C'est ce qui permet
-## d'en ajouter dix sans monter dix scènes, et c'est ce que liront les
-## `BiomeDef` quand les biomes arriveront.
+## d'en ajouter dix sans monter dix scènes.
+##
+## **Une essence décrit ce qu'elle est, jamais où elle pousse ni en quelle
+## proportion.** Son poids appartient à la composition qui l'emploie
+## (`FoliageWeight`, dans un `BiomeDef`) : la même plante pèse lourd dans un
+## biome et presque rien dans un autre, et un poids porté ici obligerait à
+## écrire la composition d'une strate à deux endroits.
 ##
 ## Volontairement limité à ce que la passe courante consomme : les paramètres de
 ## récolte (PV, outil, ressource lâchée) et les tags de propriété du Jalon 10
@@ -37,9 +42,6 @@ extends Resource
 ## du modèle : sur une pente, le bord aval de la base décolle. L'enfoncement
 ## effectif croît donc avec la pente, ce réglage en donne la valeur à plat.
 @export_range(0.0, 3.0, 0.05) var embed_depth: float = 0.5
-
-## Poids relatif dans le tirage d'espèce, à densité de strate donnée.
-@export_range(0.0, 10.0) var weight: float = 1.0
 
 ## Rayon de la base, en mètres : l'emprise que rien d'autre ne pourra occuper.
 ## C'est la contrainte *dure*, celle qui empêche un buisson de pousser dans un

@@ -37,7 +37,7 @@ sun = NodePath("DirectionalLight3D")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.726444, 37.19605, 19.68988)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1811964122]
-transform = Transform3D(0.3548448, 0.25081277, 0.9006543, 0.27689698, -0.9483171, 0.15499239, 0.8929799, 0.19439021, -0.40595475, 0, 323.5772, 0)
+transform = Transform3D(0.7805165, -0.6247395, 0.02224259, 0.23226285, 0.3228429, 0.9175111, -0.5803862, -0.71096647, 0.39708766, 0, 323.5772, 0)
 shadow_enabled = true
 directional_shadow_mode = 1
 directional_shadow_max_distance = 60.0
@@ -45,5 +45,5 @@ directional_shadow_max_distance = 60.0
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1145164309]
 environment = SubResource("Environment_60qbc")
 
-[node name="Player2" parent="." unique_id=1963134520 instance=ExtResource("3_ff4tk")]
-transform = Transform3D(-0.51538724, 0, -0.8569572, 0, 1, 0, 0.8569572, 0, -0.51538724, -5.935262, 46.154602, -3.016308)
+[node name="Player2" parent="." unique_id=409727930 instance=ExtResource("3_ff4tk")]
+transform = Transform3D(-0.51538724, 0, -0.8569572, 0, 1, 0, 0.8569572, 0, -0.51538724, 90.432144, 153.97127, 187.34659)

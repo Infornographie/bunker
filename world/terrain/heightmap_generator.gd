@@ -39,6 +39,18 @@ var clearings: PackedVector3Array
 ## Tracé de la rivière, en points monde successifs. Lu par le scatter, qui ne
 ## plante pas dans le lit.
 var river_path: PackedVector2Array
+## Influence du massif en chaque sommet : 1 sur l'axe, 0 hors du massif. C'est
+## la mesure de « à quel point on est en montagne », et c'est sur elle que les
+## biomes déclarent leur étage.
+##
+## Surtout pas sur l'altitude : la carte descend de `drainage_drop` d'un bout à
+## l'autre, si bien qu'une plaine parfaitement plate gagne quarante mètres en la
+## traversant. Un étage déclaré en mètres au-dessus de l'eau s'y déclenche donc
+## d'un seul côté de la carte, sans qu'aucun relief n'apparaisse. L'influence,
+## elle, ignore le drainage, le vallonnement et le niveau du lac.
+##
+## Elle est déjà calculée pour le relief : la publier ne coûte qu'une écriture.
+var massif_influence: PackedFloat32Array
 
 const _SEED_MACRO := 0
 const _SEED_WOBBLE := 977
@@ -66,10 +78,10 @@ var _axis: Vector2
 var _side: Vector2
 var _half_length: float
 var _half_width: float
-var _height: float
 var _axis_side_base: float
 var _valley_offset: float
 var _valley_half_width: float
+var _height: float
 var _drainage_slope: float
 
 
@@ -135,6 +147,7 @@ func _draw_massif() -> void:
 
 func _build_relief() -> void:
 	heights.resize(_n * _n)
+	massif_influence.resize(_n * _n)
 	for iz in _n:
 		for ix in _n:
 			var wp := _cfg.world_pos(ix, iz)
@@ -149,7 +162,9 @@ func _build_relief() -> void:
 			macro *= 1.0 - massif.y
 			macro *= 1.0 - _cfg.valley_macro_damping * valley.y
 			macro *= lerpf(_cfg.plain_macro_scale, 1.0, massif.z)
-			heights[_cfg.height_index(ix, iz)] = massif.x + valley.x + macro - along * _drainage_slope
+			var index := _cfg.height_index(ix, iz)
+			heights[index] = massif.x + valley.x + macro - along * _drainage_slope
+			massif_influence[index] = massif.z
 
 
 ## Retourne (hauteur du massif, masque de falaise, influence) en coordonnées

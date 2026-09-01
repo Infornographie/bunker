@@ -14,7 +14,6 @@ model = ExtResource("2_model")
 scale_range = Vector2(0.8, 1.3)
 max_slope_degrees = 45.0
 embed_depth = 0.08
-weight = 0.8
 base_radius = 0.3
 cover_amount = 0.0
 cover_response = SubResource("Curve_response")

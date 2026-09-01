@@ -1,0 +1,214 @@
+[gd_resource type="Resource" script_class="BiomeDef" format=3 uid="uid://coqdb8bmikm8o"]
+
+[ext_resource type="Script" uid="uid://p3l2rq65m6a8" path="res://resources/biome_def.gd" id="biome_script"]
+[ext_resource type="Resource" uid="uid://cjsckqvjsxloq" path="res://resources/foliage/bush_common.tres" id="f_bush_common"]
+[ext_resource type="Resource" uid="uid://rbxpfu720jvd" path="res://resources/foliage/bush_large.tres" id="f_bush_large"]
+[ext_resource type="Resource" uid="uid://d4jgv71j0tqad" path="res://resources/foliage/bush_long_1.tres" id="f_bush_long_1"]
+[ext_resource type="Resource" uid="uid://c8jji8qojumst" path="res://resources/foliage/bush_long_2.tres" id="f_bush_long_2"]
+[ext_resource type="Resource" uid="uid://b0gvtn1x61br5" path="res://resources/foliage/clover_1.tres" id="f_clover_1"]
+[ext_resource type="Resource" uid="uid://civepxrf52iek" path="res://resources/foliage/clover_2.tres" id="f_clover_2"]
+[ext_resource type="Resource" uid="uid://vakftrtyffq7" path="res://resources/foliage/common_tree_1.tres" id="f_common_tree_1"]
+[ext_resource type="Resource" uid="uid://dyf7yqtd8yhya" path="res://resources/foliage/common_tree_2.tres" id="f_common_tree_2"]
+[ext_resource type="Resource" uid="uid://cd33552u34sho" path="res://resources/foliage/common_tree_3.tres" id="f_common_tree_3"]
+[ext_resource type="Resource" uid="uid://bqborqddplqj7" path="res://resources/foliage/common_tree_4.tres" id="f_common_tree_4"]
+[ext_resource type="Resource" uid="uid://grv47s6osbc2" path="res://resources/foliage/common_tree_5.tres" id="f_common_tree_5"]
+[ext_resource type="Resource" uid="uid://dowgpow6ba5g3" path="res://resources/foliage/fern_1.tres" id="f_fern_1"]
+[ext_resource type="Resource" uid="uid://d1liwgt6sab3f" path="res://resources/foliage/fern_2.tres" id="f_fern_2"]
+[ext_resource type="Resource" uid="uid://bph8qpprgjefd" path="res://resources/foliage/grass_common_short.tres" id="f_grass_common_short"]
+[ext_resource type="Resource" uid="uid://b6ejtjjng4geg" path="res://resources/foliage/grass_common_tall.tres" id="f_grass_common_tall"]
+[ext_resource type="Resource" uid="uid://yursgi8xsq13" path="res://resources/foliage/grass_wide_short.tres" id="f_grass_wide_short"]
+[ext_resource type="Resource" uid="uid://dosgenlgpa6e5" path="res://resources/foliage/grass_wide_tall.tres" id="f_grass_wide_tall"]
+[ext_resource type="Resource" uid="uid://dmdcbu4mljagl" path="res://resources/foliage/grass_wispy_short.tres" id="f_grass_wispy_short"]
+[ext_resource type="Resource" uid="uid://n8c7xuqheqti" path="res://resources/foliage/grass_wispy_tall.tres" id="f_grass_wispy_tall"]
+[ext_resource type="Resource" uid="uid://ded83mxpquwai" path="res://resources/foliage/pebble_round_1.tres" id="f_pebble_round_1"]
+[ext_resource type="Resource" uid="uid://br8wj1o0mvxvw" path="res://resources/foliage/pebble_round_2.tres" id="f_pebble_round_2"]
+[ext_resource type="Resource" uid="uid://c5nv08csipdu2" path="res://resources/foliage/pebble_round_3.tres" id="f_pebble_round_3"]
+[ext_resource type="Resource" uid="uid://6njivhvkf1a1" path="res://resources/foliage/plant_1.tres" id="f_plant_1"]
+[ext_resource type="Resource" uid="uid://ca3ivnr5oxwc" path="res://resources/foliage/plant_1_big.tres" id="f_plant_1_big"]
+[ext_resource type="Resource" uid="uid://cfmgnxebhb4ds" path="res://resources/foliage/plant_5.tres" id="f_plant_5"]
+[ext_resource type="Resource" uid="uid://bby6prfmo2rbx" path="res://resources/foliage/tall_thick_1.tres" id="f_tall_thick_1"]
+[ext_resource type="Resource" uid="uid://j6lpyqv5ilmf" path="res://resources/foliage/tall_thick_3.tres" id="f_tall_thick_3"]
+[ext_resource type="Resource" uid="uid://baqgp28uvbpkx" path="res://resources/foliage/tall_thick_4.tres" id="f_tall_thick_4"]
+[ext_resource type="Resource" uid="uid://dgi8awtpbkcxo" path="res://resources/foliage/tall_thick_5.tres" id="f_tall_thick_5"]
+[ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="patch_script"]
+[ext_resource type="Resource" uid="uid://cfm38gq824yst" path="res://resources/foliage_patches/flower_pink.tres" id="p_flower_pink"]
+[ext_resource type="Resource" uid="uid://c5nega15yvuag" path="res://resources/foliage_patches/flower_violet.tres" id="p_flower_violet"]
+[ext_resource type="Resource" uid="uid://dofhopo0p8dhq" path="res://resources/foliage_patches/flower_white.tres" id="p_flower_white"]
+[ext_resource type="Resource" uid="uid://lqyo0annxwnr" path="res://resources/foliage_patches/flower_yellow.tres" id="p_flower_yellow"]
+[ext_resource type="Resource" uid="uid://cxmr8a4pmsmy4" path="res://resources/foliage_patches/grass_bed.tres" id="p_grass_bed"]
+[ext_resource type="Resource" uid="uid://ddfe8geik2dmf" path="res://resources/foliage_patches/mushroom_spot.tres" id="p_mushroom_spot"]
+[ext_resource type="Resource" uid="uid://douxv5svimjbc" path="res://resources/foliage_patches/scree.tres" id="p_scree"]
+[ext_resource type="Script" uid="uid://dx8q2o0qarpld" path="res://resources/biome_stratum.gd" id="stratum_script"]
+[ext_resource type="Script" uid="uid://bk7tamevhctnm" path="res://resources/foliage_weight.gd" id="weight_script"]
+
+[sub_resource type="Resource" id="FoliageWeight_canopy_tall_thick_1"]
+script = ExtResource("weight_script")
+def = ExtResource("f_tall_thick_1")
+weight = 0.6
+
+[sub_resource type="Resource" id="FoliageWeight_canopy_tall_thick_3"]
+script = ExtResource("weight_script")
+def = ExtResource("f_tall_thick_3")
+weight = 0.6
+
+[sub_resource type="Resource" id="FoliageWeight_canopy_tall_thick_4"]
+script = ExtResource("weight_script")
+def = ExtResource("f_tall_thick_4")
+weight = 0.6
+
+[sub_resource type="Resource" id="FoliageWeight_canopy_tall_thick_5"]
+script = ExtResource("weight_script")
+def = ExtResource("f_tall_thick_5")
+weight = 0.6
+
+[sub_resource type="Resource" id="BiomeStratum_canopy"]
+script = ExtResource("stratum_script")
+layer_id = &"canopy"
+entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_canopy_tall_thick_1"), SubResource("FoliageWeight_canopy_tall_thick_3"), SubResource("FoliageWeight_canopy_tall_thick_4"), SubResource("FoliageWeight_canopy_tall_thick_5")])
+
+[sub_resource type="Resource" id="FoliageWeight_understory_common_tree_1"]
+script = ExtResource("weight_script")
+def = ExtResource("f_common_tree_1")
+weight = 3.0
+
+[sub_resource type="Resource" id="FoliageWeight_understory_common_tree_2"]
+script = ExtResource("weight_script")
+def = ExtResource("f_common_tree_2")
+weight = 3.0
+
+[sub_resource type="Resource" id="FoliageWeight_understory_common_tree_3"]
+script = ExtResource("weight_script")
+def = ExtResource("f_common_tree_3")
+weight = 3.0
+
+[sub_resource type="Resource" id="FoliageWeight_understory_common_tree_4"]
+script = ExtResource("weight_script")
+def = ExtResource("f_common_tree_4")
+weight = 3.0
+
+[sub_resource type="Resource" id="FoliageWeight_understory_common_tree_5"]
+script = ExtResource("weight_script")
+def = ExtResource("f_common_tree_5")
+weight = 3.0
+
+[sub_resource type="Resource" id="BiomeStratum_understory"]
+script = ExtResource("stratum_script")
+layer_id = &"understory"
+entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_understory_common_tree_1"), SubResource("FoliageWeight_understory_common_tree_2"), SubResource("FoliageWeight_understory_common_tree_3"), SubResource("FoliageWeight_understory_common_tree_4"), SubResource("FoliageWeight_understory_common_tree_5")])
+
+[sub_resource type="Resource" id="FoliageWeight_shrub_bush_common"]
+script = ExtResource("weight_script")
+def = ExtResource("f_bush_common")
+weight = 2.0
+
+[sub_resource type="Resource" id="FoliageWeight_shrub_bush_large"]
+script = ExtResource("weight_script")
+def = ExtResource("f_bush_large")
+weight = 1.4
+
+[sub_resource type="Resource" id="FoliageWeight_shrub_bush_long_1"]
+script = ExtResource("weight_script")
+def = ExtResource("f_bush_long_1")
+
+[sub_resource type="Resource" id="FoliageWeight_shrub_bush_long_2"]
+script = ExtResource("weight_script")
+def = ExtResource("f_bush_long_2")
+
+[sub_resource type="Resource" id="FoliageWeight_shrub_fern_1"]
+script = ExtResource("weight_script")
+def = ExtResource("f_fern_1")
+weight = 2.5
+
+[sub_resource type="Resource" id="FoliageWeight_shrub_fern_2"]
+script = ExtResource("weight_script")
+def = ExtResource("f_fern_2")
+weight = 2.5
+
+[sub_resource type="Resource" id="FoliageWeight_shrub_plant_1_big"]
+script = ExtResource("weight_script")
+def = ExtResource("f_plant_1_big")
+weight = 1.2
+
+[sub_resource type="Resource" id="BiomeStratum_shrub"]
+script = ExtResource("stratum_script")
+layer_id = &"shrub"
+entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_shrub_bush_common"), SubResource("FoliageWeight_shrub_bush_large"), SubResource("FoliageWeight_shrub_bush_long_1"), SubResource("FoliageWeight_shrub_bush_long_2"), SubResource("FoliageWeight_shrub_fern_1"), SubResource("FoliageWeight_shrub_fern_2"), SubResource("FoliageWeight_shrub_plant_1_big")])
+
+[sub_resource type="Resource" id="FoliageWeight_ground_grass_common_short"]
+script = ExtResource("weight_script")
+def = ExtResource("f_grass_common_short")
+weight = 5.0
+
+[sub_resource type="Resource" id="FoliageWeight_ground_grass_common_tall"]
+script = ExtResource("weight_script")
+def = ExtResource("f_grass_common_tall")
+weight = 4.0
+
+[sub_resource type="Resource" id="FoliageWeight_ground_grass_wide_short"]
+script = ExtResource("weight_script")
+def = ExtResource("f_grass_wide_short")
+weight = 3.5
+
+[sub_resource type="Resource" id="FoliageWeight_ground_grass_wide_tall"]
+script = ExtResource("weight_script")
+def = ExtResource("f_grass_wide_tall")
+weight = 2.5
+
+[sub_resource type="Resource" id="FoliageWeight_ground_grass_wispy_short"]
+script = ExtResource("weight_script")
+def = ExtResource("f_grass_wispy_short")
+weight = 3.0
+
+[sub_resource type="Resource" id="FoliageWeight_ground_grass_wispy_tall"]
+script = ExtResource("weight_script")
+def = ExtResource("f_grass_wispy_tall")
+weight = 2.0
+
+[sub_resource type="Resource" id="FoliageWeight_ground_clover_1"]
+script = ExtResource("weight_script")
+def = ExtResource("f_clover_1")
+weight = 2.0
+
+[sub_resource type="Resource" id="FoliageWeight_ground_clover_2"]
+script = ExtResource("weight_script")
+def = ExtResource("f_clover_2")
+weight = 1.5
+
+[sub_resource type="Resource" id="FoliageWeight_ground_plant_1"]
+script = ExtResource("weight_script")
+def = ExtResource("f_plant_1")
+
+[sub_resource type="Resource" id="FoliageWeight_ground_plant_5"]
+script = ExtResource("weight_script")
+def = ExtResource("f_plant_5")
+weight = 1.2
+
+[sub_resource type="Resource" id="FoliageWeight_ground_pebble_round_1"]
+script = ExtResource("weight_script")
+def = ExtResource("f_pebble_round_1")
+weight = 0.6
+
+[sub_resource type="Resource" id="FoliageWeight_ground_pebble_round_2"]
+script = ExtResource("weight_script")
+def = ExtResource("f_pebble_round_2")
+weight = 0.6
+
+[sub_resource type="Resource" id="FoliageWeight_ground_pebble_round_3"]
+script = ExtResource("weight_script")
+def = ExtResource("f_pebble_round_3")
+weight = 0.6
+
+[sub_resource type="Resource" id="BiomeStratum_ground"]
+script = ExtResource("stratum_script")
+layer_id = &"ground"
+patches = Array[ExtResource("patch_script")]([ExtResource("p_scree"), ExtResource("p_mushroom_spot"), ExtResource("p_flower_violet"), ExtResource("p_flower_white"), ExtResource("p_flower_yellow"), ExtResource("p_flower_pink"), ExtResource("p_grass_bed")])
+entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_ground_grass_common_short"), SubResource("FoliageWeight_ground_grass_common_tall"), SubResource("FoliageWeight_ground_grass_wide_short"), SubResource("FoliageWeight_ground_grass_wide_tall"), SubResource("FoliageWeight_ground_grass_wispy_short"), SubResource("FoliageWeight_ground_grass_wispy_tall"), SubResource("FoliageWeight_ground_clover_1"), SubResource("FoliageWeight_ground_clover_2"), SubResource("FoliageWeight_ground_plant_1"), SubResource("FoliageWeight_ground_plant_5"), SubResource("FoliageWeight_ground_pebble_round_1"), SubResource("FoliageWeight_ground_pebble_round_2"), SubResource("FoliageWeight_ground_pebble_round_3")])
+
+[resource]
+script = ExtResource("biome_script")
+id = &"forest_light"
+massif_range = Vector2(0, 0.42)
+massif_falloff = 0.15
+edge_amount = 0.0
+weight_floor = 0.05
+strata = Array[ExtResource("stratum_script")]([SubResource("BiomeStratum_canopy"), SubResource("BiomeStratum_understory"), SubResource("BiomeStratum_shrub"), SubResource("BiomeStratum_ground")])

@@ -487,6 +487,77 @@ Infos tirées des pages produit — à vérifier au moment de l'achat/téléchar
   d'interaction du GDD (communication des pawns par pictos plutôt que texte
   ou voix) — reste à filtrer un sous-ensemble cohérent avec le ton
   solarpunk cosy plutôt que d'importer les 4495.
+- **[Stylized Low Poly Nature Lite](https://justcreate3d.itch.io/stylized-low-poly-nature-lite)**
+  — seulement 6 prefabs (arbres, herbe, plantes), FBX, feuillage
+  recolorable. Gratuit, licence commerciale permissive (pas de revente des
+  fichiers bruts). Le "champi rouge sympa" repéré par l'utilisateur en fait
+  partie mais le pack lui-même est trop petit pour justifier un
+  téléchargement en soi — à ne prendre que pour ce champignon précis si
+  besoin, pas comme pack de fond.
+- **[Collection Sketchfab — 3DDisco](https://sketchfab.com/3DDisco/collections/cartoon-asset-3d-models-5efd61fd5d804d62a3837b606ed08c55)**
+  — pomme de pin, gland, noisette, noix, carotte, terrier de lapin, tronc
+  couché repérés par l'utilisateur. Page non lisible en fetch automatique
+  (Sketchfab charge son contenu en JS) — à ouvrir manuellement pour
+  vérifier licence/format par modèle avant toute décision. Le terrier de
+  lapin et le tronc couché rejoignent des trous déjà identifiés (faune/
+  élevage, tronc au sol) ; pomme de pin/gland/noisette/noix seraient des
+  petits objets de cueillette jamais couverts jusqu'ici.
+- **[Collection Sketchfab — Lee1998iii](https://sketchfab.com/Lee1998iii/collections/97b11ec22ead4d2096ac4d34de36e4db-334ad4d6ad324b95bef5bfb09548d3d4)**
+  — troncs, racines, planches, herbe, fleurs selon l'utilisateur. Page non
+  lisible en fetch automatique (même limite Sketchfab) — à ouvrir
+  manuellement. Chevauche largement l'existant (Stylized Nature MegaKit) ;
+  seul intérêt potentiel identifiable sans l'ouvrir : encore une piste pour
+  le tronc couché et les planches (matériaux de construction transformés,
+  déjà en réserve sous Resource Bits).
+- **[Free Fantasy Medieval Houses and Props](https://store.godotengine.org/asset/emace-art/free-fantasy-medieval-houses-and-props-pack/)**
+  — 80+ modèles, bâtiments et props médiévaux d'inspiration slave, 3 LOD,
+  matériau de terrain inclus. Gratuit, licence propre à l'auteur (à lire
+  avant usage), natif Godot (asset store officiel). Recoupe directement
+  Medieval Village MegaKit (même usage prévu : référence de construction
+  low-tech) — l'intérêt serait une esthétique différente (slave plutôt que
+  fantasy-générique) à comparer visuellement, pas un contenu inédit.
+- **[Stylized Water Shader](https://store.godotengine.org/asset/emace-art/stylized-water-shader/)**
+  — shader d'eau toon natif Godot 4.7+ (Forward+), bandes de couleur par
+  profondeur, écume de berge automatique, caustiques, vagues, 27
+  paramètres, 3 matériaux prédéfinis. CC BY 4.0 (attribution requise).
+  **À trouver** direct, comme Godot Skies : aucun shader d'eau catalogué
+  jusqu'ici alors que la rivière est déjà nommée à plusieurs endroits (GDD :
+  rouissage des fibres, pêche évoquée sous RPG Tools) — bon candidat
+  concret plutôt qu'à construire à la main.
+- **[Free Stylized Low Poly Forest Nature Pack](https://amipolygon.itch.io/free-stylized-low-poly-forest-nature-pack)**
+  — page non récupérée (erreur 429, limite de requêtes du site) — à
+  rouvrir plus tard pour vérifier le contenu. L'utilisateur y a repéré des
+  troncs, dans la continuité des autres pistes troncs-couchés ci-dessus.
+- **[Foliage Asset Pack](https://melissaz.itch.io/foliage-asset-pack)** —
+  11 modèles thème zone humide (dont "une petite loutre"), stylisé, pensé
+  Unity. Licence **CC BY-NC-ND 4.0 — pas d'usage commercial ni de dérivé**,
+  incompatible en l'état avec le projet si celui-ci vise une diffusion
+  commerciale (à vérifier selon les intentions de diffusion). Le tronc
+  repéré par l'utilisateur reste noyé dans un pack à la licence bloquante —
+  à écarter sauf clarification de licence par l'auteur.
+- **[NatureBlocks](https://bukkbeek.itch.io/natureblocks)** — gros pack
+  (500+ assets) : végétation, terrain, rochers, et surtout des **outils de
+  génération procédurale** (terrain, rivières, cascades, lacs, routes,
+  falaises) avec 10 biomes et 12 styles de végétation, y compris un style
+  "Kuwahara" proche de l'esthétique stylisée. Payant (~21 $). Licence
+  commerciale/non-commerciale permise, revente interdite. L'utilisateur note
+  un style potentiellement proche de Quaternius — à vérifier visuellement
+  avant achat, mais l'argument fort n'est pas le contenu (déjà bien couvert
+  par Stylized Nature MegaKit) : ce sont les **outils de génération de
+  rivières/cascades/lacs**, rien d'équivalent catalogué ailleurs pour le
+  terrain généré (Jalon 4).
+- **[luyiod — "S"](https://luyiod.itch.io/s)** — page quasi vide en fetch
+  automatique (juste un zip de 142 Mo, "stylized nature", pas de détail de
+  contenu). À ouvrir manuellement comme le note l'utilisateur — impossible
+  de juger la pertinence sans voir le contenu réel.
+- **[Hand-Painted Textures Vol.13 — Nature](https://oleekconder.itch.io/hand-painted-textures-vol-13-nature)**
+  — 22 textures seamless 2048×2048 (couleur/normal/AO/height), thème
+  herbe/roche/forêt/sol. Payant (~2-10 $, aussi dispo dans un bundle de
+  4068 textures à 120 $). Licence non détaillée sur la page — à vérifier.
+  Textures de sol pour le terrain généré : chevauche l'usage envisagé pour
+  JulioVII (texture indépendante des meshes) mais pour le sol plutôt que
+  la construction — pertinence à évaluer ensemble le jour où le terrain a
+  besoin de plus de variété que les matériaux actuels.
 
 ## Manques identifiés (relecture du GDD)
 

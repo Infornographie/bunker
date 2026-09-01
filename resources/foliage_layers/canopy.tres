@@ -1,12 +1,6 @@
 [gd_resource type="Resource" script_class="FoliageLayer" format=3 uid="uid://ctvsruqvytdxu"]
 
 [ext_resource type="Script" uid="uid://c5smwg870yhrm" path="res://resources/foliage_layer.gd" id="1_layer"]
-[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="2_def"]
-[ext_resource type="Resource" uid="uid://bby6prfmo2rbx" path="res://resources/foliage/tall_thick_1.tres" id="3_tall_thick_1"]
-[ext_resource type="Resource" uid="uid://j6lpyqv5ilmf" path="res://resources/foliage/tall_thick_3.tres" id="4_tall_thick_3"]
-[ext_resource type="Resource" uid="uid://baqgp28uvbpkx" path="res://resources/foliage/tall_thick_4.tres" id="5_tall_thick_4"]
-[ext_resource type="Resource" uid="uid://dgi8awtpbkcxo" path="res://resources/foliage/tall_thick_5.tres" id="6_tall_thick_5"]
-[ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="6_yg2xv"]
 
 [sub_resource type="Curve" id="Curve_clearing"]
 _data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.55, 0.35), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
@@ -23,4 +17,3 @@ spacing = 7.0
 stand_noise = SubResource("FastNoiseLite_stand")
 stand_blend = 0.1
 clearing_response = SubResource("Curve_clearing")
-defs = Array[ExtResource("2_def")]([ExtResource("3_tall_thick_1"), ExtResource("4_tall_thick_3"), ExtResource("5_tall_thick_4"), ExtResource("6_tall_thick_5")])

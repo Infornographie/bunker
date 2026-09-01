@@ -1,15 +1,6 @@
 [gd_resource type="Resource" script_class="FoliageLayer" format=3 uid="uid://b4ekd0iy1yyss"]
 
 [ext_resource type="Script" uid="uid://c5smwg870yhrm" path="res://resources/foliage_layer.gd" id="1_layer"]
-[ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="2_def"]
-[ext_resource type="Resource" uid="uid://cjsckqvjsxloq" path="res://resources/foliage/bush_common.tres" id="3_bush_common"]
-[ext_resource type="Resource" uid="uid://rbxpfu720jvd" path="res://resources/foliage/bush_large.tres" id="4_bush_large"]
-[ext_resource type="Resource" uid="uid://d4jgv71j0tqad" path="res://resources/foliage/bush_long_1.tres" id="5_bush_long_1"]
-[ext_resource type="Resource" uid="uid://c8jji8qojumst" path="res://resources/foliage/bush_long_2.tres" id="6_bush_long_2"]
-[ext_resource type="Resource" uid="uid://dowgpow6ba5g3" path="res://resources/foliage/fern_1.tres" id="7_fern_1"]
-[ext_resource type="Resource" uid="uid://d1liwgt6sab3f" path="res://resources/foliage/fern_2.tres" id="8_fern_2"]
-[ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="9_hfaei"]
-[ext_resource type="Resource" uid="uid://ca3ivnr5oxwc" path="res://resources/foliage/plant_1_big.tres" id="9_plant_1_big"]
 
 [sub_resource type="Curve" id="Curve_clearing"]
 _data = [Vector2(0, 0.02), 0.0, 0.0, 0, 0, Vector2(0.42, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.5), 0.0, 0.0, 0, 0]
@@ -28,4 +19,3 @@ streamed = true
 stand_noise = SubResource("FastNoiseLite_stand")
 stand_blend = 0.1
 clearing_response = SubResource("Curve_clearing")
-defs = Array[ExtResource("2_def")]([ExtResource("3_bush_common"), ExtResource("4_bush_large"), ExtResource("5_bush_long_1"), ExtResource("6_bush_long_2"), ExtResource("7_fern_1"), ExtResource("8_fern_2"), ExtResource("9_plant_1_big")])

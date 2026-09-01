@@ -11,8 +11,11 @@ extends Resource
 ##
 ## Le patch est donc une seconde palette, activée là où son bruit dépasse un
 ## seuil. La taille des taches vient de la fréquence du bruit, leur rareté du
-## seuil. Les patchs d'une strate sont testés dans l'ordre : le premier qui
-## répond l'emporte.
+## seuil. Les patchs sont testés dans l'ordre : le premier qui répond l'emporte.
+##
+## Une tache appartient à un `BiomeStratum` et pas à la strate : un coin à
+## champignons peut n'exister que sous les conifères, et un bosquet de cerisiers
+## que dans la forêt claire, sans une ligne de code pour l'arbitrer.
 
 ## Identifiant stable, pour les messages de génération.
 @export var id: StringName
@@ -37,6 +40,6 @@ extends Resource
 ## parterre et pas comme une zone où l'herbe a juste changé d'espèce.
 @export_range(0.0, 3.0, 0.05) var density: float = 1.0
 
-## Ce qui pousse dans la tache. Remplace la palette de la strate, ne s'y ajoute
-## pas.
-@export var defs: Array[FoliageDef] = []
+## Ce qui pousse dans la tache, essence par essence avec son poids ici.
+## Remplace la composition du biome dans cette strate, ne s'y ajoute pas.
+@export var entries: Array[FoliageWeight] = []

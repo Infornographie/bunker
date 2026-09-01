@@ -1,7 +1,12 @@
 @tool
 class_name FoliageLayer
 extends Resource
-## Une strate de végétation : sa grille de semis et les essences qui s'y posent.
+## Une strate de végétation : sa grille de semis et sa façon de répondre au lieu.
+##
+## **Elle ne dit pas ce qui pousse.** La composition appartient aux `BiomeDef` :
+## la canopée est une hauteur et un espacement, et ce qu'on y trouve dépend de
+## l'endroit. La strate porte donc la grille, le bruit de peuplement et les
+## réponses aux clairières ; le biome porte les essences et les taches.
 ##
 ## **La strate est une responsabilité, pas une étiquette.** Mélanger de petits
 ## arbres à la canopée creuse des trouées que rien ne ferme ; les mêmes arbres
@@ -60,11 +65,3 @@ extends Resource
 ## réelle colonisée par celle qui s'y est installée — au lieu d'être traversée
 ## par la frontière de deux peuplements qui l'ignorent.
 @export var clearing_uniform: bool = false
-
-## Taches de composition différente — coins à champignons, parterres, bosquets
-## fleuris. Testées dans l'ordre ; la première qui répond l'emporte.
-@export var patches: Array[FoliagePatch] = []
-
-## Essences de la strate. Migreront dans les `BiomeDef` quand les biomes
-## arriveront ; la strate restera, c'est elle qui porte la grille.
-@export var defs: Array[FoliageDef] = []
