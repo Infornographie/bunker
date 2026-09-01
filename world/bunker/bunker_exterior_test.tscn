@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://ds2i632n6k3w7"]
 
-[ext_resource type="Script" uid="uid://d1euaa03t7lv1" path="res://debug/freecam_controller.gd" id="2_1sie3"]
 [ext_resource type="PackedScene" uid="uid://bf78px7l0w8so" path="res://assets/characters/tools/Wooden Axe.fbx" id="2_h53bt"]
 
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_h53bt"]
@@ -21,7 +20,6 @@ sdfgi_use_occlusion = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1970343201]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 10)
-script = ExtResource("2_1sie3")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1197355293]
 transform = Transform3D(0.9848078, -0.12278781, 0.12278781, 0, 0.7071068, 0.7071068, -0.1736482, -0.6963643, 0.6963643, 0, 16.52005, 10)

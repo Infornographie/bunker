@@ -10,8 +10,8 @@ Le nom d'action entre `backticks` est celui de l'Input Map (`project.godot` § `
 ## Déplacement / caméra
  
 - **ZQSD** — locomotion (`move_forward` / `move_left` / `move_back` / `move_right`)
-- **Shift (maintenu)** — course (`sprint`), bloquée quand les mains portent un objet lourd
-- **Espace** — saut (`jump`), bloqué quand les mains portent un objet lourd
+- **Shift (maintenu)** — course (`sprint`), bloquée quand les mains portent un objet lourd ; en vol (voir § Debug), accélère le déplacement
+- **Espace** — saut (`jump`), bloqué quand les mains portent un objet lourd ; en vol, monte
 - **Souris** — orientation caméra première personne (lu directement en `InputEventMouseMotion`, pas d'action dans l'Input Map)
 ## Outil en main
  
@@ -40,14 +40,14 @@ Un panneau se referme aussi tout seul quand on s'éloigne de son ancre, ou quand
 Le mode construction et les panneaux s'excluent mutuellement : `UIPanelController` arbitre les deux sens.
 ## Debug
  
-- **F7** — bascule caméra joueur ↔ freecam noclip (`toggle_debug_cam`)
+- **F11** — bascule le mode vol du joueur (`toggle_flight_mode`, dans `player_controller.gd`) : noclip, ignore gravité et collision. Espace monte, Ctrl descend, Shift accélère (`flight_boost_multiplier`). Désactiver le vol laisse le joueur là où il a volé, pas de retour au point de départ.
 - **F10** — bascule de langue EN ↔ FR (`toggle_locale`), écoutée par l'autoload `Locale`
-⚠️ **La rangée F5-F9 est réservée à l'éditeur Godot** (lancer / stop / pause…). En fenêtre de jeu embarquée, l'éditeur intercepte ces touches avant le jeu : le binding a l'air correct dans l'Input Map et ne se déclenche jamais. F8 et F9 ont été essayés et écartés pour cette raison. Toute nouvelle touche de debug se teste **en fenêtre embarquée** avant d'atterrir ici.
+⚠️ **La rangée F5-F9 est réservée à l'éditeur Godot** (lancer / stop / pause…). En fenêtre de jeu embarquée, l'éditeur intercepte ces touches avant le jeu : le binding a l'air correct dans l'Input Map et ne se déclenche jamais. F7, F8 et F9 ont été essayés et écartés pour cette raison — d'où F11 pour le mode vol. Toute nouvelle touche de debug se teste **en fenêtre embarquée** avant d'atterrir ici.
 ## Collisions de touches assumées
  
 Aucune n'est arbitrée par l'Input Map : ce sont les contrôleurs qui garantissent l'exclusivité. Toute modification de ces gardes doit repasser par ici.
  
-- **Shift** : `sprint` en locomotion, `free_placement_modifier` en mode construction. Contextes exclusifs (on ne pose pas un blueprint en courant).
+- **Shift** : `sprint` en locomotion, `free_placement_modifier` en mode construction, boost en vol. Contextes exclusifs (on ne pose pas un blueprint en courant, on ne vole pas en construisant).
 - **Molette** : `rotate_ghost`/`rotate_ghost_reverse` et `cycle_slot_prev`/`cycle_slot_next` partagent les boutons 4 et 5. Exclusivité tenue par le garde `_active` de `BuildModeController`.
 - **Clic gauche** : `use_tool` et `confirm_placement` partagent le bouton 1. Exclusivité tenue par la désactivation d'`InteractionController` pendant le mode construction.
 - **E** : un seul binding, mais plusieurs branches dans `InteractionController._unhandled_input()`, et **leur ordre est une règle de conception** — objet lourd en main d'abord, puis petit objet en poche active, puis `interact()` sur la cible. Une cible qui refuse la ressource proposée rend la main à la branche suivante au lieu de faire tomber l'objet. Toute branche ajoutée se place en connaissance de cet ordre.

@@ -25,6 +25,15 @@ class_name PlayerController
 @export var fov_lerp_speed: float = 8.0
 @export_group("")
 
+@export_group("Vol (debug)")
+## Mode noclip : ignore gravité et collision, déplacement libre. Bascule
+## via toggle_flight_mode (voir INPUTS.md). Remplace l'ancien FreecamController
+## + DebugCameraSwitch (caméra détachée) : voler avec le joueur lui-même évite
+## de revenir au point de départ à la désactivation.
+@export var flight_speed: float = 8.0
+@export var flight_boost_multiplier: float = 3.0
+@export_group("")
+
 ## Mains occupées = ni course ni saut (décision de conception : le portage
 ## d'un objet lourd immobilise le protagoniste au rythme de la marche).
 @export_node_path("Node") var carry_controller_path: NodePath = NodePath("Camera3D/CarryController")
@@ -39,6 +48,7 @@ var _carry_controller: CarryController
 var _coyote_timer: float = 0.0
 var _base_fov: float = 75.0
 var _is_active: bool = true
+var _flight_mode: bool = false
 
 var _input_enabled: bool = true
 
@@ -55,8 +65,6 @@ func _ready() -> void:
 	set_active(_is_active)
 
 ## Active/désactive le contrôleur (mouvement + caméra + capture souris).
-## Utilisé par le switch debug cam pour céder la main au FreecamController
-## sans que les deux ne se marchent dessus sur les mêmes touches.
 func set_active(value: bool) -> void:
 	_is_active = value
 	_camera.current = value
@@ -82,10 +90,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		rotation.y = _yaw
 		_camera.rotation.x = _pitch
 
+	if event.is_action_pressed("toggle_flight_mode"):
+		_set_flight_mode(not _flight_mode)
+
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _physics_process(delta: float) -> void:
+	if _flight_mode:
+		_physics_process_flight(delta)
+		return
+
 	var hands_free: bool = _carry_controller == null or not _carry_controller.is_carrying()
 
 	# Gravité : nécessaire pour rester collé au sol sur les irrégularités du
@@ -126,6 +141,35 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+## Bascule le mode vol (noclip debug). Remet la vélocité à zéro dans les deux
+## sens : en entrant, pour ne pas hériter d'un élan de course ou de chute ;
+## en sortant, pour que la gravité reparte d'un état neutre au lieu de
+## poursuivre une vitesse verticale accumulée en vol.
+func _set_flight_mode(value: bool) -> void:
+	_flight_mode = value
+	velocity = Vector3.ZERO
+
+## Déplacement noclip : ignore gravité, is_on_floor() et move_and_slide() —
+## la position est translatée directement, donc traverse librement terrain et
+## décor. C'est la même idée que l'ancien FreecamController, appliquée au
+## joueur plutôt qu'à une caméra séparée : désactiver le vol laisse le joueur
+## exactement où il a volé, pas de téléportation retour.
+func _physics_process_flight(delta: float) -> void:
+	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var vertical := 0.0
+	if Input.is_action_pressed("jump"):
+		vertical += 1.0
+	if Input.is_physical_key_pressed(KEY_CTRL):
+		vertical -= 1.0
+
+	var move_basis := transform.basis
+	var move := (move_basis.x * input_dir.x) + (move_basis.z * input_dir.y) + Vector3.UP * vertical
+	if move.length() > 0.0:
+		move = move.normalized()
+
+	var speed := flight_speed * (flight_boost_multiplier if Input.is_action_pressed("sprint") else 1.0)
+	global_position += move * speed * delta
+
 ## Simule un "step-up" (Godot n'en a pas d'intégré pour CharacterBody3D) :
 ## si un déplacement horizontal est bloqué par un obstacle bas (contremarche
 ## d'escalier, rebord), on teste si la même trajectoire passerait plus haut ;
@@ -158,14 +202,16 @@ func _try_step_up(direction: Vector3) -> void:
 #   via camera_path dans l'inspecteur). Attache-le à la tête d'un CharacterBody3D
 #   avec une CollisionShape3D (capsule recommandée, ~0.4 rayon / 1.8 hauteur).
 # - Actions input requises dans Project Settings > Input Map :
-#   move_forward, move_back, move_left, move_right (WASD par ex.)
-#   Contrairement à FreecamController qui utilise les actions ui_* par défaut,
-#   celui-ci attend des actions DÉDIÉES pour ne pas entrer en conflit avec
-#   d'éventuels menus/UI qui utiliseraient ui_left/right/up/down.
+#   move_forward, move_back, move_left, move_right (WASD par ex.), des actions
+#   DÉDIÉES pour ne pas entrer en conflit avec d'éventuels menus/UI qui
+#   utiliseraient ui_left/right/up/down.
 # - ESC libère la souris (menu futur, inventaire...) ; un clic dans le
 #   viewport la recapture.
 # - Sprint (Shift) et saut (Espace) sont gratuits : pas de coût d'énergie.
 #   Dette assumée, rattachée au Jalon 6 (survie/énergie) — voir ROADMAP.
+# - Mode vol (debug) : toggle_flight_mode (voir INPUTS.md), Espace monte,
+#   Ctrl descend, Shift accélère. Remplace FreecamController/DebugCameraSwitch
+#   (supprimés) : plus simple, et la position se conserve à la désactivation.
 # - step_height (0.35 par défaut) doit rester UN PEU plus haut que la
 #   contremarche réelle des Platform_Stairs_* du kit SciFi. Si tu changes de
 #   pack ou de type d'escalier plus tard, remesure et ajuste — trop bas et le

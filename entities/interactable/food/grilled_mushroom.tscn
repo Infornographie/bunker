@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://4gd1v2lb84vt" path="res://entities/interactable/resource_pickup.gd" id="1_nc8a7"]
 [ext_resource type="Resource" uid="uid://n0g2llhiy7lq" path="res://resources/resources/grilled_mushroom.tres" id="2_8tok8"]
-[ext_resource type="PackedScene" uid="uid://blndj0cmnyxdk" path="res://assets/nature/Stylized Nature MegaKit/glTF/Mushroom_Common.gltf" id="3_b4nf8"]
+[ext_resource type="PackedScene" uid="uid://sa8bpf2em5yj" path="res://assets/nature/models/Mushroom_Common.gltf" id="3_b4nf8"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ro2t2"]
 albedo_color = Color(0.2996862, 0.23216328, 0.17437261, 1)

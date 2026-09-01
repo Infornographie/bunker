@@ -45,9 +45,6 @@ res://
 │   ├── survival/                       — KayKit Resource Bits (survival) : sac à dos, feu de camp
 │   ├── characters/tools/                — KayKit, dix outils en bois (un seul câblé, voir ASSETS.md)
 │   └── sounds/                         — non inventorié (contenu à documenter)
-├── debug/
-│   ├── debug_camera_switch.gd          — bascule cam player ↔ freecam (F7)
-│   └── freecam_controller.gd
 ├── entities/
 │   ├── interactable/
 │   │   ├── interactable.gd             — base PhysicsBody3D : can_interact(), interact(), get_prompt_key(), receive_resource(), receive_tool_hit()
@@ -73,7 +70,7 @@ res://
 │   │       └── resource_pickup_wood.tscn
 │   └── player/
 │       ├── player.tscn
-│       ├── player_controller.gd        — CharacterBody3D, locomotion, marches auto, sprint + saut
+│       ├── player_controller.gd        — CharacterBody3D, locomotion, marches auto, sprint + saut, mode vol debug noclip (toggle_flight_mode, voir INPUTS.md)
 │       ├── action_state_machine.gd     — IDLE / USING_TOOL
 │       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, take_into_hand()
 │       ├── carry_controller.gd         — point unique "en main"

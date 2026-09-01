@@ -7,7 +7,7 @@
 - [x] Vérification licences (CC0 — déjà confirmé pour tous les packs identifiés)
 ## Jalon 1 — Forêt + Freecam ✅
 - [x] `ForestScatter.gd` : placement jitter/poisson-disque des assets nature, zone d'exclusion autour du bunker
-- [x] `FreecamController.gd` : caméra libre noclip (débug, conservé tout le long du projet)
+- [x] `FreecamController.gd` : caméra libre noclip (débug) — remplacé au Jalon 4 par un mode vol intégré à `PlayerController` (`toggle_flight_mode`, F11) ; `FreecamController`/`DebugCameraSwitch` supprimés
 - [x] Bake `NavigationServer3D` **après** le scatter
 - [x] Scène de test minimale (sol + scatter + freecam)
 ### Dette Jalon 1
@@ -145,7 +145,7 @@
 - [ ] Grotte d'entrée : porche posé sur le site publié par le générateur (`CaveSite`), scène séparée reliée par téléportation. C'est là que le bunker sera rebâti.
 - [ ] Rochers du pack posés sur l'escarpement : le relief donne la pente, les meshes donnent la paroi
 - [ ] Bordure de zone sur les côtés non noyés par le lac
-- [ ] Chaîne lointaine hors zone jouable : maillage grossier, sans collision, végétation ni navmesh
+- [ ] Chaîne lointaine hors zone jouable : maillage grossier, sans collision, végétation ni navmesh. Non traversable — le rayon d'action du robot (Jalon 6) fera de toute façon barrière avant. Exigence de raccord : aucune coupure visible entre la zone praticable et cette chaîne, ni en silhouette ni en couleur — elle doit se fondre dans la perspective aérienne du brouillard, pas apparaître comme un décor plaqué à la limite du monde.
 - [ ] Cascade, en feature du biome montagne rejoignant la rivière
 - [ ] Gorge : passage encaissé entre deux parois sur une portion du cours — feature de relief, pas de végétation
 ### Dette Jalon 4
@@ -160,7 +160,6 @@
 - **`tint` sur `FoliageDef` toujours pas posé**, et `BiomeDef` existe désormais. Les taches se montent donc à la main, biome par biome — c'est tenable à deux biomes, ça ne le sera plus à cinq. `ASSETS.md` tient l'inventaire en attendant.
 - **Pas de LOD sur la végétation.** Partiellement payé par la distance d'affichage : on ne simplifie pas les arbres lointains, on cesse de les dessiner. Un vrai LOD ou des imposteurs restent à faire si la distance d'affichage devient insuffisante.
 - **`foliage_view_distance` masque le feuillage dans l'éditeur** dès qu'on recule la caméra pour voir la carte. Ce n'est pas un bug, mais ça surprend : monter la valeur temporairement pour inspecter la carte de haut.
-- **Le fondu de visibilité dépend du shader du pack** : s'il ne prend pas le tramage, les chunks disparaissent d'un coup. Mettre la marge de fondu à 0 et laisser la brume masquer la coupure.
 - **`TallThick_2` a un trou noir dans son tronc** — défaut de la scène du pack, absent du glTF, sans surcharge de matériau en cause. Retiré de la liste d'essences. À traiter avec les autres corrections d'assets tiers, et à noter dans ATTRIBUTION le jour où on modifie le pack.
 - **Collision terrain en `ConcavePolygonShape3D`** et non `HeightMapShape3D` : ce dernier échantillonne à 1 unité fixe, incompatible avec une cellule de 3 m sans scaler le `CollisionShape3D` de façon non uniforme. Repasser dessus si le coût des requêtes physiques se voit au Jalon 5.
 - **Eau sans collision** : on traverse le plan d'eau. À traiter quand le gué comptera (Jalon 5) ou au Jalon 6 avec l'énergie.

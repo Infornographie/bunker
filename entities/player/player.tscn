@@ -3,8 +3,6 @@
 [ext_resource type="Script" uid="uid://csfobklnkvevo" path="res://entities/player/player_controller.gd" id="1_symyc"]
 [ext_resource type="Script" uid="uid://d4jgecxaici8v" path="res://entities/player/tools/tool_controller.gd" id="2_bls4j"]
 [ext_resource type="Script" uid="uid://dy1q0vki3400j" path="res://entities/player/ui_panel_controller.gd" id="2_gx6sm"]
-[ext_resource type="Script" uid="uid://b8rq8e1nju4eq" path="res://debug/debug_camera_switch.gd" id="2_sglur"]
-[ext_resource type="Script" uid="uid://d1euaa03t7lv1" path="res://debug/freecam_controller.gd" id="3_bls4j"]
 [ext_resource type="Resource" uid="uid://s8t1r53rbhcl" path="res://resources/tools/wooden_axe.tres" id="3_fkugw"]
 [ext_resource type="Script" uid="uid://bu3md5tboqq4g" path="res://entities/player/interaction_controller.gd" id="4_8fjmc"]
 [ext_resource type="Script" uid="uid://cjpxgx7qlcoir" path="res://entities/player/action_state_machine.gd" id="5_qiwj3"]
@@ -81,13 +79,4 @@ hand_anchor = NodePath("HandAnchor")
 [node name="HandAnchor" type="Marker3D" parent="CharacterBody3D/Camera3D/CarryController" unique_id=401078335]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6188431, -0.44094658, -0.68365437)
 
-[node name="FreeCam" type="Camera3D" parent="." unique_id=1830481058]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6640453, -0.35318947)
-script = ExtResource("3_bls4j")
-
 [node name="PlayerHud" parent="." unique_id=1238662632 instance=ExtResource("7_qiwj3")]
-
-[node name="DebugCameraSwitch" type="Node3D" parent="." unique_id=1778962938]
-script = ExtResource("2_sglur")
-player_path = NodePath("../CharacterBody3D")
-freecam_path = NodePath("../FreeCam")

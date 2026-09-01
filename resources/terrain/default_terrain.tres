@@ -54,7 +54,9 @@ roughness = 0.1
 
 [resource]
 script = ExtResource("1_config")
-world_seed = 1
+world_seed = 9999
+foliage_view_distance = 675.0
+foliage_fade_margin = 225.0
 macro_noise = SubResource("FastNoiseLite_macro")
 drainage_drop = 90.0
 massif_wobble_noise = SubResource("FastNoiseLite_massif_wobble")

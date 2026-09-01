@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bxks4paby6ggl"]
 
 [ext_resource type="Script" uid="uid://2okwhwlmi035" path="res://entities/interactable/choppable.gd" id="1_gbyqs"]
-[ext_resource type="PackedScene" uid="uid://bdb1w0i5q013e" path="res://assets/nature/Stylized Nature MegaKit/glTF/CommonTree_1.gltf" id="2_mir7k"]
+[ext_resource type="PackedScene" uid="uid://bt7hfcs6h3xha" path="res://assets/nature/models/CommonTree_1.gltf" id="2_mir7k"]
 [ext_resource type="AudioStream" uid="uid://6l12h67unphm" path="res://assets/sounds/593857__igroglaz__chop2.mp3" id="2_nw3iq"]
 [ext_resource type="Resource" uid="uid://cc1jos21u05lp" path="res://resources/resources/wood.tres" id="3_mwppb"]
 
