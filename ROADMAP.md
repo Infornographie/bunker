@@ -142,6 +142,7 @@
 - [ ] Bake `NavigationRegion3D` après le scatter ; rivière et falaise infranchissables, gué praticable
 - [ ] Corriger dette Jalon 1 (navmesh/branches)
 ### Passe C — grotte, falaise et lointain
+> Dépend du Jalon 4.4 : le raccord du lointain se juge sur la brume et la couleur d'horizon, pas sur la géométrie.
 - [ ] Grotte d'entrée : porche posé sur le site publié par le générateur (`CaveSite`), scène séparée reliée par téléportation. C'est là que le bunker sera rebâti.
 - [ ] Rochers du pack posés sur l'escarpement : le relief donne la pente, les meshes donnent la paroi
 - [ ] Bordure de zone sur les côtés non noyés par le lac
@@ -171,6 +172,33 @@
 - **Step-up et saut pas revalidés sur pente irrégulière** — dette reprise du Jalon 3.
 - **`forest_test.tscn` et `forest_scatter.gd` sont périmés** mais conservés : ce sont les seules scènes où les mécaniques de jeu sont testables. À supprimer quand elles auront une scène d'accueil dans le nouveau format — sans quoi il existe deux façons de peupler une forêt dans le projet.
 - La vitesse du joueur est très élevée (~13 m/s mesurés, soit le double d'un sprint humain). La réduire est le levier le moins cher pour agrandir la carte sans générer un triangle de plus. À traiter à la passe de feeling du Jalon 6.
+## Jalon 4.4 — Ciel, lumière et cycle jour/nuit ✅
+> Sorti du jalon 4 et placé **avant sa passe C** : le décor lointain se juge sur la brume et la couleur d'horizon, pas sur la géométrie. Impossible de régler l'un sans l'autre.
+ 
+### Passe A — horloge et ciel ✅
+- [x] Autoload `TimeOfDay` (scène, pour que ses réglages soient à l'inspecteur) : temps canonique, phases, signaux, et deux mesures en secondes réelles (`seconds_until_phase`, `seconds_left_in_phase`) — c'est ce qu'un pawn interrogera pour décider d'aller voir un couchant
+- [x] Temps non linéaire par **remappage** et non par courbe de vitesse : une journée dure exactement `day_duration`, quelle que soit la répartition des phases
+- [x] Phases déclarées en **élévation du soleil**, durées déclarées en parts de temps réel — le physique et le ressenti ne se règlent pas au même endroit
+- [x] `sky_profile.gd` + quatre instances (`clear_day`, `cold_clear`, `warm_haze`, `overcast`), converties depuis les presets du pack Godot Skies
+- [x] `sky_rig.tscn` (`SkyController` + `WorldEnvironment` + `DirectionalLight3D`) : oriente le soleil, écrit les uniformes du ciel, pilote brume et ambiante
+- [x] Raccord du lointain confié au moteur : `ambient_light_source = SKY` et `fog_sky_affect = 1.0`. Le `SkyProfile` ne déclare aucune couleur de brume, seulement une distance
+- [x] Aube et couchant distingués côté contrôleur, alors que le shader ne sait pas les distinguer
+### Passe B — panneau de debug ✅
+- [x] `sky_debug_panel.gd` (F3) : heure, phase, élévation, temps restant et temps avant le prochain crépuscule ; heure, durée de cycle, pause, saut aux quatre phases, répartition, choix de profil
+- [x] `fog_distance_scale` et `ambient_scale` sur le contrôleur — instrument de mesure, pas réglage : la valeur trouvée se recopie dans la courbe du profil
+- [x] Exclusivité via `UIPanelController.exclusive_modes`, curseur libéré, caméra neutralisée
+### Passe C — plancher d'élévation
+> Requalifiée après test : le décrochage d'ombres attendu ne se voit pas, parce que la coupure de `shadow_enabled` intervient avant que la tangente ne s'effondre. Reste une ceinture de sécurité.
+- [ ] `maxf()` sur l'élévation dans `foliage_proximity.gd` : la division par `tan(élévation)` peut produire un `inf`, et un `inf` dans une comparaison de distance ne lève rien du tout
+### Dette Jalon 4.4
+- **Lune** : disque lisse plaqué à l'opposé du soleil, sans phases ni éclairage propre. Une « vraie » lune est trois chantiers distincts — la **course** (mêmes formules que le soleil, décalées, avec une période légèrement différente pour que les phases dérivent seules) ; les **phases** (fraction éclairée déduite de l'angle lune/soleil, ce qui impose un disque éclairé et non plaqué — c'est là qu'est le travail de shader, et une phase qui ne s'accorde pas avec la position du soleil se voit immédiatement) ; l'**éclairage nocturne** (seconde `DirectionalLight3D`, énergie pilotée par la phase, qui remplacerait une partie de l'ambiante de nuit faite à la main et obligerait la coupure d'ombre du feuillage à raisonner sur deux astres). Le patch de shader de la course et celui de la texture sont **le même bloc de six lignes** : les traiter ensemble.
+- **Pas de nuages à l'horizon** : le shader les éteint sous 0,2 en `EYEDIR.y` et ne les pose que sur un plan au-dessus de la tête. Pas de banc de nuages sur les crêtes lointaines, alors que c'est un ingrédient Firewatch. La brume porte la profondeur à leur place.
+- **Étoiles en projection planaire XZ** : elles s'étirent au zénith et ne tournent pas avec le ciel. À reprendre avec la lune.
+- **Les textures de nuages ne se mélangent pas** : un `SkyProfile` ne fait donc varier que des uniformes, et tous les profils partagent la paire de textures du rig. Si le climat exige des formes de nuages franchement différentes, ce sera une passe de shader (deux jeux de textures et un mélange), pas un contournement.
+- **Trois `clamp(0.0, 1.0, x)` aux arguments inversés** dans le shader du pack (lignes 83, 88, 93). Le résultat tombe juste par chance. Noté pour ne pas rediagnostiquer.
+- **`sun_off_threshold` coupe l'ombre, jamais la lumière** : le soleil reste toujours visible, sinon le ciel perd `LIGHT0_DIRECTION`. Une directionnelle à énergie nulle reste soumise au rendu — coût mesuré négligeable, à revérifier si le budget lumière devient serré.
+- **Répartition et durée du cycle posées à l'œil** (30 min, 5/10/6/9). À revalider quand les pawns auront des activités qui dépendent de l'heure.
+- **Brume et ambiante réglées au jugé**, y compris la nuit. La courbe de brume doit rester assez courte à toute heure pour masquer la coupure du feuillage : c'est son **minimum** sur la journée qui compte, pas sa valeur de midi.
 ## Jalon 5 — Réveil de pawn + ordres directs
 - [ ] Pawn dormant scripté (état sommeil → réveil via interaction robot)
 - [ ] `ActionStateMachine` pawn (idle / se_deplacer / tâche_courante) via `NavigationAgent3D` — prépare les états `EVALUATING`/`INTERRUPTED` du Jalon 8
@@ -199,6 +227,7 @@
 - [ ] États `EVALUATING`/`INTERRUPTED` dans l'`ActionStateMachine`
 - [ ] **Opportunisme en chemin** : détection de proximité → réévaluation ponctuelle
 - [ ] Signalement : un pawn ajoute une tâche au tableau ou révèle un point d'intérêt
+- [ ] Tâches d'agrément déclenchées par l'heure — aller voir un couchant depuis un point de vue. Les deux mesures de `TimeOfDay` existent pour ça depuis le Jalon 4.4 : un pawn compare le temps de trajet au temps restant avant le crépuscule, et à sa durée.
 ## Jalon 9 — Interactions pawn ↔ pawn & pawn ↔ robot
 - [ ] Bulles thématiques au croisement, générées selon l'état des deux
 - [ ] Effets légers (micro moral, micro relation)
@@ -227,6 +256,7 @@
 - [ ] "Lois" votées qui modifient des paramètres colonie
 - [ ] Déblocage effectif du palier solarpunk après le vote
 - [ ] Passage progressif du tableau piloté-joueur → réajustement colonie
+> Piste visuelle : un `SkyProfile` dégradé (les presets `dark_sky` et `red_sky` du pack existent) rendrait la bascule lisible sans un mot. Le mécanisme de fondu entre profils est celui du climat.
 ## Jalon 13 — Expéditions & fins
 - [ ] Système d'expédition hors rayon robot : contrôle délégué au groupe parti
 - [ ] Objectifs typiques : souche absente localement, autre communauté, zone écologique différente
@@ -236,7 +266,7 @@
   - **Game over anticipé** — robot perdu hors périmètre, non secouru
   - **Bonne fin — robot éternel** — tous les dormants sauvés, choix final (variantes lié-mortel / isolé-éternel)
 ## Features non planifiées
-- Cycle jour/nuit
+- **Climat et intempéries** — l'axe est orthogonal à l'heure : le shader gère le moment via l'élévation du soleil, un `SkyProfile` décrit le temps qu'il fait. Changer de temps est un fondu d'un profil vers un autre sur quelques minutes. Contrainte à respecter : un profil ne fait varier que des uniformes, jamais des textures.
 - Deuxième bunker / expansion de zone
 - Sous-sol du bunker (complexe cryo) via téléportation depuis le bas de l'escalier — c'est aussi là que les dormants du Jalon 5 sont susceptibles d'être réveillés
 - Chemins qui se tracent au passage du joueur et des pawns : carte de piétinement modulant la couleur du sol et supprimant l'herbe au-dessus d'un seuil. Le découpage en chunks est ce qui la rendra possible sans régénérer la carte, et `RockPath` fournit les dalles.

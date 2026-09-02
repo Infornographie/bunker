@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world/sky/sky_debug_panel.gd" id="1_sky_debug_panel"]
+
+[node name="SkyDebugPanel" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_sky_debug_panel")

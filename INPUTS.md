@@ -6,7 +6,7 @@ Le nom d'action entre `backticks` est celui de l'Input Map (`project.godot` § `
  
 ⚠️ Godot enregistre des **physical keycodes** = positions QWERTY. Sur clavier AZERTY, la touche notée ici est la touche physiquement pressée (ex. `move_forward` est au code 87 « W » = **Z** sur AZERTY). Ne jamais lire les codes bruts comme des lettres.
  
-⚠️ **Il n'y a pas de curseur souris dans le jeu.** La souris reste capturée en permanence, y compris interfaces ouvertes : les panneaux sont des objets 3D et leurs cases se visent au réticule. Aucune interface ne fige le joueur — on continue de marcher pendant qu'un panneau est ouvert.
+⚠️ **Il n'y a pas de curseur souris dans le jeu.** La souris reste capturée en permanence, y compris interfaces ouvertes : les panneaux sont des objets 3D et leurs cases se visent au réticule. Aucune interface ne fige le joueur — on continue de marcher pendant qu'un panneau est ouvert. Seul le panneau de debug du ciel (F3) libère le curseur, et c'est un outil de dev, pas une interface de jeu.
 ## Déplacement / caméra
  
 - **ZQSD** — locomotion (`move_forward` / `move_left` / `move_back` / `move_right`)
@@ -42,6 +42,7 @@ Le mode construction et les panneaux s'excluent mutuellement : `UIPanelControlle
  
 - **F11** — bascule le mode vol du joueur (`toggle_flight_mode`, dans `player_controller.gd`) : noclip, ignore gravité et collision. Espace monte, Ctrl descend, Shift accélère (`flight_boost_multiplier`). Désactiver le vol laisse le joueur là où il a volé, pas de retour au point de départ.
 - **F10** — bascule de langue EN ↔ FR (`toggle_locale`), écoutée par l'autoload `Locale`
+- **F3** — panneau de debug du cycle jour/nuit (`toggle_sky_debug`, dans `sky_debug_panel.gd`) : heure, durée du cycle, pause, saut direct aux quatre phases, répartition des phases, choix du profil de ciel, multiplicateurs de brume et d'ambiante. **Seule interface du projet qui libère le curseur** et qui neutralise la caméra tant qu'elle est ouverte. Déclarée dans `UIPanelController.exclusive_modes` comme les autres modes.
 ⚠️ **La rangée F5-F9 est réservée à l'éditeur Godot** (lancer / stop / pause…). En fenêtre de jeu embarquée, l'éditeur intercepte ces touches avant le jeu : le binding a l'air correct dans l'Input Map et ne se déclenche jamais. F7, F8 et F9 ont été essayés et écartés pour cette raison — d'où F11 pour le mode vol. Toute nouvelle touche de debug se teste **en fenêtre embarquée** avant d'atterrir ici.
 ## Collisions de touches assumées
  

@@ -24,6 +24,14 @@ extends Node3D
 ## zéro continue de coûter une passe d'ombre.
 @export_range(0.0, 0.5, 0.001) var sun_off_threshold := 0.01
 
+@export_group("Réglage")
+## Multiplicateurs appliqués par-dessus les courbes du profil. Ils existent pour
+## que le panneau de debug puisse chercher la bonne valeur en direct : une fois
+## trouvée, elle se recopie dans la courbe du profil et le multiplicateur revient
+## à 1. Ce ne sont pas des réglages de gameplay.
+@export_range(0.1, 4.0, 0.01) var fog_distance_scale := 1.0
+@export_range(0.0, 4.0, 0.01) var ambient_scale := 1.0
+
 var _sky_material: ShaderMaterial
 var _environment: Environment
 var _static_applied := false
@@ -107,14 +115,14 @@ func _apply_sun(t: float) -> void:
 	var up := Vector3.UP if absf(to_sun.y) < 0.999 else Vector3.FORWARD
 	sun.look_at_from_position(sun.global_position, sun.global_position - to_sun, up)
 
+	# Le soleil reste TOUJOURS visible : c'est lui qui donne l'heure au shader du
+	# ciel via LIGHT0_DIRECTION. Le masquer fait disparaître LIGHT0, le ciel lit
+	# une direction nulle et se fige. Seule l'ombre se coupe.
 	var energy := _sample(profile.sun_energy, t, 1.0)
-	var lit := energy > sun_off_threshold
-	sun.visible = lit
-	sun.shadow_enabled = lit
-	if lit:
-		sun.light_energy = energy
-		if profile.sun_color != null:
-			sun.light_color = profile.sun_color.sample(t)
+	sun.light_energy = energy
+	sun.shadow_enabled = energy > sun_off_threshold
+	if profile.sun_color != null:
+		sun.light_color = profile.sun_color.sample(t)
 
 
 func _apply_sky(t: float) -> void:
@@ -134,8 +142,8 @@ func _apply_sky(t: float) -> void:
 
 
 func _apply_atmosphere(t: float) -> void:
-	_environment.ambient_light_energy = _sample(profile.ambient_energy, t, 0.5)
-	_environment.fog_depth_end = _sample(profile.fog_depth_end, t, 600.0)
+	_environment.ambient_light_energy = _sample(profile.ambient_energy, t, 0.5) * ambient_scale
+	_environment.fog_depth_end = _sample(profile.fog_depth_end, t, 600.0) * fog_distance_scale
 
 
 func _sample(curve: Curve, t: float, fallback: float) -> float:

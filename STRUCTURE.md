@@ -9,10 +9,10 @@ Carte de repérage technique : où vit quoi, et qui dépend de quoi. Pas un suiv
 - Organisation par feature/domaine, pas par type de fichier.
 - `entities/` = tout ce qui est instanciable individuellement, rangé par comportement.
 - `world/` = scènes qui assemblent des entités dans un lieu, et le code qui fabrique ce lieu.
-- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, `recipes/`, `terrain/`, `foliage/`, futur `techs/`), à côté des scripts de définition correspondants.
+- `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, `recipes/`, `terrain/`, `foliage/`, `sky/`, futur `techs/`), à côté des scripts de définition correspondants.
 - `assets/` = ressources brutes tierces. **Le nom d'un dossier dit à quoi la ressource sert dans le jeu, jamais de quel pack elle vient** : la provenance vit dans ATTRIBUTION.md.
 - Un même item peut avoir trois fichiers homonymes dans trois dossiers, un par rôle : sa définition (`resources/resources/x.tres`), sa recette (`resources/recipes/x.tres`), sa scène de pickup (`entities/interactable/.../x.tscn`). C'est le cas de `grilled_mushroom`.
-- **Aucun texte affichable dans le code ni dans les `.tres`** : uniquement des clés de traduction. Voir § Flux de localisation.
+- **Aucun texte affichable dans le code ni dans les `.tres`** : uniquement des clés de traduction. Voir § Flux de localisation. Une seule exception, nommée en tête de son fichier : `sky_debug_panel.gd`, outil de dev qui ne se localise pas.
 ## Autoloads
  
 Déclarés dans `project.godot` § `[autoload]` — cette liste doit correspondre exactement :
@@ -20,7 +20,10 @@ Déclarés dans `project.godot` § `[autoload]` — cette liste doit correspondr
 - `SoundManager` → `autoloads/sound_manager.gd` — pool d'`AudioStreamPlayer3D` pour SFX ponctuels positionnés.
 - `ResourceRegistry` → `autoloads/resource_registry.gd` — table `ResourceDef` → `PackedScene`, scan auto au boot, sert aussi les icônes.
 - `Locale` → `autoloads/locale.gd` — wrapper `TranslationServer`, fallback `en`, bascule debug F10.
+- `TimeOfDay` → `autoloads/time_of_day.**tscn**` — horloge du monde. **Seul autoload déclaré comme une scène et pas comme un script** : c'est ce qui rend sa durée de cycle et sa répartition de phases éditables dans l'inspecteur. Une horloge dont on ne peut pas changer la vitesse sans rouvrir un `.gd` ne se règle jamais.
 `autoloads/icon_generator.gd` vit dans le même dossier mais **n'est pas** un autoload : il est instancié par `ResourceRegistry`.
+
+⚠️ Aucun script d'autoload ne porte de `class_name`, et il est impossible d'ajouter un autoload si un script le référence déjà — le script ne parse pas, donc Godot refuse. Ajouter la ligne à la main dans `project.godot` § `[autoload]` casse le cycle.
 ## Couches de collision
  
 - **Couche 5 — « UI 3D »** : cases des panneaux du monde (`PanelSlot`). Vue par le raycast d'interaction, et retirée de trois masques : le `collision_mask` du joueur, `ground_mask` et `overlap_mask` de `BuildModeController`.
@@ -33,6 +36,7 @@ res://
 │   ├── sound_manager.gd
 │   ├── resource_registry.gd            — (autoload) ResourceDef → PackedScene, scan auto au boot
 │   ├── locale.gd                       — (autoload) wrapper TranslationServer
+│   ├── time_of_day.gd / .tscn          — (autoload, scène) horloge du monde : temps canonique, phases, signaux, mesures en secondes réelles
 │   └── icon_generator.gd               — modèle 3D → Texture2D, un SubViewport jetable par icône (pas un autoload)
 ├── translations/
 │   └── strings.csv                     — source unique des textes affichés (`keys`, `en`, `fr`)
@@ -44,6 +48,7 @@ res://
 │   ├── sci_fi/                         — Quaternius Modular SciFi MegaKit
 │   ├── survival/                       — KayKit Resource Bits (survival) : sac à dos, feu de camp
 │   ├── characters/tools/                — KayKit, dix outils en bois (un seul câblé, voir ASSETS.md)
+│   ├── sky/                            — Godot Skies : main.gdshader + textures/clouds_0X.tres
 │   └── sounds/                         — non inventorié (contenu à documenter)
 ├── entities/
 │   ├── interactable/
@@ -86,6 +91,7 @@ res://
 │   ├── building_def.gd                 — Resource : bâtiment (coûts, collision_shape, scènes)
 │   ├── resource_cost.gd
 │   ├── recipe_def.gd                   — Resource : recette de transformation
+│   ├── sky_profile.gd                  — Resource : un ciel complet (couleurs jour/aube/couchant/nuit, nuages, disque solaire, lune, courbes de soleil, d'ambiante et de distance de brume). Unité de **climat**, pas de moment
 │   ├── terrain_gen_config.gd           — (@tool) Resource : réglages de génération + convention de grille (grid_size, cell_count, half_size, chunks_per_side, height_index, world_pos, sample_grid, sample_height, chunk_area, stream_tile_area, stream_tiles_per_side). Porte `layers` et `biomes`
 │   ├── foliage_def.gd                  — (@tool) Resource : une essence (id, model, scale_range, random_yaw, min/max_slope_degrees, embed_depth, base_radius, cover_radius, cover_amount, cover_response) — **pas de poids** : il appartient à la composition
 │   ├── foliage_weight.gd               — (@tool) Resource : une essence et son poids ici (def, weight)
@@ -98,6 +104,7 @@ res://
 │   ├── recipes/                        — instances RecipeDef
 │   ├── tools/wooden_axe.tres
 │   ├── buildings/                      — campfire.tres, campfire_shape.tres
+│   ├── sky/                            — instances SkyProfile : clear_day, cold_clear, warm_haze, overcast
 │   ├── terrain/default_terrain.tres    — instance TerrainGenConfig ; porte en sous-ressources les FastNoiseLite, le ShaderMaterial du sol et le matériau de l'eau
 │   ├── foliage/                        — instances FoliageDef, une par essence
 │   ├── foliage_layers/                 — instances FoliageLayer : canopy, understory, shrub, ground
@@ -106,6 +113,11 @@ res://
 │       → FoliageWeight et BiomeStratum n'ont pas de dossier : ce sont des sous-ressources écrites dans le .tres du biome
 └── world/
 	├── bunker/bunker_exterior_test.tscn — scène morte-née : bunker bâti à la main directement dedans, jamais repris ailleurs, jamais de partie intérieure. À supprimer — le bunker est intégralement à refaire (→ ASSETS.md § Sci-fi)
+	├── sky/
+	│   ├── sky_rig.tscn                — Node3D + WorldEnvironment + DirectionalLight3D. Porte en sous-ressources l'Environment, le Sky, le ShaderMaterial du ciel et les bruits d'étoiles. **Une scène de test n'a qu'un seul rig, et aucune autre DirectionalLight3D**
+	│   ├── sky_controller.gd           — Node3D : lit TimeOfDay, oriente le soleil, écrit les uniformes du ciel, règle brume et ambiante. Expose profile, sun, world_environment, fog_distance_scale, ambient_scale
+	│   ├── sky_debug_panel.gd / .tscn  — CanvasLayer de debug (F3). UI construite en code, textes hors CSV : deux exceptions assumées et écrites en tête du fichier
+	│   └── (le shader du ciel vit dans assets/sky/, c'est un asset tiers)
 	├── terrain/
 	│   ├── heightmap_generator.gd      — (@tool) RefCounted : massif, relief, eau, clairières, rivière. Publie heights / massif_influence / cave_position / cave_forward / water_level / clearings / river_path
 	│   ├── biome_map.gd             — (@tool) RefCounted : generate(cfg, influence) → weights, un PackedFloat32Array normalisé par biome
@@ -121,6 +133,19 @@ res://
 ```
 ## Dépendances transversales clés
  
+### Flux du ciel et du cycle jour/nuit
+- Sens de la dépendance, à sens unique : `TimeOfDay` (autoload) ne connaît ni ciel ni lumière ; `SkyController` le lit et n'écrit jamais dedans. L'horloge est une grandeur du monde, pas un service du rendu.
+- **`TimeOfDay` publie deux registres, et tout le jeu lit l'un ou l'autre — jamais un seuil en dur.** Continu : `time_of_day` (0→1, minuit=0, lever=0.25, midi=0.5, coucher=0.75), `sun_elevation_degrees()`, `sun_azimuth_degrees()`. Discret : `phase` (`DAWN`/`DAY`/`DUSK`/`NIGHT`) et les signaux `phase_changed`, `day_started`, `night_started`.
+- Pour planifier, deux mesures **en secondes réelles** : `seconds_until_phase(phase)` et `seconds_left_in_phase()`, plus `phase_duration(phase)`. C'est ce qu'un pawn interroge pour décider s'il a le temps d'aller voir le couchant. Personne ne recalcule ça localement — avec un temps non linéaire, il faudrait inverser la courbe.
+- **Le temps n'avance pas à vitesse constante, mais ce n'est pas une courbe de vitesse.** Une progression avance linéairement sur `day_duration` secondes, et `time_of_day` en est déduit par une fonction affine par morceaux. Une journée dure donc exactement `day_duration` quelle que soit la répartition, sans dérive à intégrer.
+- **Ce qu'une phase EST se déclare en élévation du soleil** (`night_elevation_degrees`, `day_elevation_degrees`) ; **combien de temps elle DURE se déclare en parts** (`dawn_share`… `night_share`). Le premier est physique et ne se retouche pas, le second est du ressenti et se règle librement.
+- Toute couleur ou courbe s'échantillonne en `time_of_day` (temps canonique), **jamais** en temps réel : retoucher la répartition ne doit pas déplacer une couleur.
+- `SkyController` sépare `_apply_static()` (écrit une fois, et à chaque changement de profil) de ce qui dépend de l'heure, réécrit chaque frame.
+- **Le raccord avec le lointain ne se code pas, il se déclare** : `ambient_light_source = SKY` et `fog_sky_affect = 1.0` sur l'Environment font dériver l'ambiante et la couleur de brume du ciel lui-même. Corollaire structurant : **`SkyProfile` ne porte aucune couleur de brume** — seulement une distance (`fog_depth_end`, une Curve).
+- **Le shader ne sait pas distinguer l'aube du couchant** : son mélange est symétrique en élévation. `SkyProfile` porte donc deux jeux de couleurs (`*_dawn`, `*_dusk`) et le contrôleur écrit l'un ou l'autre dans les mêmes uniformes selon que le soleil monte (`time_of_day < 0.5`). La bascule tombe à midi, où ces couleurs sont entièrement mélangées hors du ciel.
+- **Un `SkyProfile` est une unité de climat, pas de moment** : il décrit une journée entière par temps donné. Changer de temps sera un fondu d'un profil vers un autre. D'où la règle qui rend ce fondu possible : **un profil fait varier des uniformes, jamais des textures** — les textures de nuages vivent dans `sky_rig.tscn` et sont les mêmes pour tous les profils.
+- `fog_distance_scale` et `ambient_scale` sur le contrôleur sont un **instrument de mesure**, pas un réglage : le panneau de debug s'en sert pour chercher une valeur en direct, qu'on recopie ensuite dans la courbe du profil avant de remettre le multiplicateur à 1.
+- `SkyDebugPanel` expose `is_active()` et se déclare dans `UIPanelController.exclusive_modes` comme les autres modes ; il interroge en retour `can_enter_exclusive_mode()` en duck typing, et fonctionne sans si le champ est vide.
 ### Flux de génération du terrain
 - Sens de la dépendance : `TerrainController` (seul nœud de la scène) appelle `HeightmapGenerator.generate(config)`, puis `BiomeMap.generate(config, massif_influence)`, puis `FoliageScatter.scatter(...)`, puis `TerrainMeshBuilder.build_chunk(...)` par chunk. Les trois sont des `RefCounted` sans état persistant et ne connaissent ni la scène ni le contrôleur.
 - **`TerrainGenConfig` est la source unique de la convention de grille** : `height_index()`, `world_pos()` et `sample_grid()` ne sont réimplémentés nulle part. `sample_height()` est un cas particulier de `sample_grid()` — une heightmap est une grandeur par sommet comme une autre, et c'est ce qui permet de lire les poids de biome au point sans écrire une seconde interpolation. Générateur et scatter les appellent, y compris dans leurs boucles chaudes.
@@ -130,6 +155,7 @@ res://
 - Le générateur publie ce que la suite doit savoir : `heights`, `water_level`, `clearings` (centre + rayon), `river_path`, `cave_position`/`cave_forward`. Le contrôleur republie `heights` pour la scène.
 - **Les nœuds générés n'ont pas d'owner** : jamais sérialisés dans le `.tscn`, jamais versionnés. Le terrain se régénère, il ne se sauvegarde pas.
 - Les normales des chunks sont calculées par différences centrées sur le **tableau global** : deux chunks voisins lisent les mêmes sommets et se raccordent sans couture, sans code de recollement.
+- `TerrainController.sun` doit pointer sur le `Sun` du `SkyRig` : c'est son élévation que `FoliageProximity` lit pour la coupure d'ombre. Un ancien soleil oublié dans la scène est le bug qui ne lève rien.
 - ⚠️ Toute la chaîne est `@tool`. Le `@tool` ne s'hérite pas : un script non-`@tool` instancié par un script `@tool` devient une coquille sans méthodes dans l'éditeur.
 ### Flux des biomes
 - `HeightmapGenerator` publie `massif_influence`, l'influence du massif par sommet : 1 sur l'axe, 0 hors du relief. Elle est calculée pour le relief de toute façon, la publier ne coûte qu'une écriture.
@@ -159,7 +185,7 @@ res://
 - `FoliageProximity` tient deux listes à deux grains : les chunks pour l'ombre, les tuiles pour le semis. Le recensement (`update_interval`) dit quelles tuiles doivent exister sans en semer aucune ; le semis consomme la file à chaque frame dans `stream_budget_ms`. **Le budget est en millisecondes et pas en tuiles** : compté en tuiles il redevient faux dès qu'on change leur taille, un espacement ou de machine.
 - La file est triée par distance, le plus proche semé en premier : l'herbe pousse sous les pieds du joueur avant de pousser au loin.
 - `FoliageProximity` est le point unique où le feuillage réagit à la distance. Tout s'y calcule **dans le repère du nœud de feuillage**, celui des emprises publiées — le nœud de terrain peut être tourné et déplacé dans sa scène.
-- `foliage_view_distance` et `foliage_fade_margin` sont posés sur chaque `MultiMeshInstance3D`. Ils se règlent **de pair avec le brouillard de profondeur** du `WorldEnvironment` : c'est la brume qui doit masquer la coupure.
+- `foliage_view_distance` et `foliage_fade_margin` sont posés sur chaque `MultiMeshInstance3D`. Ils se règlent **de pair avec le brouillard de profondeur** du `WorldEnvironment` : c'est la brume qui doit masquer la coupure. Depuis le cycle jour/nuit, cette brume est une **courbe** du `SkyProfile` et non une valeur fixe — c'est sa valeur minimale sur la journée qui doit tenir la coupure.
 ### Flux d'action (swing outil)
 - `ActionStateMachine.use_tool_on(target, on_impact, reach_distance)` appelle `ToolController.swing()` et écoute son signal `swing_impact` en retour. La SM pilote le controller, jamais l'inverse.
 - Au `swing_impact`, la SM exécute le `Callable` fourni par l'appelant, uniquement si la cible est encore valide.
@@ -177,7 +203,7 @@ res://
 - `UIPanelController.open_panel(panel, anchor)` est le seul chemin d'ouverture. Il refuse si un mode exclusif tourne ou si l'`ActionStateMachine` n'est pas `IDLE`.
 - `InteractionController.open_object_panel(source, panel_scene)` **bascule**. Le panneau est instancié à l'ouverture, branché par `bind()`, détruit à la fermeture — un exemplaire par ancre.
 - Le panneau est enfant de la **scène**, pas de son ancre : les assets du projet ont des échelles arbitraires.
-- `exclusive_modes: Array[Node]` — duck typing (`is_active()`), sans citer aucun type : c'est ce qui évite le cycle de `class_name`.
+- `exclusive_modes: Array[Node]` — duck typing (`is_active()`), sans citer aucun type : c'est ce qui évite le cycle de `class_name`. Y sont déclarés `BuildModeController` et `SkyDebugPanel`.
 - Contrat de case, implémenté par le panneau propriétaire : `slot_content()`, `slot_accepts()`, `slot_can_take()`, `slot_take()`, `slot_put()`, plus `slot_action_key()` / `slot_activate()`. La case porte un `payload` opaque et ne décide de rien.
 ### Flux de localisation
 - `translations/strings.csv` = source unique de tout texte affiché. Les lignes de titre ont une **première colonne vide** : Godot les ignore à l'import.
@@ -188,6 +214,7 @@ res://
   - `PanelSlot._refresh_display()`
   Tout nouveau `tr()` ailleurs signale une string qui aurait dû transiter par une clé.
 - Les cases de recette n'affichent **aucun texte** : elles montrent l'icône du plat produit, ce qui évite un quatrième point de traduction.
+- Exception unique et assumée : `sky_debug_panel.gd` écrit ses libellés en dur. Un outil de dev ne se localise pas ; l'exception est écrite en tête du fichier pour qu'elle ne fasse pas précédent.
 - ⚠️ Les clés de cache d'icônes sont bâties sur les `id`, **jamais** sur un nom affiché.
 ### Flux de construction
 - `BuildModeController` (B) : lit les `BuildingDef` disponibles, instancie le blueprint, molette pour tourner, `Shift` désactive le snap, check collision via `BuildingDef.collision_shape`.

@@ -89,7 +89,7 @@ var progress: float:
 
 var _time_of_day := 0.0
 var _progress := 0.0
-var _phase := Phase.DAWN
+var _phase: int = Phase.DAWN
 var _dirty := true
 
 # Bornes canoniques de chaque phase (en time_of_day) et leur durée.

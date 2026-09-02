@@ -1,9 +1,9 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene format=3 uid="uid://d1a2pi25ythqw"]
 
-[ext_resource type="Script" path="res://world/sky/sky_controller.gd" id="1_sky_controller"]
-[ext_resource type="Shader" path="res://assets/sky/main.gdshader" id="2_sky_shader"]
-[ext_resource type="Texture2D" path="res://assets/sky/textures/clouds_01.tres" id="3_clouds_01"]
-[ext_resource type="Resource" path="res://resources/sky/clear_day.tres" id="4_clear_day"]
+[ext_resource type="Script" uid="uid://b7abacud20q1u" path="res://world/sky/sky_controller.gd" id="1_sky_controller"]
+[ext_resource type="Shader" uid="uid://tl81fcesjfx0" path="res://assets/sky/main.gdshader" id="2_sky_shader"]
+[ext_resource type="Texture2D" uid="uid://dy4tvvd6jbv0g" path="res://assets/sky/textures/clouds_01.tres" id="3_clouds_01"]
+[ext_resource type="Resource" uid="uid://drmxk71mmgib2" path="res://resources/sky/clear_day.tres" id="4_clear_day"]
 
 [sub_resource type="Gradient" id="Gradient_cloud_ramp"]
 
@@ -14,10 +14,10 @@ fractal_octaves = 8
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_clouds_b"]
 width = 1024
 height = 1024
+noise = SubResource("FastNoiseLite_clouds_b")
+color_ramp = SubResource("Gradient_cloud_ramp")
 seamless = true
 seamless_blend_skirt = 0.4
-color_ramp = SubResource("Gradient_cloud_ramp")
-noise = SubResource("FastNoiseLite_clouds_b")
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_stars"]
 noise_type = 2
@@ -29,56 +29,80 @@ cellular_return_type = 6
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_stars"]
 width = 1024
 height = 1024
-invert = true
-seamless = true
-seamless_blend_skirt = 0.0
 noise = SubResource("FastNoiseLite_stars")
+seamless = true
+invert = true
+seamless_blend_skirt = 0.0
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_mottle"]
 frequency = 0.001
 fractal_type = 2
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_mottle"]
+noise = SubResource("FastNoiseLite_mottle")
 seamless = true
 seamless_blend_skirt = 0.2
-noise = SubResource("FastNoiseLite_mottle")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("2_sky_shader")
+shader_parameter/sky_day = Color(0, 0.3, 0.7, 1)
+shader_parameter/horizon_day = Color(0.75, 0.85, 0.85, 1)
+shader_parameter/horizon_sunset = Color(0.9, 0.4, 0.1, 1)
+shader_parameter/sky_sunset = Color(0.15, 0.2, 0.4, 1)
+shader_parameter/horizon_night = Color(0.1, 0.15, 0.2, 1)
+shader_parameter/sky_night = Color(0.05, 0.1, 0.15, 1)
+shader_parameter/day_night_mix = 0.8
 shader_parameter/use_directional_light = true
+shader_parameter/horizon_exponent = 2.0
+shader_parameter/sunset_amount_exponent = 0.7
+shader_parameter/night_amount_exponent = 4.0
 shader_parameter/cloud_tex_01 = ExtResource("3_clouds_01")
 shader_parameter/cloud_tex_02 = SubResource("NoiseTexture2D_clouds_b")
+shader_parameter/cloud_color = Color(0.8, 0.8, 0.8, 1)
+shader_parameter/cloud_tiling = Vector2(1, 1)
+shader_parameter/wind_speed = Vector2(0.5, 0.5)
+shader_parameter/cloud_density = 0.7
+shader_parameter/cloud_depth = 2.0
+shader_parameter/cloud_shape_exponent = 2.0
+shader_parameter/cloud_occlude_exponent = 1.0
 shader_parameter/night_noise_01 = SubResource("NoiseTexture2D_stars")
 shader_parameter/night_noise_02 = SubResource("NoiseTexture2D_mottle")
+shader_parameter/sun_scale = 0.05
+shader_parameter/sun_strength = 15.0
+shader_parameter/sun_color = Color(1, 0.9, 0, 1)
+shader_parameter/moon_scale = 0.03
+shader_parameter/moon_strength = 15.0
+shader_parameter/moon_color = Color(0.5, 0.55, 0.7, 1)
 
 [sub_resource type="Sky" id="Sky_world"]
 sky_material = SubResource("ShaderMaterial_sky")
 process_mode = 3
-radiance_size = 3
 
 [sub_resource type="Environment" id="Environment_world"]
 background_mode = 2
 sky = SubResource("Sky_world")
 ambient_light_source = 3
 reflected_light_source = 2
+ssao_enabled = true
 fog_enabled = true
 fog_mode = 1
-fog_sky_affect = 1.0
-fog_aerial_perspective = 1.0
-fog_depth_begin = 40.0
-fog_depth_end = 600.0
-fog_depth_curve = 1.0
+fog_sun_scatter = 0.3
+fog_density = 1.0
+fog_aerial_perspective = 0.8
+fog_sky_affect = 0.55
+fog_height = -40.0
+fog_depth_curve = 2.0000005
+fog_depth_begin = 80.0
+fog_depth_end = 420.0
 
-[node name="SkyRig" type="Node3D"]
+[node name="SkyRig" type="Node3D" unique_id=1122277058]
 script = ExtResource("1_sky_controller")
 profile = ExtResource("4_clear_day")
-sun = NodePath("Sun")
-world_environment = NodePath("WorldEnvironment")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=529685074]
 environment = SubResource("Environment_world")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=819077672]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 0, 0)
 light_angular_distance = 1.0
 shadow_enabled = true

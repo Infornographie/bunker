@@ -36,6 +36,17 @@ Feu de camp. Même famille visuelle low poly stylisée que les packs Quaternius,
 Dossier : `assets/characters/`
 
 Contient notamment `tools/wooden_axe_grip.tscn`, wrapper Godot maison autour du FBX de hache (rattrapage de pivot — protocole dans STATE §Apprentissages). Le wrapper est du projet ; le modèle vient du pack listé ci-dessus dont il est issu.
+## Shaders
+ 
+### Godot Skies (version complète) — binbun3d — **CC0**
+Dossier : `assets/sky/`
+[binbun3d.itch.io/godot-skies](https://binbun3d.itch.io/godot-skies)
+
+Shader de ciel (`main.gdshader`) et textures de nuages en bruit (`textures/clouds_0X.tres`). Le shader est **non modifié** à ce jour : le jour où on le patche (lune texturée, direction de lune découplée), la modification se note ici.
+
+Le pack livre aussi 27 presets — des `ShaderMaterial` et des `Sky` tout faits. **Ils ne sont pas dans le projet** : ce sont des jeux de valeurs, pas des assets. Leurs réglages ont été recopiés dans nos `SkyProfile` (`resources/sky/`), qui sont la forme utilisable par le cycle jour/nuit. Un preset décrit une journée entière et ne sait pas s'animer ; un profil, si.
+
+> Le shader du pack livre son propre `triplanar.gdshaderinc`, qui n'est inclus par rien dans `main.gdshader`. Il n'a pas été copié.
 ## Audio
  
 - **chop2.mp3** — igroglaz — **CC0** (SFX coupe du bois, hook posé, asset non encore branché)

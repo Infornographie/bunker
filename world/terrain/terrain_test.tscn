@@ -3,54 +3,31 @@
 [ext_resource type="Script" uid="uid://b03bcm36ffjoe" path="res://world/terrain/terrain_controller.gd" id="1_hr0af"]
 [ext_resource type="Resource" uid="uid://dudcemthchqc4" path="res://resources/terrain/default_terrain.tres" id="2_kgf1h"]
 [ext_resource type="PackedScene" uid="uid://06k6adpsbv7e" path="res://entities/player/player.tscn" id="3_ff4tk"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_70hql"]
-sky_top_color = Color(0.34, 0.55, 0.78, 1)
-sky_horizon_color = Color(0.93, 0.83, 0.64, 1)
-sky_curve = 0.15
-sky_energy_multiplier = 1.0
-ground_horizon_color = Color(0.93, 0.83, 0.64, 1)
-ground_bottom_color = Color(0.24, 0.21, 0.16, 1)
-ground_curve = 0.15
-
-[sub_resource type="Sky" id="Sky_j4d70"]
-sky_material = SubResource("ProceduralSkyMaterial_70hql")
-
-[sub_resource type="Environment" id="Environment_60qbc"]
-background_mode = 2
-sky = SubResource("Sky_j4d70")
-tonemap_mode = 3
-ssao_enabled = true
-sdfgi_use_occlusion = true
-fog_enabled = true
-fog_mode = 1
-fog_light_color = Color(0.9, 0.81, 0.63, 1)
-fog_sun_scatter = 0.3
-fog_density = 1.0
-fog_aerial_perspective = 0.8
-fog_sky_affect = 0.55
-fog_height = -40.0
-fog_depth_curve = 2.000001
-fog_depth_begin = 80.0
-fog_depth_end = 420.0
+[ext_resource type="PackedScene" uid="uid://d1a2pi25ythqw" path="res://world/sky/sky_rig.tscn" id="4_jqqxl"]
+[ext_resource type="PackedScene" path="res://world/sky/sky_debug_panel.tscn" id="5_dv2y6"]
 
 [node name="TerrainTest" type="Node3D" unique_id=137881587 node_paths=PackedStringArray("sun")]
 transform = Transform3D(-0.5153874, 0, 0.8569575, 0, 1, 0, -0.8569575, 0, -0.5153874, 0, 0, 0)
 script = ExtResource("1_hr0af")
 config = ExtResource("2_kgf1h")
-sun = NodePath("DirectionalLight3D")
+sun = NodePath("SkyRig/Sun")
 
 [node name="Player" parent="." unique_id=135155471 instance=ExtResource("3_ff4tk")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.726444, 37.19605, 19.68988)
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1811964122]
-transform = Transform3D(0.7805165, -0.6247395, 0.02224259, 0.23226285, 0.3228429, 0.9175111, -0.5803862, -0.71096647, 0.39708766, 0, 323.5772, 0)
-shadow_enabled = true
-directional_shadow_mode = 1
-directional_shadow_max_distance = 60.0
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1145164309]
-environment = SubResource("Environment_60qbc")
-
 [node name="Player2" parent="." unique_id=2123245294 instance=ExtResource("3_ff4tk")]
 transform = Transform3D(-0.51538724, 0, -0.8569572, 0, 1, 0, 0.8569572, 0, -0.51538724, 8.498915, 54.086716, 7.682656)
+
+[node name="UIPanelController" parent="Player2/CharacterBody3D/Camera3D" parent_id_path=PackedInt32Array(2123245294, 445877674) index="0" unique_id=1775465887 node_paths=PackedStringArray("exclusive_modes")]
+exclusive_modes = [NodePath("../BuildModeController"), NodePath("../../../../SkyDebugPanel")]
+
+[node name="SkyRig" parent="." unique_id=2109894857 node_paths=PackedStringArray("sun", "world_environment") instance=ExtResource("4_jqqxl")]
+sun = NodePath("Sun")
+world_environment = NodePath("WorldEnvironment")
+
+[node name="SkyDebugPanel" parent="." unique_id=1724175163 node_paths=PackedStringArray("sky_controller", "ui_panel_controller") instance=ExtResource("5_dv2y6")]
+sky_controller = NodePath("../SkyRig")
+ui_panel_controller = NodePath("../Player2/CharacterBody3D/Camera3D/UIPanelController")
+
+[editable path="Player2"]
+[editable path="SkyRig"]

@@ -55,8 +55,6 @@ roughness = 0.1
 [resource]
 script = ExtResource("1_config")
 world_seed = 9999
-foliage_view_distance = 675.0
-foliage_fade_margin = 225.0
 macro_noise = SubResource("FastNoiseLite_macro")
 drainage_drop = 90.0
 massif_wobble_noise = SubResource("FastNoiseLite_massif_wobble")
@@ -70,5 +68,7 @@ valley_macro_damping = 0.85
 river_valley_pull = 0.35
 layers = Array[ExtResource("3_layer")]([ExtResource("4_canopy"), ExtResource("5_understory"), ExtResource("6_shrub"), ExtResource("7_ground")])
 biomes = Array[ExtResource("biome_script")]([ExtResource("biome_forest_light"), ExtResource("biome_conifer")])
+foliage_view_distance = 675.0
+foliage_fade_margin = 225.0
 terrain_material = SubResource("ShaderMaterial_ground")
 water_material = SubResource("StandardMaterial3D_water")
