@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 SoundManager="*uid://bjna3ly1ost10"
 ResourceRegistry="*uid://cy1gmj2osyooy"
 Locale="*uid://g4npwd2q1ege"
+TimeOfDay="*res://autoloads/time_of_day.tscn"
 
 [display]
 
