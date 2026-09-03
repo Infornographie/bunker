@@ -136,11 +136,39 @@
 - [x] Biome `forest_light` : reprise à l'identique de la composition existante, comme test de non-régression du refactor.
 - [x] Biome `conifer_highland` : `GiantPine` en canopée, `Pine` en sous-étage, dix `FoliageDef` neufs. Ses strates basses ne contiennent **que des essences déjà employées par la forêt claire**, repondérées — c'est la démonstration que le contenu est réutilisable. Pas de taches de fleurs : monter en altitude fait disparaître la couleur.
 - [ ] Troisième biome au-delà de la rivière — demande une **position en travers signée** publiée par le générateur et une seconde bande sur `BiomeDef` : le système ne sait répondre qu'à « à quelle hauteur du relief », pas à « de quel côté ». Dette à ouvrir en même temps : au troisième critère (l'humidité de la berge), les champs nommés devront céder la place à une liste de critères.
-- [ ] Les couleurs de biome **et l'ouverture** s'ajoutent au shader du sol en couleur de sommet, sans remplacer le calcul altitude/pente. C'est ce qui fait exister une clairière lointaine : sans elle, une trouée vue d'une hauteur est une tache de sol nu dans le vert.
+- [x] L'**ouverture** s'ajoute au shader du sol en couleur de sommet (canal rouge) — la litière apparaît sous couvert fermé, l'herbe dans les trouées
+- [ ] Les **couleurs de biome** s'ajoutent dans les autres canaux, sans remplacer le calcul altitude/pente. C'est ce qui fait exister une clairière lointaine : sans elle, une trouée vue d'une hauteur est une tache de sol nu dans le vert.
 - [ ] Le mesh de terrain se construit **après** le semis de canopée, puisqu'il lit `cover` — le sol se colore de ce qui pousse dessus
 - [ ] Végétation `persistent` de clairière (touffes hautes, buissons fleuris, bouquets) semée au boot comme la canopée : ce qui doit se voir de loin ne se stream pas
 - [ ] Bake `NavigationRegion3D` après le scatter ; rivière et falaise infranchissables, gué praticable
 - [ ] Corriger dette Jalon 1 (navmesh/branches)
+### Passe B3 — habillage du sol par textures ✅
+- [x] `terrain.gdshader` réécrit : cinq matériaux texturés (herbe, litière, caillouteux, falaise, sable) choisis par couvert, altitude, pente et proximité de l'eau
+- [x] Mélange par carte de hauteur (`height_weights`) au lieu d'un fondu linéaire — les frontières s'imbriquent
+- [x] Occlusion ambiante des packs, reportée sur l'albédo et passée au moteur
+- [x] Échelle par matériau sous une échelle maîtresse ; triplanaire réservé à la falaise
+- [x] Normalisation des cartes de hauteur sur leur plage utile mesurée (`*_height_range`)
+- [x] Reconstruction du canal Z des normales (RGTC n'en stocke que deux)
+- [x] `TerrainMeshBuilder.build_chunk()` reçoit le matériau ; `TerrainController._ground_material()` en duplique un exemplaire par génération pour y écrire `water_level`
+- [x] `FoliageDef.align_to_slope` + enfoncement fondé sur `base_radius` — les rochers épousent le sol au lieu de flotter
+- [x] Petits cailloux retirés (`pebble_round` des deux biomes, `pebble_square` de `scree`) ; rochers moyens plus présents, en filaments, jusqu'au pied des parois
+- [ ] Force de normale **par matériau** : la normal map de la falaise n'encode que ~3° de pente, elle demande 4 à 5 là où la litière se contente de 1,4
+
+### Passe D — personnalité de la carte : catalogue de features et lieux-dits
+> **Discuté, pas commencé.** Constat de départ : le générateur n'a qu'un seul type de feature — le massif — et tout le reste en dérive. Une graine ne change donc qu'une orientation et trois dimensions ; la *composition* est identique à chaque fois. Et ce qui n'est pas le massif est du bruit, qui par construction n'a pas d'échelle privilégiée et ne fabrique donc jamais de lieu. Les clairières rondes et les coins à champignons introuvables sont les deux symptômes.
+- [ ] Extraire `MassifShape` : la forme du massif est aujourd'hui portée par des champs du générateur, donc il ne peut en exister qu'un. Test de non-régression : à graine égale, carte identique.
+- [ ] Extraire `heightmap_ops` : `flatten_disc` et `carve_channel` existent déjà et servent déjà deux clients chacun ; s'y ajoute un opérateur de paliers (une falaise réelle est stratifiée, la nôtre est une rampe régulière). Ces trois opérateurs couvrent l'essentiel du catalogue — une feature est une composition d'opérateurs, pas du code de terrain neuf.
+- [ ] `TerrainFeature` en catalogue tiré avec quotas : contrefort (le même code appelé deux fois — ferme la vallée), affluent, cuvette, plaine, carrière, belvédère. **Trois crans d'exécution** : ce qui sculpte passe avant le calcul du niveau d'eau, ce qui suit l'eau après le creusement de la rivière, ce qui se *cherche* sur un relief définitif.
+- [ ] Zones dérivées (jamais dessinées) : sommet, pentes, pied de massif, vallée rive bunker, vallée rive opposée, arrière-pays, abords du lac — plus trois zones **linéaires** (cours de la rivière, ligne de falaise, rivage). Quotas par zone et par catégorie (esthétique / contraignant).
+- [ ] `Site` publié par le générateur : position, emprise, **direction et largeur de dégagement**, capacité, qualités du terrain, nom composé de deux clés du CSV. Un site porte des **qualités, jamais des activités** — le Jalon 8 déclare ce qu'une activité cherche.
+- [ ] Registre de réservation d'emprise entre features — même principe que `ScatterOccupancy`, un étage plus haut : une feature ne peut pas en recouvrir une autre sans le déclarer.
+- [ ] Outil de planche de graines : douze cartes générées en heightmap seule (sans mesh ni végétation), affichées en vignettes ombrées. **Ne pas générer en cellule grossie** — les features ont des tailles en mètres, une carte réduite n'est pas la même carte.
+- [ ] Vérificateur d'invariants sur N graines (rivière qui atteint l'aval, clairière du bunker plane, grotte hors de l'eau, sites atteignables, quotas tenus). C'est ce qui remplace les tests unitaires : une composition qui change est normale, un invariant violé est un bug.
+- [ ] Cime marquée sur le massif — sur les captures actuelles, même du meilleur point de vue accessible, on voit une croupe allongée sans point culminant. Et rapport hauteur/largeur resserré : à 200 m pour 250 m de demi-largeur, c'est une colline.
+> **Décisions à trancher avant d'écrire** : forme de `TerrainFeature` (Resource à script vs classe + réglages) ; réglages de features dans `TerrainGenConfig` ou dans leurs propres `.tres` ; le joueur peut-il renommer un lieu-dit.
+> **Règle structurante** : une feature ne nomme jamais une autre feature. Elles se parlent par qualités du terrain, jamais par identité — sinon chaque ajout redevient une modification des anciennes. C'est la règle biome/essence, remontée d'un cran.
+> **Dette à ouvrir en même temps** : la position en travers de la rivière (nécessaire au troisième biome) se publie dans le générateur — l'écrire pendant qu'on y est. Et au troisième critère, les champs nommés de `BiomeDef` devront céder à une liste de critères.
+
 ### Passe C — grotte, falaise et lointain
 > Dépend du Jalon 4.4 : le raccord du lointain se juge sur la brume et la couleur d'horizon, pas sur la géométrie.
 - [ ] Grotte d'entrée : porche posé sur le site publié par le générateur (`CaveSite`), scène séparée reliée par téléportation. C'est là que le bunker sera rebâti.
@@ -150,6 +178,12 @@
 - [ ] Cascade, en feature du biome montagne rejoignant la rivière
 - [ ] Gorge : passage encaissé entre deux parois sur une portion du cours — feature de relief, pas de végétation
 ### Dette Jalon 4
+- **Le shader de sol lit ses cinq couches à chaque pixel** — une quarantaine de lectures de texture au pire — alors que deux au plus contribuent. GDShader n'accepte pas un `sampler2D` en argument de fonction : la sortie est un `Texture2DArray` et une sélection des deux poids dominants, qui ramènerait le coût à une douzaine de lectures constantes. À faire quand le coût se mesure ; les cinq blocs de lecture recopiés disparaîtront du même coup.
+- **La passe de détail réutilise la texture principale en miniature.** `detail_normal` est donc à 0 par défaut : monté, il fait voir le relief des petites formes pendant que la couleur montre les grandes. Correctif propre : une carte de grain dédiée, sans formes reconnaissables, partagée par les cinq matériaux.
+- **`ARRAY_TEX_UV` et `TerrainGenConfig.uv_scale` ne servent plus à rien** : le shader calcule tout en coordonnées monde. Le constructeur de mesh remplit encore le tableau d'UV. À supprimer.
+- **Les neuf `.tres` de galets ne sont plus dans aucune palette** (`pebble_round_1-3`, `pebble_square_1-6`). Conservés parce qu'ils serviront au lieu-dit « chaos de blocs » quand le catalogue de features existera ; à supprimer si cette feature ne se fait pas.
+- **Le relief du sol par décalage d'UV est un chantier fermé.** Parallaxe en une passe puis POM à seize pas : les deux ont été écrits, testés et retirés. La cause n'est pas dans le shader (voir STATE §Habillage du sol). Ne pas rouvrir sans changer l'albédo ou l'éclairage.
+- **Le scintillement du feuillage est masqué par la brume, pas corrigé.** La densité actuelle le cache à toute heure ; un profil de ciel moins dense ou une journée claire le feraient réapparaître. Cause probable : le fondu de distance du feuillage (voir le gotcha `VISIBILITY_RANGE_FADE_SELF` en fin de STATE).
 - **L'occupation des strates streamées est locale à la tuile** (24 m), et non au chunk (96 m) : deux plantes peuvent se chevaucher à une frontière, quatre fois plus souvent qu'avant. Invisible sur l'herbe à 0,8 m d'espacement, à surveiller sur `shrub` dont les buissons sont plus larges.
 - **Le budget de semis se teste après chaque tuile**, jamais pendant : une tuile ne s'interrompt pas en cours de route, donc le pic vaut `stream_budget_ms` plus une tuile. Si une tuile devient chère, c'est `stream_tile_cells` qu'on baisse, pas le budget.
 - **Les `.tres` de taches portent `min_slope_degrees = null` / `max_slope_degrees = null`** — sérialisation antérieure à ce jalon, sur des `@export_range` float. À vérifier : si `max_slope_degrees` se relit à 0, ces taches ne se déclarent quasiment jamais. Cousin du gotcha « renommage de propriété exportée ».

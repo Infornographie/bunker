@@ -469,8 +469,10 @@ func _scatter_area(layer: FoliageLayer, palettes_by_biome: Array, layer_index: i
 				continue
 
 			var basis := Basis.IDENTITY
+			if def.align_to_slope > 0.0:
+				basis = _slope_basis(cfg, heights, point, def.align_to_slope)
 			if def.random_yaw:
-				basis = basis.rotated(Vector3.UP, rng.randf() * TAU)
+				basis = basis.rotated(basis.y.normalized(), rng.randf() * TAU)
 			basis = basis.scaled(Vector3.ONE * rng.randf_range(def.scale_range.x, def.scale_range.y))
 			if not into.has(def):
 				into[def] = []
@@ -558,12 +560,31 @@ func _slope_at(cfg: TerrainGenConfig, heights: PackedFloat32Array, point: Vector
 	return rad_to_deg(atan(Vector2(dx, dz).length() / (2.0 * e)))
 
 
+## Repère d'un objet couché dans la pente. `amount` dose entre la verticale et
+## la normale du terrain : un rocher l'épouse presque, un tronc pas du tout.
+func _slope_basis(cfg: TerrainGenConfig, heights: PackedFloat32Array, point: Vector2,
+		amount: float) -> Basis:
+	var e := cfg.cell_size
+	var dx := cfg.sample_height(heights, point + Vector2(e, 0.0)) - cfg.sample_height(heights, point - Vector2(e, 0.0))
+	var dz := cfg.sample_height(heights, point + Vector2(0.0, e)) - cfg.sample_height(heights, point - Vector2(0.0, e))
+	var normal := Vector3(-dx, 2.0 * e, -dz).normalized()
+	var up := Vector3.UP.lerp(normal, amount).normalized()
+	# Repère orthonormé construit sur cette verticale locale. L'axe de départ ne
+	# peut pas être colinéaire à `up` : le terrain venant d'une heightmap, sa
+	# normale a toujours une composante verticale, donc X fait un pivot sûr.
+	var forward := Vector3.RIGHT.cross(up).normalized()
+	return Basis(up.cross(forward), up, forward)
+
+
 ## Enfoncement d'un modèle sous la hauteur lue à son centre. Il grandit avec la
-## pente parce que la base d'un tronc est un disque : plus le sol penche, plus
-## son bord aval s'écarte du point de mesure. La tangente est bornée, sinon une
-## essence autorisée en forte pente décollerait vers le bas.
+## pente parce que la base d'un modèle est un disque : plus le sol penche, plus
+## son bord aval s'écarte du point de mesure. C'est donc **le rayon de la base**
+## qui commande, pas la profondeur à plat — un bloc large décolle bien davantage
+## qu'une touffe d'herbe sur la même pente. Ce qui s'aligne sur la pente n'a
+## presque plus besoin de correction : son bord ne se soulève plus.
 func _sink(def: FoliageDef, slope_degrees: float) -> float:
-	return def.embed_depth * (1.0 + tan(deg_to_rad(minf(slope_degrees, 60.0))))
+	var lift := def.base_radius * tan(deg_to_rad(minf(slope_degrees, 60.0)))
+	return def.embed_depth + lift * (1.0 - def.align_to_slope)
 
 
 # --- Construction des nœuds ----------------------------------------------------

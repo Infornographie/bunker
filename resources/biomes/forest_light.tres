@@ -20,9 +20,6 @@
 [ext_resource type="Resource" uid="uid://dosgenlgpa6e5" path="res://resources/foliage/grass_wide_tall.tres" id="f_grass_wide_tall"]
 [ext_resource type="Resource" uid="uid://dmdcbu4mljagl" path="res://resources/foliage/grass_wispy_short.tres" id="f_grass_wispy_short"]
 [ext_resource type="Resource" uid="uid://n8c7xuqheqti" path="res://resources/foliage/grass_wispy_tall.tres" id="f_grass_wispy_tall"]
-[ext_resource type="Resource" uid="uid://ded83mxpquwai" path="res://resources/foliage/pebble_round_1.tres" id="f_pebble_round_1"]
-[ext_resource type="Resource" uid="uid://br8wj1o0mvxvw" path="res://resources/foliage/pebble_round_2.tres" id="f_pebble_round_2"]
-[ext_resource type="Resource" uid="uid://c5nv08csipdu2" path="res://resources/foliage/pebble_round_3.tres" id="f_pebble_round_3"]
 [ext_resource type="Resource" uid="uid://6njivhvkf1a1" path="res://resources/foliage/plant_1.tres" id="f_plant_1"]
 [ext_resource type="Resource" uid="uid://ca3ivnr5oxwc" path="res://resources/foliage/plant_1_big.tres" id="f_plant_1_big"]
 [ext_resource type="Resource" uid="uid://cfmgnxebhb4ds" path="res://resources/foliage/plant_5.tres" id="f_plant_5"]
@@ -183,26 +180,11 @@ script = ExtResource("weight_script")
 def = ExtResource("f_plant_5")
 weight = 1.2
 
-[sub_resource type="Resource" id="FoliageWeight_ground_pebble_round_1"]
-script = ExtResource("weight_script")
-def = ExtResource("f_pebble_round_1")
-weight = 0.6
-
-[sub_resource type="Resource" id="FoliageWeight_ground_pebble_round_2"]
-script = ExtResource("weight_script")
-def = ExtResource("f_pebble_round_2")
-weight = 0.6
-
-[sub_resource type="Resource" id="FoliageWeight_ground_pebble_round_3"]
-script = ExtResource("weight_script")
-def = ExtResource("f_pebble_round_3")
-weight = 0.6
-
 [sub_resource type="Resource" id="BiomeStratum_ground"]
 script = ExtResource("stratum_script")
 layer_id = &"ground"
 patches = Array[ExtResource("patch_script")]([ExtResource("p_scree"), ExtResource("p_mushroom_spot"), ExtResource("p_flower_violet"), ExtResource("p_flower_white"), ExtResource("p_flower_yellow"), ExtResource("p_flower_pink"), ExtResource("p_grass_bed")])
-entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_ground_grass_common_short"), SubResource("FoliageWeight_ground_grass_common_tall"), SubResource("FoliageWeight_ground_grass_wide_short"), SubResource("FoliageWeight_ground_grass_wide_tall"), SubResource("FoliageWeight_ground_grass_wispy_short"), SubResource("FoliageWeight_ground_grass_wispy_tall"), SubResource("FoliageWeight_ground_clover_1"), SubResource("FoliageWeight_ground_clover_2"), SubResource("FoliageWeight_ground_plant_1"), SubResource("FoliageWeight_ground_plant_5"), SubResource("FoliageWeight_ground_pebble_round_1"), SubResource("FoliageWeight_ground_pebble_round_2"), SubResource("FoliageWeight_ground_pebble_round_3")])
+entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_ground_grass_common_short"), SubResource("FoliageWeight_ground_grass_common_tall"), SubResource("FoliageWeight_ground_grass_wide_short"), SubResource("FoliageWeight_ground_grass_wide_tall"), SubResource("FoliageWeight_ground_grass_wispy_short"), SubResource("FoliageWeight_ground_grass_wispy_tall"), SubResource("FoliageWeight_ground_clover_1"), SubResource("FoliageWeight_ground_clover_2"), SubResource("FoliageWeight_ground_plant_1"), SubResource("FoliageWeight_ground_plant_5")])
 
 [resource]
 script = ExtResource("biome_script")

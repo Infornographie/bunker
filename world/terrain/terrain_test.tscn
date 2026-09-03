@@ -12,22 +12,14 @@ script = ExtResource("1_hr0af")
 config = ExtResource("2_kgf1h")
 sun = NodePath("SkyRig/Sun")
 
-[node name="Player" parent="." unique_id=135155471 instance=ExtResource("3_ff4tk")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.726444, 37.19605, 19.68988)
-
-[node name="Player2" parent="." unique_id=2123245294 instance=ExtResource("3_ff4tk")]
-transform = Transform3D(-0.51538724, 0, -0.8569572, 0, 1, 0, 0.8569572, 0, -0.51538724, 8.498915, 54.086716, 7.682656)
-
-[node name="UIPanelController" parent="Player2/CharacterBody3D/Camera3D" parent_id_path=PackedInt32Array(2123245294, 445877674) index="0" unique_id=1775465887 node_paths=PackedStringArray("exclusive_modes")]
-exclusive_modes = [NodePath("../BuildModeController"), NodePath("../../../../SkyDebugPanel")]
-
 [node name="SkyRig" parent="." unique_id=2109894857 node_paths=PackedStringArray("sun", "world_environment") instance=ExtResource("4_jqqxl")]
 sun = NodePath("Sun")
 world_environment = NodePath("WorldEnvironment")
 
-[node name="SkyDebugPanel" parent="." unique_id=1724175163 node_paths=PackedStringArray("sky_controller", "ui_panel_controller") instance=ExtResource("5_dv2y6")]
+[node name="SkyDebugPanel" parent="." unique_id=1724175163 node_paths=PackedStringArray("sky_controller") instance=ExtResource("5_dv2y6")]
 sky_controller = NodePath("../SkyRig")
-ui_panel_controller = NodePath("../Player2/CharacterBody3D/Camera3D/UIPanelController")
 
-[editable path="Player2"]
+[node name="Player" parent="." unique_id=135155471 instance=ExtResource("3_ff4tk")]
+transform = Transform3D(-0.51538724, 0, -0.8569572, 0, 1, 0, 0.8569572, 0, -0.51538724, -28.761559, 205.52051, -165.44711)
+
 [editable path="SkyRig"]

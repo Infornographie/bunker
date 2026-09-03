@@ -7,6 +7,31 @@
 [ext_resource type="Resource" uid="uid://bcskrhi73ac7d" path="res://resources/foliage_layers/understory.tres" id="5_understory"]
 [ext_resource type="Resource" uid="uid://b4ekd0iy1yyss" path="res://resources/foliage_layers/shrub.tres" id="6_shrub"]
 [ext_resource type="Resource" uid="uid://l8jt03qmfspv" path="res://resources/foliage_layers/ground.tres" id="7_ground"]
+[ext_resource type="Texture2D" uid="uid://cfmfm32lb0aej" path="res://assets/ground/textures/cliff_rocks_02_2k/cliff_rocks_02_baseColor_2k.png" id="11_jr2ob"]
+[ext_resource type="Texture2D" uid="uid://booep1a6yq5ta" path="res://assets/ground/textures/cliff_rocks_02_2k/cliff_rocks_02_ambientOcclusion_2k.png" id="12_iplr8"]
+[ext_resource type="Texture2D" uid="uid://bic4elql28rq4" path="res://assets/ground/textures/cliff_rocks_02_2k/cliff_rocks_02_height_2k.png" id="13_slimo"]
+[ext_resource type="Texture2D" uid="uid://48rog6ru6dpp" path="res://assets/ground/textures/cliff_rocks_02_2k/cliff_rocks_02_normal_gl_2k.png" id="14_7gkhs"]
+[ext_resource type="Texture2D" uid="uid://c47b1u08jujk5" path="res://assets/ground/textures/cliff_rocks_02_2k/cliff_rocks_02_roughness_2k.png" id="15_g43pv"]
+[ext_resource type="Texture2D" uid="uid://cl6pgq2exrefi" path="res://assets/ground/textures/grass_01_2k/grass_01_color_2k.png" id="16_nx7ou"]
+[ext_resource type="Texture2D" uid="uid://bbbwajqa7efsu" path="res://assets/ground/textures/grass_01_2k/grass_01_ambient_occlusion_2k.png" id="17_k7q5m"]
+[ext_resource type="Texture2D" uid="uid://bfqbvu5g8ewck" path="res://assets/ground/textures/grass_01_2k/grass_01_height_2k.png" id="18_7rfe8"]
+[ext_resource type="Texture2D" uid="uid://c180dq6l28s10" path="res://assets/ground/textures/grass_01_2k/grass_01_normal_gl_2k.png" id="19_h814r"]
+[ext_resource type="Texture2D" uid="uid://cf07htticf4fp" path="res://assets/ground/textures/grass_01_2k/grass_01_roughness_2k.png" id="20_qjl42"]
+[ext_resource type="Texture2D" uid="uid://dcnhn4ovunr3u" path="res://assets/ground/textures/ground_with_roots_01_2k/ground_with_roots_01_color_2k.png" id="21_tsuht"]
+[ext_resource type="Texture2D" uid="uid://xfnrxf0ddvhy" path="res://assets/ground/textures/ground_with_roots_01_2k/ground_with_roots_01_ambient_occlusion_2k.png" id="22_pdce4"]
+[ext_resource type="Texture2D" uid="uid://cc2ip6ygjj7pq" path="res://assets/ground/textures/ground_with_roots_01_2k/ground_with_roots_01_height_2k.png" id="23_l4bqe"]
+[ext_resource type="Texture2D" uid="uid://c1oygn5yidjmy" path="res://assets/ground/textures/ground_with_roots_01_2k/ground_with_roots_01_normal_gl_2k.png" id="24_18a4h"]
+[ext_resource type="Texture2D" uid="uid://b2p2wh34qkvc1" path="res://assets/ground/textures/ground_with_roots_01_2k/ground_with_roots_01_roughness_2k.png" id="25_5ld5w"]
+[ext_resource type="Texture2D" uid="uid://rblckojwsp2c" path="res://assets/ground/textures/ground_with_rocks_01_2k/ground_with_rocks_01_color_2k.png" id="26_udqqj"]
+[ext_resource type="Texture2D" uid="uid://b53bdcmaggqc2" path="res://assets/ground/textures/ground_with_rocks_01_2k/ground_with_rocks_01_ambient_occlusion_2k.png" id="27_onx8e"]
+[ext_resource type="Texture2D" uid="uid://32usdm8d6ula" path="res://assets/ground/textures/ground_with_rocks_01_2k/ground_with_rocks_01_height_2k.png" id="28_oxid6"]
+[ext_resource type="Texture2D" uid="uid://6jmetkh0a0bc" path="res://assets/ground/textures/ground_with_rocks_01_2k/ground_with_rocks_01_normal_gl_2k.png" id="29_audpc"]
+[ext_resource type="Texture2D" uid="uid://rcegrlsv7wrb" path="res://assets/ground/textures/ground_with_rocks_01_2k/ground_with_rocks_01_roughness_2k.png" id="30_4nfqp"]
+[ext_resource type="Texture2D" uid="uid://ctg4c1pm81ddb" path="res://assets/ground/textures/sand_04_2k/sand_04_color_2k.png" id="31_jr2ob"]
+[ext_resource type="Texture2D" uid="uid://mtbkgimops3b" path="res://assets/ground/textures/sand_04_2k/sand_04_ambient_occlusion_2k.png" id="32_iplr8"]
+[ext_resource type="Texture2D" uid="uid://d1ivh85ijj1p1" path="res://assets/ground/textures/sand_04_2k/sand_04_height_2k.png" id="33_slimo"]
+[ext_resource type="Texture2D" uid="uid://b0a6o208ciixb" path="res://assets/ground/textures/sand_04_2k/sand_04_normal_gl_2k.png" id="34_7gkhs"]
+[ext_resource type="Texture2D" uid="uid://c7w4c1aoql83o" path="res://assets/ground/textures/sand_04_2k/sand_04_roughness_2k.png" id="35_g43pv"]
 [ext_resource type="Resource" uid="uid://dvelcjfqxesdx" path="res://resources/biomes/conifer_highland.tres" id="biome_conifer"]
 [ext_resource type="Resource" uid="uid://coqdb8bmikm8o" path="res://resources/biomes/forest_light.tres" id="biome_forest_light"]
 [ext_resource type="Script" uid="uid://p3l2rq65m6a8" path="res://resources/biome_def.gd" id="biome_script"]
@@ -29,18 +54,66 @@ fractal_octaves = 2
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ground"]
 render_priority = 0
 shader = ExtResource("2_shader")
-shader_parameter/grass_color = Color(0.36, 0.42, 0.26, 1)
-shader_parameter/litter_color = Color(0.28, 0.22, 0.14, 1)
+shader_parameter/texture_scale = 0.08
+shader_parameter/normal_strength = 1.4
+shader_parameter/blend_contrast = 0.35
+shader_parameter/ao_on_albedo = 0.6
+shader_parameter/ao_light_affect = 0.35
+shader_parameter/detail_ratio = 8.0
+shader_parameter/detail_albedo = 0.3
+shader_parameter/detail_normal = 0.0
+shader_parameter/detail_distance = 40.0
+shader_parameter/detail_fade = 15.0
+shader_parameter/grass_albedo = ExtResource("16_nx7ou")
+shader_parameter/grass_normal = ExtResource("19_h814r")
+shader_parameter/grass_rough = ExtResource("20_qjl42")
+shader_parameter/grass_height = ExtResource("18_7rfe8")
+shader_parameter/grass_ao = ExtResource("17_k7q5m")
+shader_parameter/grass_tint = Color(1, 1, 1, 1)
+shader_parameter/grass_height_range = Vector2(0.355, 0.525)
+shader_parameter/grass_scale = 1.0
+shader_parameter/litter_albedo = ExtResource("21_tsuht")
+shader_parameter/litter_normal = ExtResource("24_18a4h")
+shader_parameter/litter_rough = ExtResource("25_5ld5w")
+shader_parameter/litter_height = ExtResource("23_l4bqe")
+shader_parameter/litter_ao = ExtResource("22_pdce4")
+shader_parameter/litter_tint = Color(1, 1, 1, 1)
+shader_parameter/litter_height_range = Vector2(0.267, 0.512)
+shader_parameter/litter_scale = 1.0
 shader_parameter/litter_cover_full = 0.55
-shader_parameter/rock_color = Color(0.42, 0.34, 0.24, 1)
-shader_parameter/cliff_color = Color(0.48, 0.48, 0.46, 1)
+shader_parameter/rocky_albedo = ExtResource("26_udqqj")
+shader_parameter/rocky_normal = ExtResource("29_audpc")
+shader_parameter/rocky_rough = ExtResource("30_4nfqp")
+shader_parameter/rocky_height = ExtResource("28_oxid6")
+shader_parameter/rocky_ao = ExtResource("27_onx8e")
+shader_parameter/rocky_tint = Color(1, 1, 1, 1)
+shader_parameter/rocky_height_range = Vector2(0.327, 0.56)
+shader_parameter/rocky_scale = 0.6
 shader_parameter/rock_height_start = 70.0
 shader_parameter/rock_height_end = 125.0
+shader_parameter/cliff_albedo = ExtResource("11_jr2ob")
+shader_parameter/cliff_normal = ExtResource("14_7gkhs")
+shader_parameter/cliff_rough = ExtResource("15_g43pv")
+shader_parameter/cliff_height = ExtResource("13_slimo")
+shader_parameter/cliff_ao = ExtResource("12_iplr8")
+shader_parameter/cliff_tint = Color(1, 1, 1, 1)
+shader_parameter/cliff_height_range = Vector2(0.136, 0.802)
+shader_parameter/cliff_scale = 0.25000001024506
 shader_parameter/cliff_slope_start = 30.0
 shader_parameter/cliff_slope_end = 44.0
+shader_parameter/triplanar_sharpness = 4.0
+shader_parameter/sand_albedo = ExtResource("31_jr2ob")
+shader_parameter/sand_normal = ExtResource("34_7gkhs")
+shader_parameter/sand_rough = ExtResource("35_g43pv")
+shader_parameter/sand_height = ExtResource("33_slimo")
+shader_parameter/sand_ao = ExtResource("32_iplr8")
+shader_parameter/sand_tint = Color(1, 1, 1, 1)
+shader_parameter/sand_height_range = Vector2(0.3, 0.519)
+shader_parameter/sand_scale = 1.0
+shader_parameter/water_level = 0.0
+shader_parameter/sand_band = 3.5
 shader_parameter/tint_scale = 0.03
 shader_parameter/tint_strength = 0.13
-shader_parameter/ground_roughness = 0.95
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_valley_wobble"]
 frequency = 0.002

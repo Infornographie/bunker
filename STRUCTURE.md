@@ -48,6 +48,7 @@ res://
 │   ├── sci_fi/                         — Quaternius Modular SciFi MegaKit
 │   ├── survival/                       — KayKit Resource Bits (survival) : sac à dos, feu de camp
 │   ├── characters/tools/                — KayKit, dix outils en bois (un seul câblé, voir ASSETS.md)
+│   ├── ground/textures/                — textures de sol PBR stylisées, un dossier par matériau (couleur, normal_gl, roughness, height, AO)
 │   ├── sky/                            — Godot Skies : main.gdshader + textures/clouds_0X.tres
 │   └── sounds/                         — non inventorié (contenu à documenter)
 ├── entities/
@@ -121,12 +122,12 @@ res://
 	├── terrain/
 	│   ├── heightmap_generator.gd      — (@tool) RefCounted : massif, relief, eau, clairières, rivière. Publie heights / massif_influence / cave_position / cave_forward / water_level / clearings / river_path
 	│   ├── biome_map.gd             — (@tool) RefCounted : generate(cfg, influence) → weights, un PackedFloat32Array normalisé par biome
-	│   ├── terrain_mesh_builder.gd     — (@tool) RefCounted statique : build_chunk() → StaticBody3D (mesh + collision trimesh)
+	│   ├── terrain_mesh_builder.gd     — (@tool) RefCounted statique : build_chunk(cfg, heights, occupancy, cx, cz, material) → StaticBody3D (mesh + collision trimesh). Le matériau lui est **donné**, il ne le lit plus dans la config
 	│   ├── foliage_scatter.gd          — (@tool) RefCounted : scatter() sème les strates permanentes, stream_tile(tx, tz) les strates streamées ; expose placed_count, placed_per_layer, placed_per_biome, occupancy, chunk_nodes
 	│   ├── scatter_occupancy.gd        — (@tool) RefCounted : is_blocked(point, radius), cover_at(point), mark(point, base_radius, cover_radius, cover_amount)
 	│   ├── foliage_proximity.gd        — (@tool) Node : setup(scatter, cfg, space, sun) ; coupe cast_shadow par chunk et sème/libère les tuiles streamées sous budget de temps (update_interval, stream_budget_ms)
 	│   ├── terrain_controller.gd       — (@tool) Node3D : orchestrateur, boutons Régénérer/Effacer, crée Chunks / Water / Foliage (+ Proximity) / CaveSite, publie heights ; expose config et sun
-	│   └── terrain.gdshader            — sol coloré par altitude, pente et bruit de teinte
+	│   └── terrain.gdshader            — sol habillé par cinq matériaux texturés (herbe, litière, caillouteux, falaise, sable), choisis par couvert / altitude / pente / proximité de l'eau ; mélange par carte de hauteur, triplanaire sur la seule falaise, échelle par matériau
 	└── forest/
 		├── forest_test.tscn            — scène de test historique (sol plat) — seule scène où les mécaniques de jeu sont montées
 		└── forest_scatter.gd           — scatter du Jalon 1, périmé, supprimé avec forest_test.tscn
@@ -147,6 +148,7 @@ res://
 - `fog_distance_scale` et `ambient_scale` sur le contrôleur sont un **instrument de mesure**, pas un réglage : le panneau de debug s'en sert pour chercher une valeur en direct, qu'on recopie ensuite dans la courbe du profil avant de remettre le multiplicateur à 1.
 - `SkyDebugPanel` expose `is_active()` et se déclare dans `UIPanelController.exclusive_modes` comme les autres modes ; il interroge en retour `can_enter_exclusive_mode()` en duck typing, et fonctionne sans si le champ est vide.
 ### Flux de génération du terrain
+- Le matériau du sol est **dupliqué par génération** (`TerrainController._ground_material()`) pour y écrire `water_level`, tiré à la graine, sans modifier la ressource de config. Un exemplaire pour toute la carte, passé à chaque chunk.
 - Sens de la dépendance : `TerrainController` (seul nœud de la scène) appelle `HeightmapGenerator.generate(config)`, puis `BiomeMap.generate(config, massif_influence)`, puis `FoliageScatter.scatter(...)`, puis `TerrainMeshBuilder.build_chunk(...)` par chunk. Les trois sont des `RefCounted` sans état persistant et ne connaissent ni la scène ni le contrôleur.
 - **`TerrainGenConfig` est la source unique de la convention de grille** : `height_index()`, `world_pos()` et `sample_grid()` ne sont réimplémentés nulle part. `sample_height()` est un cas particulier de `sample_grid()` — une heightmap est une grandeur par sommet comme une autre, et c'est ce qui permet de lire les poids de biome au point sans écrire une seconde interpolation. Générateur et scatter les appellent, y compris dans leurs boucles chaudes.
 - Ordre dans `HeightmapGenerator.generate()`, et il compte : tirage du massif → relief → niveau de l'eau → clairières → rivière. La rivière se trace sur un relief complet ; la vallée est creusée **avant** parce qu'elle est ce qui empêche la descente de gradient de s'échouer.

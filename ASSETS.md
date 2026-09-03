@@ -115,6 +115,33 @@ rochers**, pas au sol.
 | `Rock_Big_1-2` | gris, avec mousse | gros rocher | libre — habillage de l'escarpement (passe C) |
 | `RockPath_*` | gris dalle | **dalle posée par l'homme** | réservé — chemins de piétinement, jamais en semis naturel |
 
+## Textures de sol (assets/ground/textures/)
+
+Cinq matériaux stylisés de **freestylized.com** (licence en CC0 personnalisé, voir ATTRIBUTION), un dossier chacun, employés par `terrain.gdshader`. Tous en **2K** : en 1K, une fois les tuiles agrandies, le grain devenait trop grossier.
+Chaque dossier livre couleur, `normal_gl`, roughness, height et AO ; le
+`normal_dx` et le `metallic` sont présents mais **inutilisés** (convention
+DirectX, et un sol est diélectrique).
+
+| Dossier | Rôle dans le shader | Se déclenche sur |
+|---|---|---|
+| `grass_01` | herbe | couvert ouvert, pente faible |
+| `ground_with_roots_01` | litière de sous-bois | couvert fermé (carte d'ouverture) |
+| `ground_with_rocks_01` | sol caillouteux | altitude, avant la roche nue |
+| `cliff_rocks_02` | paroi | au-delà d'une pente — tuile de 50 m, la plus grande du lot |
+| `sand_04` | rivage | au ras du niveau de l'eau (`sand_03` présent mais non branché) |
+
+**Mesures faites sur les fichiers, à refaire si une texture est remplacée.**
+Quatre des cinq cartes de hauteur n'occupent que ~20 % de leur plage (elles
+sont quasi grises) et le shader les renormalise via `*_height_range`. La
+normal map de `cliff_rocks_02` n'encode que ~3° de pente moyenne, contre 16°
+pour `ground_with_roots_01` : c'est le matériau le plus plat du lot, alors
+que c'est celui qu'on regarde de plus près.
+
+**À trouver.** Une **carte de grain neutre** — micro-relief sans formes
+reconnaissables — pour la seconde échelle de détail du shader. Faute de
+quoi le détail réutilise la texture principale en miniature, ce qui
+désaccorde relief et couleur (voir dette Jalon 4).
+
 ## Sci-fi — Modular SciFi MegaKit (Quaternius)
 
 Rangé dans `assets/sci_fi/`. Aucun modèle n'est intégré aujourd'hui :

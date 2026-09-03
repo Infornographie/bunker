@@ -36,6 +36,19 @@ func _ready() -> void:
 	generate()
 
 
+## Exemplaire de travail du matériau de sol, renseigné des grandeurs tirées à la
+## graine. La ressource de config n'est jamais modifiée — même règle que les
+## bruits dupliqués du générateur de relief.
+func _ground_material(water_level: float) -> Material:
+	if config.terrain_material == null:
+		return null
+	var material := config.terrain_material.duplicate()
+	var shader_material := material as ShaderMaterial
+	if shader_material != null:
+		shader_material.set_shader_parameter("water_level", water_level)
+	return material
+
+
 func generate() -> void:
 	if config == null:
 		push_warning("TerrainController : aucun TerrainGenConfig assigné, rien à générer.")
@@ -79,10 +92,15 @@ func generate() -> void:
 	var chunks := Node3D.new()
 	chunks.name = CHUNKS_NODE
 	add_child(chunks)
+	# Le matériau du sol est dupliqué une fois pour toute la carte : le niveau de
+	# l'eau est tiré à la graine, et l'écrire sur la ressource de config la
+	# modifierait sur disque. Un exemplaire par chunk, à l'inverse, casserait le
+	# regroupement des appels de dessin.
+	var ground := _ground_material(heightmap.water_level)
 	var side := config.chunks_per_side()
 	for cz in side:
 		for cx in side:
-			var chunk := TerrainMeshBuilder.build_chunk(config, heights, scatter.occupancy, cx, cz)
+			var chunk := TerrainMeshBuilder.build_chunk(config, heights, scatter.occupancy, cx, cz, ground)
 			if chunk != null:
 				chunks.add_child(chunk)
 

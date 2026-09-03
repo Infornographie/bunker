@@ -21,7 +21,7 @@ extends RefCounted
 ## Construit un chunk, ou null si le découpage ne laisse rien à construire à
 ## ces coordonnées (dernier chunk d'une grille non multiple de chunk_cells).
 static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array,
-		occupancy: ScatterOccupancy, cx: int, cz: int) -> StaticBody3D:
+		occupancy: ScatterOccupancy, cx: int, cz: int, material: Material) -> StaticBody3D:
 	var cells := cfg.cell_count()
 	var x0 := cx * cfg.chunk_cells
 	var z0 := cz * cfg.chunk_cells
@@ -82,8 +82,8 @@ static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array,
 
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	if cfg.terrain_material != null:
-		mesh.surface_set_material(0, cfg.terrain_material)
+	if material != null:
+		mesh.surface_set_material(0, material)
 
 	var body := StaticBody3D.new()
 	body.name = "chunk_%d_%d" % [cx, cz]

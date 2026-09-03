@@ -36,6 +36,54 @@ Feu de camp. Même famille visuelle low poly stylisée que les packs Quaternius,
 Dossier : `assets/characters/`
 
 Contient notamment `tools/wooden_axe_grip.tscn`, wrapper Godot maison autour du FBX de hache (rattrapage de pivot — protocole dans STATE §Apprentissages). Le wrapper est du projet ; le modèle vient du pack listé ci-dessus dont il est issu.
+### Textures de sol stylisées — freestylized.com — **CC0 personnalisé**
+Dossier : `assets/ground/textures/`
+[freestylized.com](https://freestylized.com)
+
+Cinq matériaux, en **2K** (le 1K s'est révélé trop grossier une fois les
+tuiles agrandies) :
+
+| Matériau | Page |
+|---|---|
+| `grass_01` | [freestylized.com/material/grass_01](https://freestylized.com/material/grass_01/) |
+| `ground_with_roots_01` | [/material/ground_with_roots_01](https://freestylized.com/material/ground_with_roots_01/) |
+| `ground_with_rocks_01` | [/material/ground_with_rocks_01](https://freestylized.com/material/ground_with_rocks_01/) |
+| `cliff_rocks_02` | [/material/cliff_rocks_02](https://freestylized.com/material/cliff_rocks_02/) |
+| `sand_04` | [/material/sand_04](https://freestylized.com/material/sand_04/) |
+
+Chacun livre couleur, normal (GL et DX), roughness, height, AO et metallic,
+produits sous Substance Designer. Le `normal_dx` (convention DirectX) et le
+`metallic` (un sol est diélectrique) ne sont pas employés.
+
+`sand_03` est également présent dans le dossier mais n'est branché nulle
+part — `sand_04` lui a été préféré. À supprimer ou à réemployer.
+
+**Licence, telle que publiée par le site :**
+
+> All Content provided on freestylized.com is added with the authors
+> consent, allowing everyone to use the provided content FREE for their
+> Commercial and Non-Commercial projects without any permission.
+> Attribution to freestylized.com with your work (in which you used
+> freestylized.com in any capacity) would be much appreciated, but not
+> required.
+> The Content is distributed under custom CC0 License allowing all CC0
+> attributions except the limits stated below.
+> This license limits the redistribution of freestylized.com content with
+> any individual or any organization's attribution other than
+> freestylized.com or the authors of content. The redistribution of content
+> on any other platform such as marketplaces and other sites is also
+> prohibited, unless there are some key modifications and re-purpose of
+> content is done then, they can be redistributed such as a model or a
+> texture used as part of a kit or an asset pack.
+
+> **Ce que la limite implique concrètement.** L'usage dans le jeu est libre,
+> attribution non requise (elle est faite ici quand même). Ce qui est
+> interdit, c'est de **redistribuer les textures en tant que telles** sous
+> une autre attribution — donc pas de partage du dossier `assets/ground/`
+> hors du projet, et prudence si le dépôt devient public : y publier les
+> fichiers bruts s'approche de la redistribution. Intégrées au jeu, elles
+> sont « re-purposed » au sens de la licence.
+
 ## Shaders
  
 ### Godot Skies (version complète) — binbun3d — **CC0**

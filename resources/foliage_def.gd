@@ -38,6 +38,12 @@ extends Resource
 ## les falaises : l'herbe s'arrête, la roche prend la suite.
 @export_range(0.0, 90.0) var max_slope_degrees: float = 35.0
 
+## Part de la normale du terrain reprise par l'objet, de 0 (toujours vertical)
+## à 1 (couché dans la pente). Une plante pousse vers le haut quelle que soit la
+## pente : elle reste à 0. Un rocher, lui, épouse le sol — sans quoi il flotte
+## par son bord aval et s'enterre par l'amont, d'autant plus qu'il est large.
+@export_range(0.0, 1.0, 0.05) var align_to_slope: float = 0.0
+
 ## Enfoncement dans le sol, en mètres. La hauteur du terrain est lue au centre
 ## du modèle : sur une pente, le bord aval de la base décolle. L'enfoncement
 ## effectif croît donc avec la pente, ce réglage en donne la valeur à plat.

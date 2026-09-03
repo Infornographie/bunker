@@ -1,68 +1,32 @@
 [gd_resource type="Resource" script_class="FoliagePatch" format=3 uid="uid://douxv5svimjbc"]
 
 [ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="1_patch"]
-[ext_resource type="Resource" path="res://resources/foliage/pebble_square_1.tres" id="3_pebble_square_1"]
-[ext_resource type="Resource" path="res://resources/foliage/pebble_square_2.tres" id="4_pebble_square_2"]
-[ext_resource type="Resource" path="res://resources/foliage/pebble_square_3.tres" id="5_pebble_square_3"]
-[ext_resource type="Resource" path="res://resources/foliage/pebble_square_4.tres" id="6_pebble_square_4"]
-[ext_resource type="Resource" path="res://resources/foliage/pebble_square_5.tres" id="7_pebble_square_5"]
-[ext_resource type="Resource" path="res://resources/foliage/pebble_square_6.tres" id="8_pebble_square_6"]
-[ext_resource type="Resource" path="res://resources/foliage/rock_medium_1.tres" id="9_rock_medium_1"]
-[ext_resource type="Resource" path="res://resources/foliage/rock_medium_2.tres" id="10_rock_medium_2"]
-[ext_resource type="Resource" path="res://resources/foliage/rock_medium_3.tres" id="11_rock_medium_3"]
-[ext_resource type="Resource" path="res://resources/foliage/rock_medium_4.tres" id="12_rock_medium_4"]
+[ext_resource type="Resource" uid="uid://do32hhmk32rmh" path="res://resources/foliage/rock_medium_1.tres" id="9_rock_medium_1"]
+[ext_resource type="Resource" uid="uid://diy354ufg6371" path="res://resources/foliage/rock_medium_2.tres" id="10_rock_medium_2"]
+[ext_resource type="Resource" uid="uid://c2o4e27chdcjc" path="res://resources/foliage/rock_medium_3.tres" id="11_rock_medium_3"]
+[ext_resource type="Resource" uid="uid://bdabhyy7njvjh" path="res://resources/foliage/rock_medium_4.tres" id="12_rock_medium_4"]
 [ext_resource type="Resource" path="res://resources/foliage/grass_wispy_rock.tres" id="13_grass_wispy_rock"]
 [ext_resource type="Script" uid="uid://bk7tamevhctnm" path="res://resources/foliage_weight.gd" id="w_script"]
-
-[sub_resource type="Resource" id="FoliageWeight_pebble_square_1"]
-script = ExtResource("w_script")
-def = ExtResource("3_pebble_square_1")
-weight = 3.0
-
-[sub_resource type="Resource" id="FoliageWeight_pebble_square_2"]
-script = ExtResource("w_script")
-def = ExtResource("4_pebble_square_2")
-weight = 3.0
-
-[sub_resource type="Resource" id="FoliageWeight_pebble_square_3"]
-script = ExtResource("w_script")
-def = ExtResource("5_pebble_square_3")
-weight = 3.0
-
-[sub_resource type="Resource" id="FoliageWeight_pebble_square_4"]
-script = ExtResource("w_script")
-def = ExtResource("6_pebble_square_4")
-weight = 3.0
-
-[sub_resource type="Resource" id="FoliageWeight_pebble_square_5"]
-script = ExtResource("w_script")
-def = ExtResource("7_pebble_square_5")
-weight = 3.0
-
-[sub_resource type="Resource" id="FoliageWeight_pebble_square_6"]
-script = ExtResource("w_script")
-def = ExtResource("8_pebble_square_6")
-weight = 3.0
 
 [sub_resource type="Resource" id="FoliageWeight_rock_medium_1"]
 script = ExtResource("w_script")
 def = ExtResource("9_rock_medium_1")
-weight = 2.0
+weight = 3.0
 
 [sub_resource type="Resource" id="FoliageWeight_rock_medium_2"]
 script = ExtResource("w_script")
 def = ExtResource("10_rock_medium_2")
-weight = 2.0
+weight = 3.0
 
 [sub_resource type="Resource" id="FoliageWeight_rock_medium_3"]
 script = ExtResource("w_script")
 def = ExtResource("11_rock_medium_3")
-weight = 2.0
+weight = 3.0
 
 [sub_resource type="Resource" id="FoliageWeight_rock_medium_4"]
 script = ExtResource("w_script")
 def = ExtResource("12_rock_medium_4")
-weight = 2.0
+weight = 3.0
 
 [sub_resource type="Resource" id="FoliageWeight_grass_wispy_rock"]
 script = ExtResource("w_script")
@@ -70,14 +34,14 @@ def = ExtResource("13_grass_wispy_rock")
 weight = 2.5
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_gate"]
-frequency = 0.018
+frequency = 0.028
 fractal_octaves = 2
 
 [resource]
 script = ExtResource("1_patch")
 id = &"scree"
 noise = SubResource("FastNoiseLite_gate")
-threshold = 0.35
+threshold = 0.55
 min_slope_degrees = 16.0
-density = 0.9
-entries = Array[ExtResource("w_script")]([SubResource("FoliageWeight_pebble_square_1"), SubResource("FoliageWeight_pebble_square_2"), SubResource("FoliageWeight_pebble_square_3"), SubResource("FoliageWeight_pebble_square_4"), SubResource("FoliageWeight_pebble_square_5"), SubResource("FoliageWeight_pebble_square_6"), SubResource("FoliageWeight_rock_medium_1"), SubResource("FoliageWeight_rock_medium_2"), SubResource("FoliageWeight_rock_medium_3"), SubResource("FoliageWeight_rock_medium_4"), SubResource("FoliageWeight_grass_wispy_rock")])
+density = 0.85
+entries = Array[ExtResource("w_script")]([SubResource("FoliageWeight_rock_medium_1"), SubResource("FoliageWeight_rock_medium_2"), SubResource("FoliageWeight_rock_medium_3"), SubResource("FoliageWeight_rock_medium_4"), SubResource("FoliageWeight_grass_wispy_rock")])
