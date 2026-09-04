@@ -128,7 +128,7 @@ DirectX, et un sol est diélectrique).
 | `ground_with_roots_01` | litière de sous-bois | couvert fermé (carte d'ouverture) |
 | `ground_with_rocks_01` | sol caillouteux | altitude, avant la roche nue |
 | `cliff_rocks_02` | paroi | au-delà d'une pente — tuile de 50 m, la plus grande du lot |
-| `sand_04` | rivage | au ras du niveau de l'eau (`sand_03` présent mais non branché) |
+| `sand_04` | rivage | au ras du niveau de l'eau |
 
 **Mesures faites sur les fichiers, à refaire si une texture est remplacée.**
 Quatre des cinq cartes de hauteur n'occupent que ~20 % de leur plage (elles

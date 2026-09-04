@@ -36,8 +36,8 @@ render_mode diffuse_burley;
 //
 // 4. **Tout se calcule en coordonnées monde**, jamais avec les UV du mesh : le
 //    triplanaire de la falaise et le planaire des autres partagent ainsi la même
-//    origine et la même échelle maîtresse. Conséquence à traiter : `ARRAY_TEX_UV`
-//    dans le constructeur de mesh et `uv_scale` dans la config ne servent plus.
+//    origine et la même échelle maîtresse. Le mesh de terrain ne porte donc
+//    aucun UV — inutile d'en produire.
 //
 // Les normales sont recomposées en espace monde pour toutes les couches, puis
 // converties en espace vue à la toute fin. Le mesh n'ayant pas de tangentes,
@@ -50,8 +50,13 @@ group_uniforms Echelle;
 // cinq multiplicateurs ci-dessous s'y appliquent — bouger celui-ci décale toute
 // la carte d'un coup, sans défaire les proportions entre matériaux.
 uniform float texture_scale = 0.08;
-// Intensité du relief des normal maps. Au-delà de 1, on exagère : c'est souvent
-// nécessaire sur des textures stylisées, dont le relief est peint doux.
+// Intensité du relief des normal maps, échelle maîtresse. Au-delà de 1, on
+// exagère : c'est souvent nécessaire sur des textures stylisées, dont le relief
+// est peint doux. Chaque couche y applique son propre multiplicateur — même
+// motif que `texture_scale` et les cinq `*_scale`, et pour la même raison : les
+// cartes ne codent pas toutes la même amplitude de pente. Mesuré sur les
+// fichiers : ~16 degrés de pente moyenne pour la litière, ~3 pour la falaise.
+// Une valeur unique ne peut pas servir les deux.
 uniform float normal_strength : hint_range(0.0, 3.0) = 1.4;
 // Dureté de la dispute entre deux matériaux. 0 = fondu linéaire (mou),
 // au-delà de ~0.5 la frontière devient franche et découpée.
@@ -109,6 +114,7 @@ uniform vec3 grass_tint : source_color = vec3(1.0, 1.0, 1.0);
 // rend leur amplitude. À remesurer si la texture est remplacée.
 uniform vec2 grass_height_range = vec2(0.355, 0.525);
 uniform float grass_scale : hint_range(0.05, 4.0) = 1.0;
+uniform float grass_normal_strength : hint_range(0.0, 8.0) = 1.0;
 
 group_uniforms Litiere;
 uniform sampler2D litter_albedo : source_color, hint_default_white;
@@ -124,6 +130,7 @@ uniform vec3 litter_tint : source_color = vec3(1.0, 1.0, 1.0);
 // rend leur amplitude. À remesurer si la texture est remplacée.
 uniform vec2 litter_height_range = vec2(0.267, 0.512);
 uniform float litter_scale : hint_range(0.05, 4.0) = 1.0;
+uniform float litter_normal_strength : hint_range(0.0, 8.0) = 1.0;
 // Couverture à partir de laquelle le sol est franchement de la litière.
 uniform float litter_cover_full : hint_range(0.05, 1.0) = 0.55;
 
@@ -141,6 +148,7 @@ uniform vec3 rocky_tint : source_color = vec3(1.0, 1.0, 1.0);
 // rend leur amplitude. À remesurer si la texture est remplacée.
 uniform vec2 rocky_height_range = vec2(0.327, 0.560);
 uniform float rocky_scale : hint_range(0.05, 4.0) = 0.6;
+uniform float rocky_normal_strength : hint_range(0.0, 8.0) = 1.0;
 // Bande d'altitude sur laquelle le sol végétal cède au caillouteux, en mètres.
 uniform float rock_height_start = 70.0;
 uniform float rock_height_end = 125.0;
@@ -163,6 +171,8 @@ uniform vec3 cliff_tint : source_color = vec3(1.0, 1.0, 1.0);
 // rend leur amplitude. À remesurer si la texture est remplacée.
 uniform vec2 cliff_height_range = vec2(0.136, 0.802);
 uniform float cliff_scale : hint_range(0.05, 4.0) = 0.25;
+// La plus faible pente encodée des cinq, donc le plus gros multiplicateur.
+uniform float cliff_normal_strength : hint_range(0.0, 8.0) = 3.5;
 // Bande de pente sur laquelle le sol cède à la paroi nue, en degrés.
 uniform float cliff_slope_start = 30.0;
 uniform float cliff_slope_end = 44.0;
@@ -184,6 +194,7 @@ uniform vec3 sand_tint : source_color = vec3(1.0, 1.0, 1.0);
 // rend leur amplitude. À remesurer si la texture est remplacée.
 uniform vec2 sand_height_range = vec2(0.300, 0.519);
 uniform float sand_scale : hint_range(0.05, 4.0) = 1.0;
+uniform float sand_normal_strength : hint_range(0.0, 8.0) = 1.0;
 // Altitude de la surface de l'eau, en mètres. Renseignée à la génération : le
 // rivage n'est pas dessiné, c'est une bande au-dessus de ce niveau.
 uniform float water_level = 0.0;
@@ -239,9 +250,9 @@ vec2 height_weights(float t, float ha, float hb) {
 // Normale monde d'une couche planaire. Les UV suivent +X et +Z en monde, donc le
 // repère tangent est connu sans tangentes sur le mesh : on décale simplement la
 // normale géométrique dans le plan horizontal.
-vec3 planar_normal(vec3 geo, vec2 uv, sampler2D tex) {
+vec3 planar_normal(vec3 geo, vec2 uv, sampler2D tex, float strength) {
 	vec2 ts = texture(tex, uv).xy * 2.0 - 1.0;
-	return normalize(geo + vec3(ts.x, 0.0, ts.y) * normal_strength);
+	return normalize(geo + vec3(ts.x, 0.0, ts.y) * strength);
 }
 
 // Normale tangente lue en ne se fiant qu'à X et Y. La compression normal map de
@@ -340,28 +351,28 @@ void fragment() {
 
 	vec3 grass_c = texture(grass_albedo, guv).rgb * grass_tint
 		* mix(vec3(1.0), texture(grass_albedo, gd).rgb * 2.0, ka);
-	vec3 grass_n = planar_normal(geo, guv, grass_normal);
+	vec3 grass_n = planar_normal(geo, guv, grass_normal, normal_strength * grass_normal_strength);
 	grass_n = normalize(grass_n + vec3(tangent_normal(grass_normal, gd).xy, 0.0).xzy * kn);
 	float grass_r = texture(grass_rough, guv).r;
 	float grass_o = texture(grass_ao, guv).r;
 
 	vec3 litter_c = texture(litter_albedo, luv).rgb * litter_tint
 		* mix(vec3(1.0), texture(litter_albedo, ld).rgb * 2.0, ka);
-	vec3 litter_n = planar_normal(geo, luv, litter_normal);
+	vec3 litter_n = planar_normal(geo, luv, litter_normal, normal_strength * litter_normal_strength);
 	litter_n = normalize(litter_n + vec3(tangent_normal(litter_normal, ld).xy, 0.0).xzy * kn);
 	float litter_r = texture(litter_rough, luv).r;
 	float litter_o = texture(litter_ao, luv).r;
 
 	vec3 rocky_c = texture(rocky_albedo, ruv).rgb * rocky_tint
 		* mix(vec3(1.0), texture(rocky_albedo, rd).rgb * 2.0, ka);
-	vec3 rocky_n = planar_normal(geo, ruv, rocky_normal);
+	vec3 rocky_n = planar_normal(geo, ruv, rocky_normal, normal_strength * rocky_normal_strength);
 	rocky_n = normalize(rocky_n + vec3(tangent_normal(rocky_normal, rd).xy, 0.0).xzy * kn);
 	float rocky_r = texture(rocky_rough, ruv).r;
 	float rocky_o = texture(rocky_ao, ruv).r;
 
 	vec3 sand_c = texture(sand_albedo, suv).rgb * sand_tint
 		* mix(vec3(1.0), texture(sand_albedo, sd).rgb * 2.0, ka);
-	vec3 sand_n = planar_normal(geo, suv, sand_normal);
+	vec3 sand_n = planar_normal(geo, suv, sand_normal, normal_strength * sand_normal_strength);
 	sand_n = normalize(sand_n + vec3(tangent_normal(sand_normal, sd).xy, 0.0).xzy * kn);
 	float sand_r = texture(sand_rough, suv).r;
 	float sand_o = texture(sand_ao, suv).r;
@@ -392,15 +403,19 @@ void fragment() {
 	// Mélange « whiteout » des trois normales : chaque projection est réorientée
 	// selon sa face avant d'être sommée. Un simple mix des trois donnerait des
 	// normales molles aux arêtes.
-	vec3 nx = tangent_normal(cliff_normal, uv_x) + vec3(tangent_normal(cliff_normal, dx).xy, 0.0) * kn;
-	vec3 ny = tangent_normal(cliff_normal, uv_y) + vec3(tangent_normal(cliff_normal, dy).xy, 0.0) * kn;
-	vec3 nz = tangent_normal(cliff_normal, uv_z) + vec3(tangent_normal(cliff_normal, dz).xy, 0.0) * kn;
+	// L'exagération se fait sur la pente tangente, **avant** la recomposition
+	// whiteout. Une amplification appliquée après — un `mix` entre la normale
+	// géométrique et la normale reconstruite — est bornée à 1 par construction :
+	// au-delà, elle ne fait plus rien du tout. C'est ce que faisait ce bloc, et
+	// c'est pourquoi monter le réglage global ne redressait jamais la falaise.
+	float ck = normal_strength * cliff_normal_strength;
+	vec3 nx = tangent_normal(cliff_normal, uv_x) * vec3(ck, ck, 1.0) + vec3(tangent_normal(cliff_normal, dx).xy, 0.0) * kn;
+	vec3 ny = tangent_normal(cliff_normal, uv_y) * vec3(ck, ck, 1.0) + vec3(tangent_normal(cliff_normal, dy).xy, 0.0) * kn;
+	vec3 nz = tangent_normal(cliff_normal, uv_z) * vec3(ck, ck, 1.0) + vec3(tangent_normal(cliff_normal, dz).xy, 0.0) * kn;
 	nx = vec3(nx.xy + geo.zy, abs(nx.z) * geo.x);
 	ny = vec3(ny.xy + geo.xz, abs(ny.z) * geo.y);
 	nz = vec3(nz.xy + geo.xy, abs(nz.z) * geo.z);
-	vec3 cliff_n = normalize(mix(geo,
-		normalize(nx.zyx * tri.x + ny.xzy * tri.y + nz.xyz * tri.z),
-		clamp(normal_strength, 0.0, 1.0)));
+	vec3 cliff_n = normalize(nx.zyx * tri.x + ny.xzy * tri.y + nz.xyz * tri.z);
 
 	// --- La cascade, avec les poids déjà calculés -----------------------------
 

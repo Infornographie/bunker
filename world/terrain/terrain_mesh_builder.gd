@@ -36,11 +36,9 @@ static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array,
 
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
-	var uvs := PackedVector2Array()
 	var colors := PackedColorArray()
 	vertices.resize(wide * deep)
 	normals.resize(wide * deep)
-	uvs.resize(wide * deep)
 	colors.resize(wide * deep)
 
 	for iz in range(z0, z1 + 1):
@@ -50,7 +48,6 @@ static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array,
 			var h := heights[cfg.height_index(ix, iz)]
 			vertices[local] = Vector3(wp.x - origin.x, h, wp.y - origin.y)
 			normals[local] = _normal_at(cfg, heights, ix, iz)
-			uvs[local] = wp * cfg.uv_scale
 			colors[local] = Color(occupancy.cover_at(wp), 0.0, 0.0, 1.0)
 
 	var indices := PackedInt32Array()
@@ -76,7 +73,6 @@ static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array,
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_NORMAL] = normals
-	arrays[Mesh.ARRAY_TEX_UV] = uvs
 	arrays[Mesh.ARRAY_COLOR] = colors
 	arrays[Mesh.ARRAY_INDEX] = indices
 

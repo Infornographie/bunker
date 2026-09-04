@@ -55,8 +55,8 @@ Chacun livre couleur, normal (GL et DX), roughness, height, AO et metallic,
 produits sous Substance Designer. Le `normal_dx` (convention DirectX) et le
 `metallic` (un sol est diélectrique) ne sont pas employés.
 
-`sand_03` est également présent dans le dossier mais n'est branché nulle
-part — `sand_04` lui a été préféré. À supprimer ou à réemployer.
+Seule la variante 2k de chaque matériau est conservée : les 1k pixellisaient
+de près. `sand_01` et `sand_03` ont été supprimés au profit de `sand_04`.
 
 **Licence, telle que publiée par le site :**
 

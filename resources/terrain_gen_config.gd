@@ -181,8 +181,6 @@ extends Resource
 @export_group("Rendu")
 @export var terrain_material: Material
 @export var water_material: Material
-## Répétition de la texture de sol, en tours par mètre.
-@export var uv_scale: float = 0.08
 
 
 ## Nombre de sommets par côté de la grille.
