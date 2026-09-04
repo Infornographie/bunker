@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://06k6adpsbv7e" path="res://entities/player/player.tscn" id="3_ff4tk"]
 [ext_resource type="PackedScene" uid="uid://d1a2pi25ythqw" path="res://world/sky/sky_rig.tscn" id="4_jqqxl"]
 [ext_resource type="PackedScene" path="res://world/sky/sky_debug_panel.tscn" id="5_dv2y6"]
+[ext_resource type="Script" uid="uid://cyjep4eoodmlw" path="res://world/terrain/heightmap_signature.gd" id="6_ne2wn"]
 
 [node name="TerrainTest" type="Node3D" unique_id=137881587 node_paths=PackedStringArray("sun")]
 transform = Transform3D(-0.5153874, 0, 0.8569575, 0, 1, 0, -0.8569575, 0, -0.5153874, 0, 0, 0)
@@ -21,5 +22,9 @@ sky_controller = NodePath("../SkyRig")
 
 [node name="Player" parent="." unique_id=135155471 instance=ExtResource("3_ff4tk")]
 transform = Transform3D(-0.51538724, 0, -0.8569572, 0, 1, 0, 0.8569572, 0, -0.51538724, -28.761559, 205.52051, -165.44711)
+
+[node name="Node" type="Node" parent="." unique_id=1563046211]
+script = ExtResource("6_ne2wn")
+config = ExtResource("2_kgf1h")
 
 [editable path="SkyRig"]

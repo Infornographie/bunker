@@ -19,3 +19,7 @@ mono_crash.*.json
 *.tmp
 desktop.ini
 Thumbs.db
+# Référence locale du test de non-régression du relief (voir heightmap_signature.gd).
+# Non versionnée : elle se réécrit à chaque changement légitime de carte, et une
+# référence qu'on met à jour par réflexe ne teste plus rien.
+world/terrain/heightmap_signature.txt

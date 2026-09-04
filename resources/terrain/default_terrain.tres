@@ -118,7 +118,7 @@ shader_parameter/sand_normal_strength = 1.0
 shader_parameter/water_level = 0.0
 shader_parameter/sand_band = 3.5
 shader_parameter/tint_scale = 0.03
-shader_parameter/tint_strength = 0.13
+shader_parameter/tint_strength = 0.130000006175
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_valley_wobble"]
 frequency = 0.002
