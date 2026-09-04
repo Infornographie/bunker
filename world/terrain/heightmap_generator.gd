@@ -128,6 +128,7 @@ func _draw_massif() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = _cfg.world_seed
 	_massif = MassifShape.draw(_cfg, rng, _wobble, _profile)
+	_massif.place_cliff_foot_at_origin()
 
 	var size := _cfg.size_meters
 	_valley_offset = _cfg.valley_offset_ratio * size
@@ -147,10 +148,14 @@ func _build_relief() -> void:
 	for iz in _n:
 		for ix in _n:
 			var wp := _cfg.world_pos(ix, iz)
-			var local := _massif.local_of(wp)
-			var along := local.x
-			var side := local.y
-			var massif := _massif.sample(along, side)
+			# Projections sur les directions du massif, origine au monde : c'est
+			# le repère de la vallée et de la pente d'écoulement, qui s'alignent
+			# sur son axe sans être placées avec lui. Le massif, lui, se lit dans
+			# son repère placé — d'où `sample_at` et non `sample`.
+			var proj := _massif.project(wp)
+			var along := proj.x
+			var side := proj.y
+			var massif := _massif.sample_at(wp)
 			var valley := _valley_at(along, side)
 			var macro := _macro.get_noise_2d(wp.x, wp.y) * _cfg.macro_amplitude
 			# Le vallonnement s'efface sur la falaise (on y tient à une paroi
@@ -218,8 +223,7 @@ func _flatten_clearings() -> void:
 func _accepts_clearing(centre: Vector2, radius: float) -> bool:
 	if centre.length() < _cfg.bunker_radius + _cfg.bunker_falloff + radius:
 		return false
-	var local := _massif.local_of(centre)
-	var massif := _massif.sample(local.x, local.y)
+	var massif := _massif.sample_at(centre)
 	if massif.z > _cfg.clearing_max_massif_influence:
 		return false
 	return _ops.sample(centre) > water_level + _cfg.clearing_min_above_water
@@ -258,9 +262,9 @@ func _trace_river() -> PackedVector2Array:
 		# Le guide vise l'axe de vallée d'autant plus franchement qu'on en est
 		# loin, et pousse toujours vers l'aval. Sa portée est la demi-largeur de
 		# la vallée : au-delà, on la rejoint à 45°.
-		var local := _massif.local_of(pos)
-		var along := local.x
-		var lateral := clampf((_valley_offset + _valley_wobble_at(along) - local.y) / _valley_half_width, -1.0, 1.0)
+		var proj := _massif.project(pos)
+		var along := proj.x
+		var lateral := clampf((_valley_offset + _valley_wobble_at(along) - proj.y) / _valley_half_width, -1.0, 1.0)
 		var guide := (_massif.axis + _massif.side * lateral).normalized()
 		var wanted := downhill.lerp(guide, _cfg.river_valley_pull)
 		dir = (wanted + dir * _RIVER_MOMENTUM).normalized()

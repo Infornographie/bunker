@@ -12,6 +12,13 @@ extends RefCounted
 ## falaise. Tout ce qui se rapporte au massif se calcule là-dedans, et personne
 ## n'a besoin de savoir que l'orientation a été tirée au hasard.
 ##
+## **Tirer et placer sont deux gestes séparés.** Le massif principal se place par
+## résolution — le pied de sa falaise doit tomber sur la bouche de grotte, à
+## l'origine du monde — alors que tout autre massif se place où on le lui dit.
+## Confondre les deux, c'est ne pouvoir en avoir qu'un : tous naîtraient au même
+## endroit. `draw()` ne fait donc que tirer une forme, et le placement est un
+## second appel, explicite.
+##
 ## Ce qui n'est PAS ici : la vallée, la pente de drainage, le vallonnement. Ils
 ## s'alignent sur ce repère mais ne lui appartiennent pas — la carte n'a qu'une
 ## vallée et qu'un sens d'écoulement, quel que soit le nombre de massifs.
@@ -21,10 +28,14 @@ var axis: Vector2
 var side: Vector2
 var half_length: float
 var half_width: float
-## Décalage de l'axe en travers, dans le repère monde.
-var side_base: float
 ## Altitude de crête avant modulation par le profil.
 var height: float
+
+## Placement, en projections du centre du massif sur son propre repère. Deux
+## scalaires plutôt qu'un point : c'est sous cette forme que le repère les
+## consomme, et un point obligerait à reprojeter à chaque lecture.
+var along_base: float
+var side_base: float
 
 var _cfg: TerrainGenConfig
 var _wobble: FastNoiseLite
@@ -50,17 +61,45 @@ static func draw(cfg: TerrainGenConfig, rng: RandomNumberGenerator,
 	shape.half_length = rng.randf_range(cfg.massif_half_length_ratio_range.x, cfg.massif_half_length_ratio_range.y) * size
 	shape.half_width = rng.randf_range(cfg.massif_half_width_ratio_range.x, cfg.massif_half_width_ratio_range.y) * size
 	shape.height = rng.randf_range(cfg.massif_height_range.x, cfg.massif_height_range.y)
-
-	# L'axe est décalé pour que le pied de la falaise passe par l'origine au
-	# milieu du massif, méandre compris : c'est là que s'ouvre la grotte.
-	var foot_distance := shape.half_width * (1.0 - cfg.cliff_position)
-	shape.side_base = -foot_distance - shape.wobble_at(0.0)
 	return shape
 
 
-## Coordonnées d'un point monde dans le repère du massif : (le long, en travers).
-func local_of(world_point: Vector2) -> Vector2:
+## Place le massif pour que le pied de sa falaise passe par l'origine du monde,
+## au milieu de la crête et méandre compris : c'est là que s'ouvre la grotte.
+## Un placement par **résolution**, pas par réglage — d'où l'absence de position
+## de massif dans la config.
+func place_cliff_foot_at_origin() -> void:
+	along_base = 0.0
+	side_base = -(half_width * (1.0 - _cfg.cliff_position)) - wobble_at(0.0)
+
+
+## Place le centre du massif sur un point monde. C'est le placement de tout
+## massif qui n'est pas le principal.
+func place_at(centre: Vector2) -> void:
+	along_base = centre.dot(axis)
+	side_base = centre.dot(side)
+
+
+## Projections d'un point monde sur les directions du massif, **origine au
+## monde** : (le long, en travers). C'est le repère de ce qui s'aligne sur son
+## axe sans lui appartenir — la vallée, la pente d'écoulement.
+##
+## Le retour est un `Vector2`, donc arrondi à 32 bits là où `dot()` calcule en
+## 64. Ce n'est pas un détail de style : ce passage est une étape d'arrondi, et
+## la remplacer par deux `dot()` directs déplace tous les sommets de la carte de
+## quelques millièmes de millimètre. Assez pour qu'aucun œil ne le voie, et pour
+## que l'empreinte change sur toutes les graines.
+func project(world_point: Vector2) -> Vector2:
 	return Vector2(world_point.dot(axis), world_point.dot(side))
+
+
+## Profil du massif en un point monde. Point d'entrée normal : c'est ici, et
+## seulement ici, que le placement du massif entre en jeu — d'où le passage par
+## `project()` plutôt qu'une projection écrite au dehors, qui oublierait un jour
+## de retirer les bases.
+func sample_at(world_point: Vector2) -> Vector3:
+	var p := project(world_point)
+	return sample(p.x - along_base, p.y - side_base)
 
 
 ## Retourne (hauteur du massif, masque de falaise, influence) en coordonnées
@@ -72,7 +111,7 @@ func sample(along: float, side_distance: float) -> Vector3:
 	if taper <= 0.0:
 		return Vector3.ZERO
 
-	var across := side_distance - side_base - wobble_at(along)
+	var across := side_distance - wobble_at(along)
 	var t := 1.0 - absf(across) / half_width
 	if t <= 0.0:
 		return Vector3.ZERO
