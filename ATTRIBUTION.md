@@ -95,6 +95,17 @@ Shader de ciel (`main.gdshader`) et textures de nuages en bruit (`textures/cloud
 Le pack livre aussi 27 presets — des `ShaderMaterial` et des `Sky` tout faits. **Ils ne sont pas dans le projet** : ce sont des jeux de valeurs, pas des assets. Leurs réglages ont été recopiés dans nos `SkyProfile` (`resources/sky/`), qui sont la forme utilisable par le cycle jour/nuit. Un preset décrit une journée entière et ne sait pas s'animer ; un profil, si.
 
 > Le shader du pack livre son propre `triplanar.gdshaderinc`, qui n'est inclus par rien dans `main.gdshader`. Il n'a pas été copié.
+
+### Stylized Water Shader (Cool Water) — EmacEArt — **licence propriétaire**
+Dossier : `assets/water/`
+[store.godotengine.org/asset/emace-art/stylized-water-shader](https://store.godotengine.org/asset/emace-art/stylized-water-shader/)
+
+Shader d'eau stylisée (`EA_CoolWater.gdshader`), ses deux textures (normale et Voronoï d'écume) et trois matériaux d'exemple. Shader **non modifié** ; le jour où on le patche, la modification se note ici.
+
+> **Licence EmacEArt : usage personnel et commercial libres, redistribution des fichiers en tant que tels interdite.** Concrètement : intégré au jeu, aucun problème ; publier `assets/water/` en fichiers bruts dans un dépôt ouvert s'approche de la redistribution. Même prudence que pour les textures de sol Freestylized si le dépôt devient public. Le texte complet est dans `assets/water/LICENSE.txt`.
+
+Non copiés du pack : la scène de démo, son panneau de sliders, ses scripts de caméra, le mesh et le matériau du terrain de démo. Ce sont des outils de démonstration, pas des assets du jeu — les 27 réglages se lisent dans la documentation PDF restée hors dépôt.
+
 ## Audio
  
 - **chop2.mp3** — igroglaz — **CC0** (SFX coupe du bois, hook posé, asset non encore branché)

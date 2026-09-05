@@ -64,6 +64,44 @@ static func draw(cfg: TerrainGenConfig, rng: RandomNumberGenerator,
 	return shape
 
 
+## Tire un éperon perpendiculaire à la crête d'un massif hôte, et le place.
+##
+## Tirage et placement sont faits ensemble ici, contrairement au massif
+## principal, parce qu'un éperon n'existe que par rapport à son hôte : il n'y a
+## pas de forme d'éperon indépendante d'une crête à laquelle s'accrocher.
+##
+## **Le centre est posé sur le pied de falaise de l'hôte**, pas sur sa crête :
+## l'éperon part donc du versant, traverse la vallée et s'éteint au-delà. La
+## moitié qui remonte dans le massif disparaît sous lui au `max`, gratuitement.
+static func draw_spur(cfg: TerrainGenConfig, rng: RandomNumberGenerator,
+		wobble: FastNoiseLite, profile: FastNoiseLite, host: MassifShape) -> MassifShape:
+	var spur := MassifShape.new()
+	spur._cfg = cfg
+	spur._wobble = wobble
+	spur._profile = profile
+
+	var deviation := deg_to_rad(rng.randf_range(-cfg.spur_angle_deviation, cfg.spur_angle_deviation))
+	spur.axis = host.side.rotated(deviation)
+	spur.side = Vector2(-spur.axis.y, spur.axis.x)
+
+	var size := cfg.size_meters
+	spur.half_length = rng.randf_range(cfg.spur_half_length_ratio_range.x, cfg.spur_half_length_ratio_range.y) * size
+	spur.half_width = rng.randf_range(cfg.spur_half_width_ratio_range.x, cfg.spur_half_width_ratio_range.y) * size
+	spur.height = host.height * rng.randf_range(cfg.spur_height_ratio_range.x, cfg.spur_height_ratio_range.y)
+
+	# Position le long de la crête hôte, d'un côté ou de l'autre. Le plancher
+	# tient l'éperon à l'écart de la bouche de grotte : elle est à l'origine, et
+	# un éperon qui passe dessus la mure.
+	var along := rng.randf_range(cfg.spur_along_ratio_range.x, cfg.spur_along_ratio_range.y) * host.half_length
+	if rng.randf() < 0.5:
+		along = -along
+	var clearance := spur.half_width + cfg.bunker_radius + cfg.bunker_falloff
+	along = signf(along) * maxf(absf(along), clearance)
+
+	spur.place_at(host.axis * along)
+	return spur
+
+
 ## Place le massif pour que le pied de sa falaise passe par l'origine du monde,
 ## au milieu de la crête et méandre compris : c'est là que s'ouvre la grotte.
 ## Un placement par **résolution**, pas par réglage — d'où l'absence de position

@@ -22,6 +22,30 @@ extends Resource
 ## Côté d'un chunk, en cellules.
 @export_range(8, 128) var chunk_cells: int = 32
 
+@export_group("Contrefort")
+## Éperons perpendiculaires à la crête, qui ferment la vallée et cassent la
+## symétrie d'une carte à massif unique. À 0, la carte est celle d'avant.
+##
+## Dette nommée : ces fourchettes vivront dans le `.tres` du contrefort quand le
+## catalogue de features existera (passe D). Elles sont ici parce qu'un
+## contrefort est un massif, et que les fourchettes de massif sont ici.
+@export_range(0, 4) var spur_count: int = 1
+## Demi-longueur, en fraction de la taille de zone. Au-delà de la distance du
+## pied de falaise à la vallée, l'éperon barre le cours — et le fleuve le tranche
+## en cluse, ce qui est voulu.
+@export var spur_half_length_ratio_range: Vector2 = Vector2(0.15, 0.25)
+## Demi-largeur, en fraction de la taille de zone. Un éperon est étroit : c'est
+## ce qui le distingue d'un second massif.
+@export var spur_half_width_ratio_range: Vector2 = Vector2(0.04, 0.07)
+## Hauteur, en fraction de celle du massif hôte. Au-delà de ~0,6 il rivalise
+## avec la crête au lieu d'en descendre.
+@export var spur_height_ratio_range: Vector2 = Vector2(0.35, 0.55)
+## Position le long de la crête hôte, en fraction de sa demi-longueur.
+@export var spur_along_ratio_range: Vector2 = Vector2(0.35, 0.7)
+## Écart à la perpendiculaire, en degrés. Un éperon exactement perpendiculaire
+## se lit comme une construction.
+@export_range(0.0, 60.0) var spur_angle_deviation: float = 25.0
+
 @export_group("Relief général")
 ## Vallonnement de fond. Son domain warp (réglé sur la ressource) sert de
 ## déformation d'ensemble à toute la carte.
@@ -104,7 +128,7 @@ extends Resource
 @export_group("Vallée de la rivière")
 ## Écart entre la grotte et l'axe de vallée, en fraction de la taille de zone,
 ## mesuré côté versant ouvert. 1/6 partage la zone praticable en 2/3 – 1/3.
-@export var valley_offset_ratio: float = 0.1667
+@export var valley_offset_ratio: float = 0.25
 ## Demi-largeur de la vallée, en fraction de la taille de zone.
 @export_range(0.02, 0.4) var valley_half_width_ratio: float = 0.12
 ## Creusement de la vallée sous le niveau environnant, en mètres.
@@ -118,18 +142,45 @@ extends Resource
 @export_range(0.0, 1.0) var valley_macro_damping: float = 0.5
 
 @export_group("Rivière")
-## Largeur du lit, en mètres.
-@export var river_width: float = 12.0
-## Profondeur du lit sous la ligne d'eau, en mètres.
-@export var river_depth: float = 6.0
+## Largeur du lit, en mètres — fourchette parcourue le long du cours. Repères
+## réels : Saône 30-50 m, Rhône jusqu'à 60 m dans Lyon, Seine 170 m à Rouen.
+## Un fleuve de 300 m mangerait la carte ; 50-60 m se traverse en pont et se
+## lit comme un fleuve.
+@export var river_width_range: Vector2 = Vector2(42.0, 68.0)
+## Profondeur du lit sous la ligne d'eau, en mètres. Les fleuves français vont
+## de 5 à 30 m. Le minimum compte plus que le maximum : sous une dizaine de
+## mètres, les passages les moins creusés cessent de se lire comme un lit.
+@export var river_depth_range: Vector2 = Vector2(12.0, 24.0)
+## Encaissement : de combien la surface de l'eau est sous le terrain qu'elle
+## traverse, en mètres.
+##
+## Sans lui, la ligne d'eau est posée à l'altitude du sol et le fleuve coule au
+## ras de la plaine : le moindre creux alentour passe sous la nappe, et l'eau
+## se répand en feuilles au-dessus de la forêt. Un fleuve coule dans ses berges.
+@export var river_freeboard: float = 6.0
 ## Largeur de la berge adoucie de part et d'autre du lit. Plus large que le lit
 ## et elle avale l'entaille avant qu'elle existe.
-@export var river_bank: float = 5.0
-## Attirance du tracé vers l'axe de vallée. 0 = descente de gradient pure, le
-## tracé se perd dans le vallonnement ; 1 = il ignore le relief.
-@export_range(0.0, 1.0) var river_valley_pull: float = 0.15
+@export var river_bank: float = 18.0
 ## Longueur d'un pas de tracé, en mètres.
 @export var river_step: float = 6.0
+
+## Amplitude du méandre principal, en mètres. Deux harmoniques plus courtes s'y
+## ajoutent — c'est ce qui fait une boucle de Seine plutôt qu'une sinusoïde.
+## Le total dépasse l'amplitude d'environ deux tiers : la garder sous la
+## demi-largeur de vallée évite que le cours ne grimpe sur les versants.
+@export var river_meander_amplitude_range: Vector2 = Vector2(45.0, 75.0)
+## Longueur d'onde du méandre principal, en mètres.
+@export var river_meander_wavelength_range: Vector2 = Vector2(260.0, 460.0)
+
+## Chance qu'un bras secondaire se détache et laisse une île. Le tirage peut
+## échouer faute de portion émergée assez longue : la fréquence réelle est plus
+## basse que ce réglage.
+@export_range(0.0, 1.0) var river_island_chance: float = 0.7
+## Longueur de l'île, en mètres.
+@export var river_island_length_range: Vector2 = Vector2(160.0, 320.0)
+## Écartement du bras secondaire, en multiples de la largeur du lit. Sous 2, les
+## deux bras se rejoignent et l'île n'existe pas.
+@export var river_island_spread: float = 3.0
 
 @export_group("Lac")
 ## Position du rivage sur l'axe d'écoulement, en fraction de la demi-zone vers

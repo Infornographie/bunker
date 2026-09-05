@@ -1,0 +1,24 @@
+{
+  "cols": 400,
+  "rows": 400,
+  "cell_m": 3.0,
+  "width_m": 1200,
+  "depth_m": 1200,
+  "alt_min_m": 162.26,
+  "alt_max_m": 299.32,
+  "amplitude_m": 137.05,
+  "lambert93": {
+    "x_min": 840800,
+    "x_max": 842000,
+    "y_min": 6519000,
+    "y_max": 6520200
+  },
+  "f32": {
+    "dtype": "float32 little-endian",
+    "layout": "row-major, ligne 0 = SUD (+Z Godot), colonne 0 = OUEST (+X)",
+    "values": 160000,
+    "bytes": 640000,
+    "unit": "metres NGF-IGN69, valeur absolue"
+  },
+  "name": "A_fourviere_1200"
+}

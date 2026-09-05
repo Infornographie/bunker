@@ -35,6 +35,7 @@
 [ext_resource type="Resource" uid="uid://dvelcjfqxesdx" path="res://resources/biomes/conifer_highland.tres" id="biome_conifer"]
 [ext_resource type="Resource" uid="uid://coqdb8bmikm8o" path="res://resources/biomes/forest_light.tres" id="biome_forest_light"]
 [ext_resource type="Script" uid="uid://p3l2rq65m6a8" path="res://resources/biome_def.gd" id="biome_script"]
+[ext_resource type="Material" path="res://assets/water/Materials/EA_Water_Lagoon.tres" id="water_lagoon"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_macro"]
 frequency = 0.006
@@ -124,15 +125,9 @@ shader_parameter/tint_strength = 0.130000006175
 frequency = 0.002
 fractal_octaves = 2
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_water"]
-transparency = 1
-albedo_color = Color(0.16, 0.36, 0.44, 0.72)
-metallic = 0.3
-roughness = 0.1
-
 [resource]
 script = ExtResource("1_config")
-world_seed = 1234
+world_seed = 2032
 macro_noise = SubResource("FastNoiseLite_macro")
 drainage_drop = 90.0
 massif_wobble_noise = SubResource("FastNoiseLite_massif_wobble")
@@ -143,10 +138,10 @@ clearing_radius_range = Vector2(10, 26)
 clearing_falloff = 18.0
 valley_wobble_noise = SubResource("FastNoiseLite_valley_wobble")
 valley_macro_damping = 0.85
-river_valley_pull = 0.35
+river_freeboard = null
 layers = Array[ExtResource("3_layer")]([ExtResource("4_canopy"), ExtResource("5_understory"), ExtResource("6_shrub"), ExtResource("7_ground")])
 biomes = Array[ExtResource("biome_script")]([ExtResource("biome_forest_light"), ExtResource("biome_conifer")])
 foliage_view_distance = 675.0
 foliage_fade_margin = 225.0
 terrain_material = SubResource("ShaderMaterial_ground")
-water_material = SubResource("StandardMaterial3D_water")
+water_material = ExtResource("water_lagoon")

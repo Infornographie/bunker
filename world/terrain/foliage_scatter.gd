@@ -141,18 +141,21 @@ var chunk_nodes: Dictionary = {}
 var _cfg: TerrainGenConfig
 var _heights: PackedFloat32Array
 var _clearings: PackedVector3Array
-var _river: PackedVector2Array
+## Tous les cours d'eau, bras secondaires compris. Ne connaître que le cours
+## principal laisse les bras d'île se couvrir d'arbres — une île boisée au
+## milieu du fleuve, avec un bras qu'on ne voit plus.
+var _reaches: Array[RiverReach] = []
 var _water_level: float
 var _biomes: BiomeMap
 
 
 ## Construit tout le feuillage. Retourne un Node3D à parenter dans la scène.
 func scatter(cfg: TerrainGenConfig, heights: PackedFloat32Array, clearings: PackedVector3Array,
-		river: PackedVector2Array, water_level: float, biomes: BiomeMap) -> Node3D:
+		reaches: Array[RiverReach], water_level: float, biomes: BiomeMap) -> Node3D:
 	_cfg = cfg
 	_heights = heights
 	_clearings = clearings
-	_river = river
+	_reaches = reaches
 	_water_level = water_level
 	_biomes = biomes
 	placed_count = 0
@@ -367,7 +370,6 @@ func _scatter_area(layer: FoliageLayer, palettes_by_biome: Array, layer_index: i
 	var cfg := _cfg
 	var heights := _heights
 	var clearings := _clearings
-	var river := _river
 	var water_level := _water_level
 	var half := cfg.half_size()
 	var origin := area.position
@@ -390,8 +392,16 @@ func _scatter_area(layer: FoliageLayer, palettes_by_biome: Array, layer_index: i
 	# Le lit est écarté de la moitié de sa largeur plus sa berge : les plantes
 	# s'arrêtent en haut de talus. On ne retient que les segments qui passent
 	# dans ce chunk, sinon chaque candidat testerait tout le cours d'eau.
-	var river_margin := cfg.river_width * 0.5 + cfg.river_bank
-	var nearby := _river_segments_near(river, area, river_margin)
+	#
+	# La largeur du lit varie le long du cours, mais le semis ne connaît que le
+	# tracé : on écarte donc de la largeur **maximale**. Conséquence assumée —
+	# sur les passages étroits, la berge reste nue un peu plus loin qu'il ne
+	# faudrait. La corriger demanderait de publier la largeur point par point,
+	# ce qui n'a d'intérêt que si ça se voit.
+	var river_margin := cfg.river_width_range.y * 0.5 + cfg.river_bank
+	var nearby_per_reach: Array[PackedInt32Array] = []
+	for reach in _reaches:
+		nearby_per_reach.append(_river_segments_near(reach.path, area, river_margin))
 	# Même pré-filtrage pour les clairières : la jitter peut déborder d'une
 	# cellule au-delà de l'aire, d'où la marge.
 	var clearings_near := _clearings_near(clearings, area.grow(spacing))
@@ -413,7 +423,12 @@ func _scatter_area(layer: FoliageLayer, palettes_by_biome: Array, layer_index: i
 			if layer.clearing_response != null \
 					and rng.randf() > layer.clearing_response.sample(openness):
 				continue
-			if _is_in_river(river, nearby, point, river_margin):
+			var in_water := false
+			for r in _reaches.size():
+				if _is_in_river(_reaches[r].path, nearby_per_reach[r], point, river_margin):
+					in_water = true
+					break
+			if in_water:
 				continue
 
 			# Dans une clairière, la composition se lit au centre de la tache :

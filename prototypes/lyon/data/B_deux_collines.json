@@ -1,0 +1,24 @@
+{
+  "cols": 733,
+  "rows": 833,
+  "cell_m": 3.0,
+  "width_m": 2200,
+  "depth_m": 3000,
+  "alt_min_m": 162.11,
+  "alt_max_m": 299.32,
+  "amplitude_m": 137.21,
+  "lambert93": {
+    "x_min": 840800,
+    "x_max": 843000,
+    "y_min": 6519000,
+    "y_max": 6522000
+  },
+  "f32": {
+    "dtype": "float32 little-endian",
+    "layout": "row-major, ligne 0 = SUD (+Z Godot), colonne 0 = OUEST (+X)",
+    "values": 610589,
+    "bytes": 2442356,
+    "unit": "metres NGF-IGN69, valeur absolue"
+  },
+  "name": "B_deux_collines"
+}

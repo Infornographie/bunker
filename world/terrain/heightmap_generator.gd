@@ -8,7 +8,7 @@ extends RefCounted
 ##   2. relief : vallonnement + pente de drainage + massif + vallée
 ##   3. niveau de l'eau, lu sur le fond de vallée en aval
 ##   4. clairières : celle du bunker, puis les replats tirés à la graine
-##   5. tracé de la rivière par descente de gradient, puis creusement du lit
+##   5. tracé géométrique de la rivière, puis creusement du lit
 ##
 ## La rivière se trace sur un relief déjà complet : elle a besoin de connaître
 ## les pentes pour les descendre. La vallée, elle, est creusée *avant* le tracé
@@ -40,9 +40,13 @@ var water_level: float
 ## Replats aplanis, en (centre.x, centre.z, rayon). Le premier est celui du
 ## bunker. Lu par le scatter, qui n'y pose pas de canopée.
 var clearings: PackedVector3Array
-## Tracé de la rivière, en points monde successifs. Lu par le scatter, qui ne
-## plante pas dans le lit.
+## Tracé du cours principal, en points monde successifs. Lu par le scatter, qui
+## ne plante pas dans le lit.
 var river_path: PackedVector2Array
+## Tous les cours d'eau de la carte — le bras principal d'abord, puis les bras
+## secondaires. Chacun porte son tracé, sa ligne d'eau et ses largeurs : c'est
+## ce que lit le constructeur de ruban pour en faire une surface.
+var river_reaches: Array[RiverReach] = []
 ## Influence du massif en chaque sommet : 1 sur l'axe, 0 hors du massif. C'est
 ## la mesure de « à quel point on est en montagne », et c'est sur elle que les
 ## biomes déclarent leur étage.
@@ -61,13 +65,12 @@ const _SEED_WOBBLE := 977
 const _SEED_PROFILE := 1451
 const _SEED_VALLEY := 2129
 const _SEED_CLEARING := 3313
+const _SEED_RIVER := 4409
 ## Tentatives de placement par clairière avant abandon.
 const _CLEARING_TRIES := 12
 ## Descente minimale imposée entre deux points du tracé, en mètres. Empêche la
 ## ligne d'eau de stagner dans un creux et de remonter.
 const _RIVER_MIN_DROP := 0.05
-## Inertie du tracé : sans elle, il pivote d'un pas à l'autre sur du bruit.
-const _RIVER_MOMENTUM := 0.6
 
 var _cfg: TerrainGenConfig
 var _n: int
@@ -76,7 +79,12 @@ var _wobble: FastNoiseLite
 var _profile: FastNoiseLite
 var _valley: FastNoiseLite
 
-## Le massif tiré à la graine, et le tableau de hauteurs avec ses opérateurs.
+## Tous les massifs de la carte, composés au `max`. Le premier est le principal :
+## c'est lui qui porte le repère dont la vallée, l'écoulement et la rivière
+## dérivent, et lui seul est placé par résolution sur la bouche de grotte.
+var _massifs: Array[MassifShape] = []
+## Raccourci de lecture sur le principal — la géographie de la carte se déclare
+## sur lui, pas sur l'ensemble.
 var _massif: MassifShape
 var _ops: HeightmapOps
 
@@ -129,6 +137,13 @@ func _draw_massif() -> void:
 	rng.seed = _cfg.world_seed
 	_massif = MassifShape.draw(_cfg, rng, _wobble, _profile)
 	_massif.place_cliff_foot_at_origin()
+	_massifs.clear()
+	_massifs.append(_massif)
+
+	# Après le massif principal, et sur la même chaîne de hasard : à `spur_count`
+	# nul, aucun tirage n'est consommé et la carte est exactement celle d'avant.
+	for _i in _cfg.spur_count:
+		_massifs.append(MassifShape.draw_spur(_cfg, rng, _wobble, _profile, _massif))
 
 	var size := _cfg.size_meters
 	_valley_offset = _cfg.valley_offset_ratio * size
@@ -155,7 +170,7 @@ func _build_relief() -> void:
 			var proj := _massif.project(wp)
 			var along := proj.x
 			var side := proj.y
-			var massif := _massif.sample_at(wp)
+			var massif := _massif_profile_at(wp)
 			var valley := _valley_at(along, side)
 			var macro := _macro.get_noise_2d(wp.x, wp.y) * _cfg.macro_amplitude
 			# Le vallonnement s'efface sur la falaise (on y tient à une paroi
@@ -168,6 +183,30 @@ func _build_relief() -> void:
 			relief[index] = massif.x + valley.x + macro - along * _drainage_slope
 			massif_influence[index] = massif.z
 	_ops = HeightmapOps.new(_cfg, relief)
+
+
+## Profil composé de tous les massifs : (hauteur, masque de falaise, influence).
+##
+## **Composition au `max`, jamais en somme.** Deux reliefs qui se croisent, c'est
+## le plus haut qui gagne — la somme ferait une bosse de deux massifs empilés à
+## la jonction, là où le `max` fait disparaître le plus bas sous le plus haut et
+## produit l'arête franche qu'est un contrefort. Même règle pour les deux autres
+## composantes : une falaise reste une falaise quel que soit le massif qui la
+## porte, et l'influence d'un point est celle du massif qui le domine — les
+## biomes la lisent, et une influence sommée déclencherait les conifères dans
+## une plaine coincée entre deux reliefs.
+##
+## À un seul massif, cette fonction est l'identité : c'est ce qui a permis de
+## l'introduire sous empreinte, avant qu'un second massif n'existe.
+func _massif_profile_at(world_point: Vector2) -> Vector3:
+	var profile := _massifs[0].sample_at(world_point)
+	for i in range(1, _massifs.size()):
+		var other := _massifs[i].sample_at(world_point)
+		profile = Vector3(
+			maxf(profile.x, other.x),
+			maxf(profile.y, other.y),
+			maxf(profile.z, other.z))
+	return profile
 
 
 ## Retourne (creusement de la vallée, masque de fond de vallée).
@@ -223,7 +262,7 @@ func _flatten_clearings() -> void:
 func _accepts_clearing(centre: Vector2, radius: float) -> bool:
 	if centre.length() < _cfg.bunker_radius + _cfg.bunker_falloff + radius:
 		return false
-	var massif := _massif.sample_at(centre)
+	var massif := _massif_profile_at(centre)
 	if massif.z > _cfg.clearing_max_massif_influence:
 		return false
 	return _ops.sample(centre) > water_level + _cfg.clearing_min_above_water
@@ -232,72 +271,175 @@ func _accepts_clearing(centre: Vector2, radius: float) -> bool:
 # --- Rivière -------------------------------------------------------------------
 
 func _carve_river() -> void:
-	river_path = _trace_river()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _cfg.world_seed + _SEED_RIVER
+	river_path = _lay_river(rng)
 	if river_path.size() < 2:
 		push_warning("HeightmapGenerator : tracé de rivière vide, rien à creuser.")
 		return
-	_ops.carve_channel(river_path, _water_line(river_path),
-		_cfg.river_width, _cfg.river_bank, _cfg.river_depth)
+
+	var water := _water_line(river_path)
+	var widths := _river_widths(river_path.size(), rng)
+	var depths := _river_depths(river_path.size(), rng)
+	_ops.carve_channel(river_path, water, widths, _cfg.river_bank, depths)
+	river_reaches.clear()
+	river_reaches.append(RiverReach.new(river_path, water, widths))
+	_carve_island(river_path, water, widths, depths, rng)
 
 
-## Descente de gradient dans la plaine, tenue par l'axe de vallée. Le gradient
-## donne le méandre ; le guide garantit la topologie voulue (la rivière partage
-## la zone au ratio demandé) et empêche le tracé de s'échouer dans une cuvette.
-## La rivière ne descend pas du massif : une cascade depuis les hauteurs est une
-## feature du biome montagne, pas une propriété du relief.
-func _trace_river() -> PackedVector2Array:
+## Trace le cours **géométriquement**, sans regarder le relief.
+##
+## L'ancien tracé descendait le gradient, guidé vers l'axe de vallée. Il avait
+## deux défauts, et le second est le vrai : il s'échouait dans la moindre cuvette
+## fermée — un éperon en travers de la vallée lui suffisait — et surtout il ne
+## produisait pas le méandre qu'on attendait de lui. On payait les inconvénients
+## d'une descente de gradient sans en toucher le bénéfice.
+##
+## Ici le cours est **posé**, puis le terrain cède : la ligne d'eau ne remonte
+## jamais et le lit se creuse dessous, si bien qu'un relief en travers du chemin
+## est tranché. C'est le modèle de la rivière **antécédente** — elle coulait
+## avant que le relief ne se soulève et a creusé au rythme où il montait. La
+## cluse n'est donc plus une feature à écrire : c'est ce qui arrive lorsque le
+## cours croise un éperon.
+##
+## Trois harmoniques plutôt qu'une : une sinusoïde se lit comme une sinusoïde,
+## et ce sont les longueurs d'onde secondaires qui donnent les boucles serrées
+## et les presqu'îles.
+func _lay_river(rng: RandomNumberGenerator) -> PackedVector2Array:
+	var amplitude := rng.randf_range(_cfg.river_meander_amplitude_range.x, _cfg.river_meander_amplitude_range.y)
+	var wavelength := rng.randf_range(_cfg.river_meander_wavelength_range.x, _cfg.river_meander_wavelength_range.y)
+	var p0 := rng.randf() * TAU
+	var p1 := rng.randf() * TAU
+	var p2 := rng.randf() * TAU
+
+	# On parcourt large et on ne garde que ce qui tombe dans la carte : le cours
+	# entre et sort par un bord, il ne commence ni ne finit à l'intérieur.
 	var half := _cfg.half_size()
-	var source := _river_source()
-
-	var path := PackedVector2Array([source])
-	var dir := _massif.axis
-	var max_steps := int(_cfg.size_meters * 3.0 / _cfg.river_step)
-	var pos := source
-
-	for _i in max_steps:
-		var grad := _ops.gradient_at(pos)
-		var downhill := dir
-		if grad.length_squared() > 1e-8:
-			downhill = -grad.normalized()
-		# Le guide vise l'axe de vallée d'autant plus franchement qu'on en est
-		# loin, et pousse toujours vers l'aval. Sa portée est la demi-largeur de
-		# la vallée : au-delà, on la rejoint à 45°.
-		var proj := _massif.project(pos)
-		var along := proj.x
-		var lateral := clampf((_valley_offset + _valley_wobble_at(along) - proj.y) / _valley_half_width, -1.0, 1.0)
-		var guide := (_massif.axis + _massif.side * lateral).normalized()
-		var wanted := downhill.lerp(guide, _cfg.river_valley_pull)
-		dir = (wanted + dir * _RIVER_MOMENTUM).normalized()
-		pos += dir * _cfg.river_step
-		path.append(pos)
-		if absf(pos.x) >= half or absf(pos.y) >= half:
-			break
-
-	return path
+	var reach := half * 1.6
+	var path := PackedVector2Array()
+	var a := -reach
+	while a <= reach:
+		var lateral := _valley_offset + _valley_wobble_at(a)
+		lateral += amplitude * sin(TAU * a / wavelength + p0)
+		lateral += amplitude * 0.45 * sin(TAU * a / (wavelength * 0.43) + p1)
+		lateral += amplitude * 0.22 * sin(TAU * a / (wavelength * 0.19) + p2)
+		path.append(_massif.axis * a + _massif.side * lateral)
+		a += _cfg.river_step
+	return _clipped_to_zone(path, half)
 
 
-## Point où l'axe de vallée entre dans la zone, côté amont. La rivière part du
-## bord de la carte et pas d'un point arbitraire à l'intérieur — sans ça, une
-## orientation en diagonale la faisait démarrer en plein milieu.
-func _river_source() -> Vector2:
-	var half := _cfg.half_size()
-	var start := _massif.side * _valley_offset
-	var upstream := -_massif.axis
-	var distance := INF
-	if absf(upstream.x) > 1e-6:
-		distance = minf(distance, ((half if upstream.x > 0.0 else -half) - start.x) / upstream.x)
-	if absf(upstream.y) > 1e-6:
-		distance = minf(distance, ((half if upstream.y > 0.0 else -half) - start.y) / upstream.y)
-	return start + upstream * (distance * 0.999)
+## Ne garde que la traversée de la zone, plus un point de marge de chaque côté
+## pour que le lit soit creusé jusqu'au bord et non un pas avant.
+func _clipped_to_zone(path: PackedVector2Array, half: float) -> PackedVector2Array:
+	var first := -1
+	var last := -1
+	for i in path.size():
+		if maxf(absf(path[i].x), absf(path[i].y)) <= half:
+			if first < 0:
+				first = i
+			last = i
+	if first < 0:
+		return PackedVector2Array()
+	return path.slice(maxi(first - 1, 0), mini(last + 2, path.size()))
 
 
-## Ligne d'eau le long du tracé : elle suit le terrain mais ne remonte jamais.
+## Largeur du lit le long du cours. Deux ondes de longueurs très différentes :
+## la lente fait les biefs larges et les passages resserrés, la rapide évite que
+## la variation ne se lise comme une régularité.
+func _river_widths(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var phase := rng.randf() * TAU
+	var widths := PackedFloat32Array()
+	widths.resize(count)
+	for i in count:
+		var t := float(i)
+		var wave := 0.5 + 0.35 * sin(t * 0.012 + phase) + 0.15 * sin(t * 0.047 + phase * 2.3)
+		widths[i] = lerpf(_cfg.river_width_range.x, _cfg.river_width_range.y, clampf(wave, 0.0, 1.0))
+	return widths
+
+
+## Profondeur du lit. Corrélée à la largeur dans la nature — un bief large est un
+## bief profond — mais décalée, pour que les deux ne varient pas d'un bloc.
+func _river_depths(count: int, rng: RandomNumberGenerator) -> PackedFloat32Array:
+	var phase := rng.randf() * TAU
+	var depths := PackedFloat32Array()
+	depths.resize(count)
+	for i in count:
+		var wave := 0.5 + 0.5 * sin(float(i) * 0.009 + phase)
+		depths[i] = lerpf(_cfg.river_depth_range.x, _cfg.river_depth_range.y, wave)
+	return depths
+
+
+## Détache un bras secondaire sur une portion du cours : ce qui reste entre les
+## deux bras est une île.
+##
+## Le bras s'écarte en cloche, ce qui lui donne ses deux confluences sans qu'on
+## ait à les dessiner. Il est creusé **moins large et moins profond** que le bras
+## principal : un bras secondaire l'est toujours, et c'est ce qui évite que l'île
+## ne flotte entre deux chenaux jumeaux, ce qu'aucun fleuve ne fait.
+##
+## L'emplacement se tire **dans la portion émergée du cours**. Sans cette
+## contrainte, la moitié aval du tracé est sous le niveau du lac, et une île
+## tirée là est un haut-fond invisible : c'est ce qui donnait l'impression qu'il
+## n'y avait presque jamais d'île.
+func _carve_island(path: PackedVector2Array, water: PackedFloat32Array,
+		widths: PackedFloat32Array, depths: PackedFloat32Array, rng: RandomNumberGenerator) -> void:
+	if rng.randf() > _cfg.river_island_chance:
+		return
+
+	var length := rng.randf_range(_cfg.river_island_length_range.x, _cfg.river_island_length_range.y)
+	var span := maxi(int(length / _cfg.river_step), 4)
+	if path.size() < span + 4:
+		return
+	var start := _island_start(water, span, rng)
+	if start < 0:
+		return
+	var side_sign := 1.0 if rng.randf() < 0.5 else -1.0
+
+	var branch := PackedVector2Array()
+	var branch_water := PackedFloat32Array()
+	var branch_widths := PackedFloat32Array()
+	var branch_depths := PackedFloat32Array()
+	for i in span + 1:
+		var k := start + i
+		var u := float(i) / float(span)
+		var bulge := sin(PI * u) * widths[k] * _cfg.river_island_spread * side_sign
+		# L'écart se prend perpendiculairement au **cours**, pas selon l'axe de
+		# vallée : dans un coude, les deux ne pointent pas au même endroit.
+		var tangent := (path[mini(k + 1, path.size() - 1)] - path[maxi(k - 1, 0)]).normalized()
+		branch.append(path[k] + Vector2(-tangent.y, tangent.x) * bulge)
+		branch_water.append(water[k])
+		branch_widths.append(widths[k] * 0.6)
+		branch_depths.append(depths[k] * 0.55)
+	_ops.carve_channel(branch, branch_water, branch_widths, _cfg.river_bank, branch_depths)
+	river_reaches.append(RiverReach.new(branch, branch_water, branch_widths))
+
+
+## Indice de départ d'une île, tiré parmi les portions entièrement au-dessus du
+## niveau du lac. Retourne -1 s'il n'en existe aucune d'assez longue.
+func _island_start(water: PackedFloat32Array, span: int, rng: RandomNumberGenerator) -> int:
+	var candidates := PackedInt32Array()
+	for start in range(1, water.size() - span - 1):
+		if water[start + span] > water_level + _cfg.river_depth_range.x:
+			candidates.append(start)
+	if candidates.is_empty():
+		return -1
+	return candidates[rng.randi_range(0, candidates.size() - 1)]
+
+
+## Ligne d'eau le long du tracé : elle suit le terrain, **en dessous**, et ne
+## remonte jamais.
+##
+## Deux contraintes, deux rôles. Ne jamais remonter est ce qui fait qu'un relief
+## posé en travers du cours est tranché plutôt que contourné. Passer sous le
+## terrain d'un encaissement est ce qui fait que l'eau reste dans ses berges :
+## posée à l'altitude du sol, la nappe déborde sur tout ce qui est un peu plus
+## bas alentour et inonde le sous-bois.
 func _water_line(path: PackedVector2Array) -> PackedFloat32Array:
 	var water := PackedFloat32Array()
 	water.resize(path.size())
 	var previous := INF
 	for i in path.size():
-		var level := minf(_ops.sample(path[i]), previous - _RIVER_MIN_DROP)
+		var level := minf(_ops.sample(path[i]) - _cfg.river_freeboard, previous - _RIVER_MIN_DROP)
 		water[i] = level
 		previous = level
 	return water

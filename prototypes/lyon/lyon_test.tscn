@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://bbxg01lbwrngy"]
+
+[ext_resource type="Script" uid="uid://bw6sb36ou6eey" path="res://prototypes/lyon/lyon_terrain.gd" id="1_terrain"]
+[ext_resource type="Script" uid="uid://dr2fkk8ysq3d1" path="res://prototypes/lyon/lyon_test.gd" id="2_test"]
+[ext_resource type="Script" uid="uid://bkr0f7c600bx7" path="res://prototypes/lyon/lyon_debug_hud.gd" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://06k6adpsbv7e" path="res://entities/player/player.tscn" id="4_player"]
+[ext_resource type="PackedScene" uid="uid://d1a2pi25ythqw" path="res://world/sky/sky_rig.tscn" id="5_sky"]
+
+[node name="LyonTest" type="Node3D" unique_id=5088151]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -648.09283)
+script = ExtResource("2_test")
+terrain = NodePath("Terrain")
+player = NodePath("")
+
+[node name="Terrain" type="Node3D" parent="." unique_id=691731358]
+script = ExtResource("1_terrain")
+
+[node name="SkyRig" parent="." unique_id=308254660 instance=ExtResource("5_sky")]
+
+[node name="DebugHud" type="CanvasLayer" parent="." unique_id=1782522206]
+script = ExtResource("3_hud")
+terrain = NodePath("../Terrain")
+target = NodePath("")
+
+[node name="Player" parent="." unique_id=135155471 instance=ExtResource("4_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1012.974, 5.8875885, 1419.8757)

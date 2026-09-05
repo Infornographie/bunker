@@ -38,14 +38,6 @@ func sample(point: Vector2) -> float:
 	return _cfg.sample_height(heights, point)
 
 
-## Pente locale, par différences centrées. Sert à descendre un versant.
-func gradient_at(point: Vector2) -> Vector2:
-	var e := _cfg.cell_size
-	var dx := sample(point + Vector2(e, 0.0)) - sample(point - Vector2(e, 0.0))
-	var dz := sample(point + Vector2(0.0, e)) - sample(point - Vector2(0.0, e))
-	return Vector2(dx, dz) / (2.0 * e)
-
-
 ## Aplanit un disque sur la hauteur de son centre. L'aplanissement renonce là où
 ## le terrain s'écarte trop de la cible : sans ça, le disque taillerait une
 ## marche nette dès qu'il mord sur un relief qui le domine.
@@ -69,10 +61,13 @@ func flatten_disc(centre: Vector2, radius: float, falloff: float, max_delta: flo
 ## Creuse un chenal le long d'une polyligne, sous une ligne d'eau donnée point
 ## par point. Le lit descend au niveau demandé, les berges rejoignent le terrain
 ## existant sur `bank` mètres. Le terrain n'est jamais remonté : un chenal creuse.
+##
+## Largeur et profondeur sont données **par point** et interpolées le long de
+## chaque segment. Un fleuve de largeur constante se lit comme un canal : c'est
+## le resserrement dans les coudes et l'évasement dans les courbes qui le font
+## passer pour un cours d'eau.
 func carve_channel(path: PackedVector2Array, water: PackedFloat32Array,
-		width: float, bank: float, depth: float) -> void:
-	var inner := width * 0.5
-	var outer := inner + bank
+		widths: PackedFloat32Array, bank: float, depths: PackedFloat32Array) -> void:
 
 	for i in path.size() - 1:
 		var a := path[i]
@@ -82,6 +77,9 @@ func carve_channel(path: PackedVector2Array, water: PackedFloat32Array,
 		if ab_len_sq < 1e-6:
 			continue
 
+		# L'emprise du segment se prend sur la plus large de ses deux extrémités.
+		var inner := maxf(widths[i], widths[i + 1]) * 0.5
+		var outer := inner + bank
 		var lo := Vector2(minf(a.x, b.x), minf(a.y, b.y)) - Vector2(outer, outer)
 		var hi := Vector2(maxf(a.x, b.x), maxf(a.y, b.y)) + Vector2(outer, outer)
 		var box := _cell_box(lo, hi)
@@ -94,10 +92,11 @@ func carve_channel(path: PackedVector2Array, water: PackedFloat32Array,
 				if dist >= outer:
 					continue
 				var idx := _cfg.height_index(ix, iz)
-				var bed := lerpf(water[i], water[i + 1], s) - depth
+				var lit := lerpf(widths[i], widths[i + 1], s) * 0.5
+				var bed := lerpf(water[i], water[i + 1], s) - lerpf(depths[i], depths[i + 1], s)
 				var carved := bed
-				if dist > inner:
-					var k := smoothstep(0.0, 1.0, (dist - inner) / bank)
+				if dist > lit:
+					var k := smoothstep(0.0, 1.0, clampf((dist - lit) / bank, 0.0, 1.0))
 					carved = lerpf(bed, heights[idx], k)
 				heights[idx] = minf(heights[idx], carved)
 

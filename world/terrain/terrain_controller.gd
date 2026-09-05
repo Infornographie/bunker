@@ -14,6 +14,11 @@ extends Node3D
 const CHUNKS_NODE := "Chunks"
 const CAVE_NODE := "CaveSite"
 const WATER_NODE := "Water"
+const RIVER_NODE := "River"
+## Subdivisions du plan du lac, par côté. Assez pour que la houle du shader se
+## lise sur toute la nappe, pas au point de payer des sommets pour un
+## déplacement qui reste sous les cinq centimètres.
+const LAKE_SUBDIVISIONS := 64
 const FOLIAGE_NODE := "Foliage"
 const PROXIMITY_NODE := "Proximity"
 
@@ -67,10 +72,26 @@ func generate() -> void:
 	water.name = WATER_NODE
 	var surface := PlaneMesh.new()
 	surface.size = Vector2(config.size_meters, config.size_meters) * 1.6
+	# Le shader d'eau fait ses vagues en déplaçant les sommets : un plan à quatre
+	# coins n'a rien à déplacer et reste parfaitement lisse. La subdivision est
+	# ce qui rend l'animation possible, pas un réglage de qualité.
+	surface.subdivide_width = LAKE_SUBDIVISIONS
+	surface.subdivide_depth = LAKE_SUBDIVISIONS
 	water.mesh = surface
 	water.material_override = config.water_material
 	add_child(water)
 	water.position = Vector3(0.0, heightmap.water_level, 0.0)
+
+	# Le fleuve a sa propre surface : la sienne descend d'un bout à l'autre, un
+	# plan à altitude fixe ne peut pas la porter. Elle s'arrête là où le lac
+	# prend le relais.
+	var ribbon := RiverMeshBuilder.build(heightmap.river_reaches, heightmap.water_level,
+		config.water_material, config.river_bank)
+	if ribbon != null:
+		var river := MeshInstance3D.new()
+		river.name = RIVER_NODE
+		river.mesh = ribbon
+		add_child(river)
 
 	# La carte de biome se calcule entre le relief et le semis : elle se déduit
 	# du premier et n'est lue que par le second. Elle lit l'influence du massif
@@ -83,7 +104,7 @@ func generate() -> void:
 	# colorer le sol de ce qui pousse dessus.
 	var scatter := FoliageScatter.new()
 	var foliage_started := Time.get_ticks_msec()
-	var foliage := scatter.scatter(config, heights, heightmap.clearings, heightmap.river_path,
+	var foliage := scatter.scatter(config, heights, heightmap.clearings, heightmap.river_reaches,
 			heightmap.water_level, biomes)
 	var foliage_elapsed := Time.get_ticks_msec() - foliage_started
 	foliage.name = FOLIAGE_NODE
@@ -139,7 +160,7 @@ func generate() -> void:
 
 func clear() -> void:
 	heights = PackedFloat32Array()
-	for node_name in [CHUNKS_NODE, WATER_NODE, FOLIAGE_NODE, CAVE_NODE]:
+	for node_name in [CHUNKS_NODE, WATER_NODE, RIVER_NODE, FOLIAGE_NODE, CAVE_NODE]:
 		var existing := get_node_or_null(NodePath(node_name))
 		if existing != null:
 			existing.free()
