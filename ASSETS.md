@@ -102,7 +102,7 @@ rochers**, pas au sol.
 |---|---|---|---|
 | `Mushroom_Common` | blanc cassé | champignon de sol | patch **mushroom_spot** |
 | `Mushroom_RedCap` | tige blanche, chapeau orangé | petit champignon de sol | patch **mushroom_spot** |
-| `Mushroom_Oyster` | blanc violacé, tige et chapeau | **champignon d'arbre** | réservé à la strate épiphyte (Jalon 4, passe B2) |
+| `Mushroom_Oyster` | blanc violacé, tige et chapeau | **champignon d'arbre** | réservé à une strate épiphyte, non planifiée |
 | `Mushroom_Laetiporus` | jaune/marron, plats | **champignon d'arbre** | réservé à la strate épiphyte |
 
 ### Minéral

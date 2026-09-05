@@ -26,7 +26,8 @@ Extension physique de l'ordinateur central du bunker, voué à s'éteindre faute
 - **Pas de gros inventaire** — le transport de ressources/outils est un enjeu en soi, moteur de coopération.
 - **Dépendance réciproque et évolutive** entre le robot et les pawns (le sauveur devient sauvé).
 - **Systèmes hérités de Degel** (fatigue, relations, events narratifs) recâblés sur une horloge temps réel plutôt que sur des tours.
-- **Forêt générée** autour d'un bunker fixe — sinon pas d'intérêt technique/ludique au projet.
+- **Colonie nombreuse** — la simulation vise 40 à 50 pawns simultanés. C'est le pilier technique du projet, et il prime sur le décor : tout ce qui coûte de la frame sans faire vivre un pawn est négociable.
+- **Monde resserré autour du bunker** — une forêt générée, mais petite et sobre. La contrainte d'espace ne vient pas des mètres, elle vient de la liaison au bunker.
 - **Low poly / cosy** — lisibilité avant tout, cohérence visuelle assurée par un unique écosystème d'assets (Quaternius).
 ## Boucle de gameplay (MVP)
  
@@ -56,7 +57,7 @@ Un pawn en route vers sa tâche assignée peut croiser une opportunité (filon, 
 - **Signalement** : à défaut de s'arrêter, le pawn peut ajouter une tâche au tableau ou révéler un point d'intérêt sur la carte.
 #### Autonomie politique croissante
  
-Les pawns gagnent en poids décisionnel collectif à mesure que la colonie mûrit (écho à la bascule démocratique du Jalon 12 — modalités précises dans ROADMAP §Décisions à trancher).
+Les pawns gagnent en poids décisionnel collectif à mesure que la colonie mûrit (écho à la bascule démocratique du Jalon 11 — modalités précises dans ROADMAP §Décisions à trancher).
  
 ### Fatigue
  
@@ -106,17 +107,27 @@ Ramassage d'un petit objet : va automatiquement dans le sac à dos, jamais dans 
  
 - **Pool robot local** : énergie embarquée, rechargeable au bunker central, gère l'autonomie court-terme (déplacements/actions).
 - **Pool bunker global** : la vraie fatalité — descend en continu, non rechargeable (ou très difficilement), horloge de fin de partie.
-#### Rayon d'action = énergie, pas géographie
- 
-Le périmètre d'action du robot n'est pas une limite spatiale fixe mais fonction de son énergie embarquée : passé un certain seuil, plus assez pour revenir → risque réel. Lisible en jeu comme une jauge, pas un mur invisible.
+#### Liaison au bunker
+
+Le robot est l'extension physique de l'ordinateur central : il n'agit qu'en restant **connecté** à lui. Le périmètre n'est donc ni une limite spatiale fixe ni une conséquence de l'énergie embarquée (celle-ci n'a aucun rapport avec la distance) — c'est une **portée de signal**, que le relief module. La plaine porte loin, une crête coupe derrière elle.
+
+Ce qui se passe quand on s'éloigne, dans l'ordre :
+
+1. L'écran commence à glitcher.
+2. Le glitch s'intensifie avec la distance, un avertissement s'affiche.
+3. Au-delà de la limite, le robot **tombe**.
+4. S'il n'y a aucun pawn éveillé, c'est un game over.
+5. Sinon, un pawn vient le ramener au bunker — conséquences supplémentaires à définir.
+
+Trois ressources coexistent et **aucune ne se déduit d'une autre** : l'énergie du bunker (horloge de fin de partie, et raison du réveil), l'énergie du robot (autonomie d'action, à recharger), la liaison (géographie). Le mur invisible est remplacé par une dégradation qu'on ressent avant de la heurter.
  
 #### Sauvetage dégressif
  
-Si le robot se retrouve à court loin du bunker : premier événement de sauvetage possible (par un pawn), avec chances amoindries par la distance et risques croissants en cas de récidive. Peut mener à un **game over anticipé** (perdu, non retrouvé) — indépendant du shutdown global. Règles précises à caler par expérimentation.
+Le sauvetage n'est pas un système à part : c'est une tâche postée au tableau, prioritaire et non refusable, dont la cible est la position du robot tombé. Les chances s'amenuisent avec la distance et la récidive. Peut mener à un **game over anticipé** (perdu, non retrouvé) — indépendant du shutdown global. Règles précises à caler par expérimentation.
  
 #### Expéditions hors périmètre
  
-Les pawns peuvent partir en expédition au-delà du rayon d'action du robot (celui-ci ne peut pas les rejoindre). Bon test de l'autonomie de la colonie : pendant l'expédition, le contrôle est totalement délégué. Risque (pas de secours possible) contre bénéfice (ressources hors zone habituelle).
+Les pawns peuvent partir en expédition au-delà de la portée de liaison du robot (celui-ci ne peut pas les rejoindre). Bon test de l'autonomie de la colonie : pendant l'expédition, le contrôle est totalement délégué. Risque (pas de secours possible) contre bénéfice (ressources hors zone habituelle).
  
 #### Atelier robotique — dépendance inversée
  
