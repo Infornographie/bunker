@@ -32,10 +32,15 @@ Dossier : `assets/props/`
 
 Feu de camp. Même famille visuelle low poly stylisée que les packs Quaternius, retenu faute d'équivalent chez Quaternius.
 
-### Outils et personnages
-Dossier : `assets/characters/`
+### Low Poly Primitive Tools — lowpolyassets — **CC0**
+Dossier : `assets/characters/tools/`
+[lowpolyassets.itch.io/low-poly-primitive-tools](https://lowpolyassets.itch.io/low-poly-primitive-tools)
 
-Contient notamment `tools/wooden_axe_grip.tscn`, wrapper Godot maison autour du FBX de hache (rattrapage de pivot — protocole dans STATE §Apprentissages). Le wrapper est du projet ; le modèle vient du pack listé ci-dessus dont il est issu.
+Onze outils primitifs en bois : hache, pioche, pelle, marteau, couteau, massue, lance, bouclier, arc, flèche, torche. Le pack en compte vingt — **la moitié en pierre n'est pas importée**, elle est la piste retenue pour le tier pierre.
+
+`tools/wooden_axe_grip.tscn` est un wrapper Godot maison autour du FBX de hache (rattrapage de pivot — protocole dans STATE §Apprentissages) : le wrapper est du projet, le modèle vient de ce pack.
+
+> Provenance corrigée le 07/09 : ces outils étaient attribués à KayKit, à tort. Le dossier s'appelle `characters/` pour des raisons historiques et ne contient aujourd'hui que `tools/` — les personnages Quaternius ne sont pas encore importés.
 ### Textures de sol stylisées — freestylized.com — **CC0 personnalisé**
 Dossier : `assets/ground/textures/`
 [freestylized.com](https://freestylized.com)

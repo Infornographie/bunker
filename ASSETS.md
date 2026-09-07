@@ -180,14 +180,25 @@ Trois modèles, deux intégrés :
 | `Bonfire.fbx` | intégré — `campfire.tscn` |
 | `Bonfire_Fire.fbx` | **à supprimer** — variante avec un feu en dur, jamais utilisée (le feu vient de `flame_light_flicker.gd`) |
 
-## Characters — outils (KayKit, assets/characters/tools/)
+## Outils — Low Poly Primitive Tools (lowpolyassets, CC0, assets/characters/tools/)
 
-Dix outils, un seul câblé :
+[lowpolyassets.itch.io/low-poly-primitive-tools](https://lowpolyassets.itch.io/low-poly-primitive-tools)
+— 20 modèles, FBX, nom-ton-prix, **CC0**. *(Attribué à KayKit jusqu'au 07/09,
+à tort — corrigé ici et dans ATTRIBUTION.)*
+
+**Onze modèles importés, tous en bois, un seul câblé :**
 
 | Modèle | Emploi |
 |---|---|
 | `Wooden Axe.fbx` | intégré — seul outil avec un grip (`wooden_axe_grip.tscn`) |
-| `Bow`, `Torch`, `Wooden Arrow`, `Wooden Club`, `Wooden Hammer`, `Wooden Knife`, `Wooden Pickaxe`, `Wooden Shield`, `Wooden Shovel`, `Wooden Spear` | libres — dette Jalon 3 (grips + hand_position manquants), repoussé non bloquant |
+| `Wooden Pickaxe.fbx` | **libre, et c'est la pioche du tier bois** — l'outil `MINE` n'attend qu'un `ToolDef` et un grip |
+| `Bow`, `Torch`, `Wooden Arrow`, `Wooden Club`, `Wooden Hammer`, `Wooden Knife`, `Wooden Shield`, `Wooden Shovel`, `Wooden Spear` | libres — dette Jalon 3 (grips + hand_position manquants), repoussé non bloquant |
+
+**Les neuf modèles restants du pack sont les variantes en pierre**, non
+importées. C'est la piste directe pour le **tier pierre** des outils : même
+auteur, même style, même échelle, donc aucun raccord à faire — et le tier
+devient une différence lisible à l'œil plutôt qu'un chiffre dans un `.tres`.
+À télécharger avec le pack complet le jour où le tier existe.
 
 ## Resource Bits — KayKit (pack source, non importé)
 
@@ -551,9 +562,15 @@ Infos tirées des pages produit — à vérifier au moment de l'achat/téléchar
   supposé ici — crédit facultatif, mais redistribution des fichiers bruts
   interdite (même limite que les textures freestylized).
 - **[Free Stylized Low Poly Forest Nature Pack](https://amipolygon.itch.io/free-stylized-low-poly-forest-nature-pack)**
-  — page non récupérée (erreur 429, limite de requêtes du site) — à
-  rouvrir plus tard pour vérifier le contenu. L'utilisateur y a repéré des
-  troncs, dans la continuité des autres pistes troncs-couchés ci-dessus.
+  — 38 modèles : 6 arbres, 3 pins, 3 arbres morts, **4 troncs**, **4 bûches**,
+  **3 bâtons**, 11 herbes, 4 buissons. Gratuit (nom-ton-prix), **FBX et
+  GLB**, usage commercial autorisé, crédit facultatif, revente du pack brut
+  interdite. **Le meilleur candidat de la liste pour le manque « branches /
+  petit bois »**, et il répond du même coup à la ligne « troncs tombés et
+  souches » restée ouverte au semis : trois bâtons couvrent la branche
+  ramassable, quatre bûches et quatre troncs couvrent le tronc couché. GLB
+  natif, donc pas de conversion. Le style stylisé est à comparer aux
+  Quaternius avant intégration — c'est le seul vrai risque.
 - **[Foliage Asset Pack](https://melissaz.itch.io/foliage-asset-pack)** —
   11 modèles thème zone humide (dont "une petite loutre"), stylisé, pensé
   Unity. Licence **CC BY-NC-ND 4.0 — pas d'usage commercial ni de dérivé**,
@@ -585,10 +602,98 @@ Infos tirées des pages produit — à vérifier au moment de l'achat/téléchar
   la construction — pertinence à évaluer ensemble le jour où le terrain a
   besoin de plus de variété que les matériaux actuels.
 
+### Repérages du 07/09 — bois mort, construction et bâtiments
+
+Contexte : recherche d'un asset de **branche** (aucun dans les packs
+possédés), et de pistes pour les bâtiments constructibles.
+
+- **[Low Poly Nature Pack](https://svartskogen.itch.io/low-poly-nature-pack)**
+  — Lite 31 préfabs (nom-ton-prix), Pro 134 (dès 9,99 $). Arbres, plantes,
+  rochers, champignons, tuiles de terrain. **CC0, usage commercial libre.**
+  Livré en `.unitypackage`, projet Unreal, et un zip FBX pour les autres
+  moteurs — c'est ce zip qui nous concerne. La description ne détaille pas
+  son contenu : le tronc couché et la branche qu'y voit l'utilisateur sont
+  **repérés sur les captures, pas listés**. À vérifier au téléchargement.
+- **[Free Forest Nature Pack](https://hooray4brains.itch.io/free-forest-nature-pack)**
+  — 60 modèles : 28 arbres (chênes, pins, épicéas, arbres de parc), 13
+  rochers, 7 buissons, champignons et herbes. **Gratuit, `.glb` uniquement**
+  (format natif Godot, aucun import à bricoler), usage commercial autorisé,
+  attribution facultative, redistribution des fichiers bruts interdite.
+  Même réserve : le tronc couché et la souche sont **vus à l'image**, la
+  description ne les liste pas.
+- **[Forest Ground Essentials](https://lowendplay.itch.io/forest-ground-essentials)**
+  — 46 éléments dont **8 branches d'arbres morts**, 13 champignons, 12
+  touffes d'herbe, 7 rochers, 5 buissons. FBX, glTF et OBJ. **Payant, 6 €
+  minimum.** Commercial autorisé, revente interdite. C'est le seul pack de
+  la liste où les branches sont **explicitement décrites** plutôt que
+  devinées — mais c'est aussi le seul payant, et amipolygon couvre le même
+  besoin gratuitement. À garder en recours si le style d'amipolygon jure.
+- **[Low Poly Construction Pack](https://lowpolyassets.itch.io/low-poly-construction-pack)**
+  — 80 modèles, ~45 000 tris : sécurité (casque, gilet), outils (pelles,
+  pioches, marteaux), matériaux (briques, ciment, acier), équipements
+  (bétonnière, brouette, grue), pièces de bâtiment modulaires, clôtures,
+  échafaudages, barrières. FBX. **Gratuit (nom-ton-prix), CC0.**
+  Deux emplois immédiats : les **échafaudages et barrières** habillent un
+  chantier en cours (`ConstructionSite`) sans rien modéliser, et la
+  **brouette** est un candidat évident au transport de gros objets par les
+  pawns. Réserve sur le reste : ciment, acier et grue sont de l'industrie
+  lourde, à l'opposé du palier low-tech du GDD.
+- **[Low Poly Bamboo Modular](https://lowpolyassets.itch.io/low-poly-bamboo-modular)**
+  — 32 modèles, FBX, **8 $ minimum**, CC0. Le bambou est une bonne piste
+  solarpunk : matériau de construction renouvelable et à croissance rapide,
+  cohérent avec la terre crue et l'hempcrete du Jalon 10. Et l'idée du
+  bambou qui reprend la ville abandonnée est un motif de reconquête
+  végétale directement lisible. Nuance à trancher : ce serait une **essence
+  de plus** dans un écosystème dont la cohérence visuelle est le pari du
+  projet — le bambou ne pousse pas dans la forêt de Compiègne.
+- **[3D Low Poly Outdoors Fall](https://richie-gutz.itch.io/3d-low-poly-outdoors-fall)**
+  — forêt d'automne, **un seul FBX de 4 Mo** (`Outdoor_Fall.fbx`), gratuit
+  (nom-ton-prix), commercial autorisé, crédit apprécié. La page ne donne ni
+  inventaire ni compte de modèles. Repéré pour sa **maison en rondins** —
+  bonne référence de construction low-tech joueur. ⚠️ Un fichier unique
+  veut dire un import à découper : à vérifier avant d'y compter.
+- **[Free 3D Modular Low Poly Assets for Prototyping](https://rgsdev.itch.io/free-3d-modular-low-poly-assets-for-prototyping-by-rgsdev)**
+  — 75 pièces modulaires plus un personnage riggé (sans animations) et des
+  scènes d'exemple. FBX, **gratuit, CC0, crédit non requis.** Destiné au
+  blockout de bâtiments, ce qui est exactement son intérêt ici : ça ne se
+  garde pas, ça sert à valider un volume. ⚠️ Des utilisateurs signalent des
+  **pivots décentrés**, et l'auteur conseille de convertir en glTF pour
+  Godot 4 — deux frictions connues d'avance.
+- **[Modular Village Pack](https://fertile-soil-productions.itch.io/modular-village-pack)**
+  — 155 modèles, **pièces individuelles** (murs, toits, portes, fenêtres,
+  décors, plus chariots et bateaux), assemblables en village médiéval.
+  **OBJ + MTL, couleurs en matériaux plats, sans texture image.** Gratuit
+  (nom-ton-prix), **CC0**. C'est le mieux placé des trois packs de
+  bâtiments : vraiment modulaire, vraiment libre, et l'absence de texture
+  est ici un **avantage** — recolorer des matériaux plats pour les accorder
+  aux Quaternius est autrement plus simple que de repeindre des atlas.
+  Recoupe Medieval Village MegaKit (déjà catalogué, non importé) : à
+  comparer avant d'en importer un des deux, pas les deux.
+- **[Modular Medieval Asset Pack](https://dybo.itch.io/modularmedievalassetpack)**
+  — ~55 modèles : 16 murs bois, 10 murs pierre, 8 sols, 7 supports, 4
+  toitures, avec préfabs. Nom-ton-prix, attribution appréciée, **revente en
+  NFT interdite** (pas d'autre restriction relevée). ⚠️ **Livré uniquement
+  en `.unitypackage`** (Standard et URP) : il faut ouvrir Unity pour en
+  extraire quoi que ce soit. À licence et contenu comparables, le Modular
+  Village Pack ci-dessus est meilleur — moins cher en friction et plus
+  fourni. À écarter sauf si son style tranche nettement.
+
 ## Manques identifiés (relecture du GDD)
 
 Pas des packs à trouver précisément, plutôt des trous qui ressortent en
 relisant le GDD en entier — à garder en tête plutôt qu'à traiter maintenant.
+
+- **Branches et petit bois au sol.** Aucun des packs possédés n'en a :
+  Quaternius livre des arbres entiers et des `DeadTree`, Resource Bits deux
+  rondins (`Wood_Log_A`, `Wood_Log_B`). Or la branche est la ressource de
+  départ du tier bois — ramassable sans outil, et butin secondaire de
+  l'abattage. Piste retenue : les **3 bâtons d'amipolygon** (gratuit, GLB,
+  voir Pistes externes). Dépannage sans rien télécharger : un `Wood_Log_A`
+  réduit à ~40 % fait une brindille crédible et ne coûte qu'un `.tres`.
+- **Troncs couchés et souches.** Même angle mort, et il bloque une ligne du
+  semis restée ouverte : `FoliageDef` ne sait pas poser un objet couché
+  (rotation autour de X/Z). L'asset et la fonctionnalité manquent tous les
+  deux — inutile d'écrire la seconde avant d'avoir le premier.
 
 - **Faune locale, vivante et animée.** Le GDD mentionne une "lignée
   animale" comme motif d'expédition et une "faune dangereuse" au Jalon 12,

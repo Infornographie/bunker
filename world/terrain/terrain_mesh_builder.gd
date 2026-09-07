@@ -18,6 +18,12 @@ extends RefCounted
 ## sol nu. Le mesh se construit donc **après** le semis : le sol se colore de ce
 ## qui pousse dessus. Les biomes viendront s'ajouter dans les autres canaux.
 
+const LAYER_DEFAULT := 1 << 0
+## Couche « Ground » du projet. C'est elle que `BuildModeController.ground_mask`
+## interroge — un chunk qui ne la porte pas est invisible au mode construction.
+const LAYER_GROUND := 1 << 1
+
+
 ## Construit un chunk, ou null si le découpage ne laisse rien à construire à
 ## ces coordonnées (dernier chunk d'une grille non multiple de chunk_cells).
 static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array,
@@ -84,6 +90,11 @@ static func build_chunk(cfg: TerrainGenConfig, heights: PackedFloat32Array,
 	var body := StaticBody3D.new()
 	body.name = "chunk_%d_%d" % [cx, cz]
 	body.position = Vector3(origin.x, 0.0, origin.y)
+	# Défaut + « Ground » (couche 2). La seconde n'est pas décorative : c'est
+	# elle que `BuildModeController.ground_mask` interroge pour savoir où poser
+	# un blueprint. Un chunk laissé sur la seule couche par défaut porte le
+	# joueur mais reste invisible au mode construction, sans le moindre message.
+	body.collision_layer = LAYER_DEFAULT | LAYER_GROUND
 
 	var visual := MeshInstance3D.new()
 	visual.name = "Mesh"
