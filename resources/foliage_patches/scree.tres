@@ -5,7 +5,7 @@
 [ext_resource type="Resource" uid="uid://diy354ufg6371" path="res://resources/foliage/rock_medium_2.tres" id="10_rock_medium_2"]
 [ext_resource type="Resource" uid="uid://c2o4e27chdcjc" path="res://resources/foliage/rock_medium_3.tres" id="11_rock_medium_3"]
 [ext_resource type="Resource" uid="uid://bdabhyy7njvjh" path="res://resources/foliage/rock_medium_4.tres" id="12_rock_medium_4"]
-[ext_resource type="Resource" path="res://resources/foliage/grass_wispy_rock.tres" id="13_grass_wispy_rock"]
+[ext_resource type="Resource" uid="uid://dewxjwm0u7yyy" path="res://resources/foliage/grass_wispy_rock.tres" id="13_grass_wispy_rock"]
 [ext_resource type="Script" uid="uid://bk7tamevhctnm" path="res://resources/foliage_weight.gd" id="w_script"]
 
 [sub_resource type="Resource" id="FoliageWeight_rock_medium_1"]

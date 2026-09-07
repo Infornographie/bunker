@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://2noe7867ssku"]
+
+[ext_resource type="Script" uid="uid://b03bcm36ffjoe" path="res://world/terrain/terrain_controller.gd" id="1_controller"]
+[ext_resource type="Resource" uid="uid://dudcemthchqc4" path="res://resources/terrain/default_terrain.tres" id="2_config"]
+[ext_resource type="PackedScene" uid="uid://06k6adpsbv7e" path="res://entities/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://d1a2pi25ythqw" path="res://world/sky/sky_rig.tscn" id="4_sky"]
+[ext_resource type="PackedScene" path="res://world/sky/sky_debug_panel.tscn" id="5_sky_debug"]
+[ext_resource type="PackedScene" uid="uid://bxks4paby6ggl" path="res://entities/interactable/forest/oak_choppable.tscn" id="6_choppable"]
+[ext_resource type="PackedScene" uid="uid://ddwvl4p2drvne" path="res://entities/interactable/backpack_pickup.tscn" id="7_backpack"]
+
+[node name="BlockoutTest" type="Node3D" unique_id=912293018 node_paths=PackedStringArray("sun")]
+script = ExtResource("1_controller")
+config = ExtResource("2_config")
+sun = NodePath("SkyRig/Sun")
+
+[node name="SkyRig" parent="." unique_id=1271209145 node_paths=PackedStringArray("sun", "world_environment") instance=ExtResource("4_sky")]
+sun = NodePath("Sun")
+world_environment = NodePath("WorldEnvironment")
+
+[node name="SkyDebugPanel" parent="." unique_id=1767018301 node_paths=PackedStringArray("sky_controller") instance=ExtResource("5_sky_debug")]
+sky_controller = NodePath("../SkyRig")
+
+[node name="Player" parent="." unique_id=537940431 instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.801096, 3, -18.688911)
+
+[node name="Props" type="Node3D" parent="." unique_id=1876775789]
+
+[node name="OakChoppable" parent="Props" unique_id=2139812555 instance=ExtResource("6_choppable")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 1, 6)
+
+[node name="BackpackPickup" parent="Props" unique_id=842390497 instance=ExtResource("7_backpack")]
+transform = Transform3D(0.124490514, -0.11908119, 0.10159613, -0.013411716, 0.12121734, 0.15851332, -0.15595585, -0.10547995, 0.06746663, -32.41721, 4.117654, -21.076534)
+
+[editable path="SkyRig"]

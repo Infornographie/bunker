@@ -543,14 +543,13 @@ Infos tirées des pages produit — à vérifier au moment de l'achat/téléchar
   Medieval Village MegaKit (même usage prévu : référence de construction
   low-tech) — l'intérêt serait une esthétique différente (slave plutôt que
   fantasy-générique) à comparer visuellement, pas un contenu inédit.
-- **[Stylized Water Shader](https://store.godotengine.org/asset/emace-art/stylized-water-shader/)**
-  — shader d'eau toon natif Godot 4.7+ (Forward+), bandes de couleur par
-  profondeur, écume de berge automatique, caustiques, vagues, 27
-  paramètres, 3 matériaux prédéfinis. CC BY 4.0 (attribution requise).
-  **À trouver** direct, comme Godot Skies : aucun shader d'eau catalogué
-  jusqu'ici alors que la rivière est déjà nommée à plusieurs endroits (GDD :
-  rouissage des fibres, pêche évoquée sous RPG Tools) — bon candidat
-  concret plutôt qu'à construire à la main.
+- ~~**[Stylized Water Shader](https://store.godotengine.org/asset/emace-art/stylized-water-shader/)**~~
+  — **intégré au projet** (`assets/water/`, voir ATTRIBUTION). Shader d'eau
+  toon Godot 4.7+ (Forward+), bandes de couleur par profondeur, écume de
+  berge, caustiques, 3 matériaux prédéfinis dont `EA_Water_Lagoon` employé
+  sur le plan d'eau. Correction : la licence n'est **pas** CC BY 4.0 comme
+  supposé ici — crédit facultatif, mais redistribution des fichiers bruts
+  interdite (même limite que les textures freestylized).
 - **[Free Stylized Low Poly Forest Nature Pack](https://amipolygon.itch.io/free-stylized-low-poly-forest-nature-pack)**
   — page non récupérée (erreur 429, limite de requêtes du site) — à
   rouvrir plus tard pour vérifier le contenu. L'utilisateur y a repéré des

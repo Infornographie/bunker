@@ -86,6 +86,25 @@ de près. `sand_01` et `sand_03` ont été supprimés au profit de `sand_04`.
 
 ## Shaders
  
+### Stylized Water Shader — Maciej « EmacEArt » — **licence propre à l'auteur**
+Dossier : `assets/water/`
+[emaceart.itch.io](https://emaceart.itch.io)
+
+Shader d'eau toon (`EA_CoolWater.gdshader`), ses deux textures et trois
+matériaux prédéfinis. Le projet emploie `EA_Water_Lagoon` sur le plan d'eau du
+terrain ; `EA_Water_DeepBlue` et `EA_Water_Tropical` sont conservés comme
+variantes de climat, pas encore employées.
+
+**Licence, telle que livrée avec le pack :**
+
+> Free for personal and commercial use, but resale or redistribution of the
+> assets as standalone files or asset packs is prohibited. No credit is
+> required, though it is always welcome.
+
+> Même limite que les textures de sol : l'usage dans le jeu est libre, le
+> crédit facultatif (fait ici quand même), et c'est la **redistribution des
+> fichiers bruts** qui est interdite — prudence si le dépôt devient public.
+
 ### Godot Skies (version complète) — binbun3d — **CC0**
 Dossier : `assets/sky/`
 [binbun3d.itch.io/godot-skies](https://binbun3d.itch.io/godot-skies)

@@ -102,6 +102,28 @@ func carve_channel(path: PackedVector2Array, water: PackedFloat32Array,
 				heights[idx] = minf(heights[idx], carved)
 
 
+## Relève un disque jusqu'à une altitude cible, sans jamais descendre le terrain.
+##
+## C'est le symétrique exact de `carve_channel()`, qui ne fait que creuser. Les
+## deux ne se remplacent pas : un chenal doit pouvoir passer sous un relief sans
+## le raboter, et un haut-fond doit pouvoir remonter un lit sans remonter ses
+## berges. D'où le `maxf` — il rend l'opérateur indifférent à ce qu'il rencontre
+## en dehors de ce qu'il vise.
+func lift_disc(centre: Vector2, radius: float, falloff: float, target: float) -> void:
+	var outer := radius + falloff
+	var box := _cell_box(centre - Vector2(outer, outer), centre + Vector2(outer, outer))
+
+	for iz in range(box.y, box.w + 1):
+		for ix in range(box.x, box.z + 1):
+			var dist := _cfg.world_pos(ix, iz).distance_to(centre)
+			if dist >= outer:
+				continue
+			var idx := _cfg.height_index(ix, iz)
+			var h := heights[idx]
+			var w := 1.0 - smoothstep(radius, outer, dist)
+			heights[idx] = maxf(h, lerpf(h, target, w))
+
+
 ## Indices de grille couvrant une emprise monde, bornés à la carte, en
 ## (ix0, iz0, ix1, iz1). Les deux bornes s'arrondissent vers l'extérieur : un
 ## `floor` d'un côté et un `ceil` de l'autre perdraient la cellule de frontière.

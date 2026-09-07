@@ -120,20 +120,19 @@ res://
 	│   ├── sky_debug_panel.gd / .tscn  — CanvasLayer de debug (F3). UI construite en code, textes hors CSV : deux exceptions assumées et écrites en tête du fichier
 	│   └── (le shader du ciel vit dans assets/sky/, c'est un asset tiers)
 	├── terrain/
-	│   ├── heightmap_generator.gd      — (@tool) RefCounted : compose massif → relief → eau → clairières → rivière. Publie heights / massif_influence / cave_position / cave_forward / water_level / clearings / river_path
-	│   ├── massif_shape.gd             — (@tool) RefCounted : un massif. draw(cfg, rng, wobble, profile) le tire ; local_of(point) donne le repère (along, side), sample(along, side) → (hauteur, masque de falaise, influence), wobble_at, amplitude_at. La vallée n'est PAS ici
-	│   ├── heightmap_ops.gd            — (@tool) RefCounted : possède `heights` et le déforme. sample(point), gradient_at(point), flatten_disc(...), carve_channel(...). Le tableau se lit de l'extérieur, jamais ne s'y écrit
-	│   ├── heightmap_signature.gd      — (@tool) Node de test : empreinte SHA-256 de tout ce que le générateur publie, sur N graines. Boutons Écrire la référence / Comparer. Sert aux remaniements à résultat constant, pas à valider une carte. Référence gitignorée
+	│   ├── blockout_heightmap.gd       — (@tool) RefCounted : carte de travail déclarée. Plaine + colline → clairières aplanies → rivière creusée → gué relevé. Publie heights / water_level / clearings / river_path / massif_influence / cave_position / cave_forward — le contrat que toute fabrique de carte doit tenir
+	│   ├── heightmap_ops.gd            — (@tool) RefCounted : possède `heights` et le déforme. sample(point), gradient_at(point), flatten_disc(...), carve_channel(...) qui ne fait que creuser, lift_disc(...) qui ne fait que remonter. Le tableau se lit de l'extérieur, jamais ne s'y écrit
 	│   ├── biome_map.gd             — (@tool) RefCounted : generate(cfg, influence) → weights, un PackedFloat32Array normalisé par biome
 	│   ├── terrain_mesh_builder.gd     — (@tool) RefCounted statique : build_chunk(cfg, heights, occupancy, cx, cz, material) → StaticBody3D (mesh + collision trimesh). Le matériau lui est **donné**, il ne le lit plus dans la config
 	│   ├── foliage_scatter.gd          — (@tool) RefCounted : scatter() sème les strates permanentes, stream_tile(tx, tz) les strates streamées ; expose placed_count, placed_per_layer, placed_per_biome, occupancy, chunk_nodes
 	│   ├── scatter_occupancy.gd        — (@tool) RefCounted : is_blocked(point, radius), cover_at(point), mark(point, base_radius, cover_radius, cover_amount)
 	│   ├── foliage_proximity.gd        — (@tool) Node : setup(scatter, cfg, space, sun) ; coupe cast_shadow par chunk et sème/libère les tuiles streamées sous budget de temps (update_interval, stream_budget_ms)
 	│   ├── terrain_controller.gd       — (@tool) Node3D : orchestrateur, boutons Régénérer/Effacer, crée Chunks / Water / Foliage (+ Proximity) / CaveSite, publie heights ; expose config et sun
+	│   ├── blockout_test.tscn          — **scène principale**. TerrainController (à l'identité, pas de rotation) + SkyRig + panneau de ciel + joueur + quelques props de test
 	│   └── terrain.gdshader            — sol habillé par cinq matériaux texturés (herbe, litière, caillouteux, falaise, sable), choisis par couvert / altitude / pente / proximité de l'eau ; mélange par carte de hauteur, triplanaire sur la seule falaise, échelle par matériau
-	└── forest/
-		├── forest_test.tscn            — scène de test historique (sol plat) — seule scène où les mécaniques de jeu sont montées
-		└── forest_scatter.gd           — scatter du Jalon 1, périmé, supprimé avec forest_test.tscn
+	└── forest/  (en sursis)
+		├── forest_test.tscn            — scène de test historique (sol plat) — seule scène où le bunker monté à la main et les mécaniques de jeu sont testables. À supprimer une fois son mobilier reporté dans blockout_test.tscn
+		└── forest_scatter.gd           — scatter du Jalon 1, périmé, part avec forest_test.tscn
 ```
 ## Dépendances transversales clés
  
@@ -151,24 +150,24 @@ res://
 - `fog_distance_scale` et `ambient_scale` sur le contrôleur sont un **instrument de mesure**, pas un réglage : le panneau de debug s'en sert pour chercher une valeur en direct, qu'on recopie ensuite dans la courbe du profil avant de remettre le multiplicateur à 1.
 - `SkyDebugPanel` expose `is_active()` et se déclare dans `UIPanelController.exclusive_modes` comme les autres modes ; il interroge en retour `can_enter_exclusive_mode()` en duck typing, et fonctionne sans si le champ est vide.
 ### Flux de génération du terrain
-- Le matériau du sol est **dupliqué par génération** (`TerrainController._ground_material()`) pour y écrire `water_level`, tiré à la graine, sans modifier la ressource de config. Un exemplaire pour toute la carte, passé à chaque chunk.
-- Sens de la dépendance : `TerrainController` (seul nœud de la scène) appelle `HeightmapGenerator.generate(config)`, puis `BiomeMap.generate(config, massif_influence)`, puis `FoliageScatter.scatter(...)`, puis `TerrainMeshBuilder.build_chunk(...)` par chunk. Les trois sont des `RefCounted` sans état persistant et ne connaissent ni la scène ni le contrôleur.
-- **`TerrainGenConfig` est la source unique de la convention de grille** : `height_index()`, `world_pos()` et `sample_grid()` ne sont réimplémentés nulle part. `sample_height()` est un cas particulier de `sample_grid()` — une heightmap est une grandeur par sommet comme une autre, et c'est ce qui permet de lire les poids de biome au point sans écrire une seconde interpolation. Générateur et scatter les appellent, y compris dans leurs boucles chaudes.
-- Ordre dans `HeightmapGenerator.generate()`, et il compte : tirage du massif → relief → niveau de l'eau → clairières → rivière. La rivière se trace sur un relief complet ; la vallée est creusée **avant** parce qu'elle est ce qui empêche la descente de gradient de s'échouer.
-- **Tout le relief se calcule dans le repère du massif** (`along` le long de l'axe, `side` en travers), porté par `MassifShape`. C'est ce qui permet de tirer l'orientation au hasard : vallée, pente d'écoulement et rivière s'alignent dessus sans rien savoir de l'angle.
-- **`MassifShape` est ce qui est multipliable ; la vallée ne l'est pas.** Elle s'aligne sur l'axe du massif mais reste dans le générateur : la carte n'a qu'une vallée et qu'un sens d'écoulement, et c'est d'elle que dépendent le niveau de l'eau et la topologie de la rivière. La forme ne tire pas non plus sa propre graine — le `rng` lui est fourni, le générateur reste seul maître de la chaîne de hasard.
+- Sens de la dépendance : `TerrainController` (seul nœud de la scène) appelle `BlockoutHeightmap.generate(config)`, puis `BiomeMap.generate(config, massif_influence)`, puis `FoliageScatter.scatter(...)`, puis `TerrainMeshBuilder.build_chunk(...)` par chunk. Les quatre sont des `RefCounted` sans état persistant et ne connaissent ni la scène ni le contrôleur.
+- **Le terrain est une fabrique derrière un contrat.** `BlockoutHeightmap` publie `heights`, `water_level`, `clearings` (centre + rayon), `river_path`, `massif_influence`, `cave_position`/`cave_forward`. C'est tout ce que la suite de la chaîne connaît de lui : le générateur procédural v1 publiait exactement la même chose, et son remplacement n'a demandé aucune modification au semis, aux biomes ni au mesh. Toute nouvelle fabrique de carte doit publier ce contrat, et rien de plus.
+- **La carte est déclarée, pas tirée.** Colline, tracé de rivière, gué et clairières sont des valeurs de `TerrainGenConfig`, éditées à l'inspecteur. Deux générations donnent la même carte ; changer la carte veut dire changer une valeur.
+- **`TerrainGenConfig` est la source unique de la convention de grille** : `height_index()`, `world_pos()` et `sample_grid()` ne sont réimplémentés nulle part. `sample_height()` est un cas particulier de `sample_grid()` — une heightmap est une grandeur par sommet comme une autre, et c'est ce qui permet de lire les poids de biome au point sans écrire une seconde interpolation. Fabrique et scatter les appellent, y compris dans leurs boucles chaudes.
+- Ordre dans `BlockoutHeightmap.generate()`, et il compte : relief (plaine + colline) → clairières aplanies → rivière creusée → gué relevé. Le gué passe après le creusement puisqu'il le corrige localement.
 - **`HeightmapOps` possède le tableau de hauteurs**, et c'est la seule façon de le déformer. Des opérateurs statiques prenant le tableau en argument écriraient dans leur copie sans rien signaler (copie sur écriture) ; l'objet supprime la question. Le relief de départ arrive par le constructeur, jamais par écriture depuis l'extérieur.
-- **Un remaniement du générateur se prouve, il ne se regarde pas.** `HeightmapSignature` empreinte tout ce que le générateur publie sur douze graines : on écrit la référence *avant* de toucher au code, on remanie, on compare. Une carte de 161 000 flottants ne se vérifie pas à l'œil, et une différence d'un demi-mètre sur un versant ne se voit sur aucune capture.
-- Contrainte de placement : la bouche de grotte est à l'origine du monde, et l'axe du massif est **résolu** pour que le pied de sa falaise y tombe. Il n'existe aucun réglage de position de massif.
-- Le générateur publie ce que la suite doit savoir : `heights`, `water_level`, `clearings` (centre + rayon), `river_path`, `cave_position`/`cave_forward`. Le contrôleur republie `heights` pour la scène.
+- **`carve_channel()` ne fait que descendre, `lift_disc()` ne fait que monter.** Les deux ne se remplacent pas : un chenal doit passer sous un relief sans le raboter, un haut-fond doit remonter un lit sans remonter ses berges. Un opérateur unique devrait arbitrer, et arbitrerait mal quelque part.
+- Contrainte de placement : la bouche de grotte est à l'origine du monde. Le relief se pose autour d'elle, sa position à elle ne se règle pas.
+- `world_seed` ne sert plus qu'au semis et aux lisières de biome. Elle ne décide plus de la forme de la carte.
+- Le matériau du sol est **dupliqué par génération** (`TerrainController._ground_material()`) pour y écrire `water_level` sans modifier la ressource de config. Un exemplaire pour toute la carte, passé à chaque chunk.
 - **Les nœuds générés n'ont pas d'owner** : jamais sérialisés dans le `.tscn`, jamais versionnés. Le terrain se régénère, il ne se sauvegarde pas.
 - Les normales des chunks sont calculées par différences centrées sur le **tableau global** : deux chunks voisins lisent les mêmes sommets et se raccordent sans couture, sans code de recollement.
 - `TerrainController.sun` doit pointer sur le `Sun` du `SkyRig` : c'est son élévation que `FoliageProximity` lit pour la coupure d'ombre. Un ancien soleil oublié dans la scène est le bug qui ne lève rien.
 - ⚠️ Toute la chaîne est `@tool`. Le `@tool` ne s'hérite pas : un script non-`@tool` instancié par un script `@tool` devient une coquille sans méthodes dans l'éditeur.
 ### Flux des biomes
-- `HeightmapGenerator` publie `massif_influence`, l'influence du massif par sommet : 1 sur l'axe, 0 hors du relief. Elle est calculée pour le relief de toute façon, la publier ne coûte qu'une écriture.
-- **Un étage se déclare sur cette influence, jamais sur une altitude.** La carte descend de `drainage_drop` d'un bout à l'autre : une plaine plate y gagne quarante mètres, et un seuil en mètres au-dessus de l'eau fait apparaître un étage montagnard sur une moitié de plaine — c'est arrivé, et ça se voyait comme un mélange 50-50 sur un seul côté de la carte.
-- Repères d'influence sur la carte : **0** en plaine, **~0,27** à la bouche de grotte, **~0,57** en haut de falaise, **1** sur l'axe des crêtes.
+- `BlockoutHeightmap` publie `massif_influence`, la position dans le relief par sommet : 1 au sommet de la colline, 0 en plaine. C'est le même profil que celui qui construit la colline, publié plutôt que recalculé. Le nom vient de la v1, où l'influence était celle d'un massif ; il a survécu parce que ce que la grandeur *veut dire* n'a pas changé.
+- **Un étage se déclare sur cette influence, jamais sur une altitude.** Un seuil en mètres au-dessus de l'eau fait apparaître un étage montagnard partout où le sol est haut pour une autre raison — une pente d'écoulement, un replat, une berge. C'est arrivé en v1 : le mélange 50-50 s'était installé sur une moitié de plaine parfaitement horizontale.
+- Repères d'influence sur la carte de blockout : **0** en plaine et sur la rive de la rivière, **~0,02** à la bouche de grotte (elle est au pied de la colline), **1** au sommet.
 - `BiomeMap.weights` = un `PackedFloat32Array` par biome, normalisés à 1 par sommet. **Jamais d'identifiant de biome** : une carte qui rangerait chaque cellule dans un biome imposerait du code de frontière, et ce code se verrait — les limites suivraient la grille.
 - **Le mélange se fait au tirage, pas sur les poids d'essences.** Le semis tire quel biome décide de ce candidat, puis déroule sa roue inchangée. Sur la lisière, les deux compositions s'entremêlent arbre par arbre. Mélanger les poids aurait donné une moyenne — un arbre à mi-chemin entre deux biomes, qui ne pousse dans aucun — et aurait imposé de reconstruire la roue à chaque candidat.
 - Le tirage du biome est un `randf()` et non un bruit : un bruit ferait des plaques aux bords nets, soit exactement la frontière que la carte de poids sert à ne pas avoir.
@@ -229,7 +228,7 @@ res://
 - Placement validé → spawn d'un `ConstructionSite`, qui lit `BuildingDef.costs`, réceptionne les livraisons, et à complétion spawn la `built_scene`.
 - **Le mode construction n'est pas un état de l'`ActionStateMachine`.** Son exclusivité passe par `UIPanelController.can_enter_exclusive_mode()`.
 ### Contraintes d'ordre
-- `HeightmapGenerator` avant `TerrainMeshBuilder` et `FoliageScatter` : les deux lisent le tableau de hauteurs terminé.
+- `BlockoutHeightmap` avant `TerrainMeshBuilder` et `FoliageScatter` : les deux lisent le tableau de hauteurs terminé.
 - Le scatter doit tourner **après** le terrain et **avant** le bake de `NavigationRegion3D`.
 - La carte d'ouverture (passe B2) se calcule **entre** la strate canopée et la strate sol : elle dépend de ce que la canopée a effectivement posé.
 ### Flux d'équipement

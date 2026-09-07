@@ -17,7 +17,7 @@
 - [x] Scène construite à la main, pas de génération procédurale
 - [x] Sol de la forêt découpé au CSG pour laisser un accès réel à l'escalier intérieur
 - [x] Nav mesh du bunker bakée
-> **Périmé par le Jalon 4.** `bunker_exterior_test.tscn` a été construit sur un sol plat ; le terrain procédural fournit désormais un site de grotte à l'origine du monde, et le bunker sera rebâti là. La scène actuelle sert de réserve de pièces, pas de livrable.
+> **Périmé par le Jalon 4.** `bunker_exterior_test.tscn` a été construit sur un sol plat ; le terrain publie désormais un site à l'origine du monde (`CaveSite`), et le bunker sera rebâti là. La scène actuelle sert de réserve de pièces, pas de livrable.
 ### Dette Jalon 2
 - Jointures entre pièces SciFi non scellées → fuites de lumière SDFGI aux angles du toit, et le joueur peut se faufiler par endroits. À corriger avant toute présentation publique de la scène.
 - Plateformes du bunker sans épaisseur visuelle (le kit SciFi n'a pas de pièce "Bottom" pour les sols). Solution retenue : socle réutilisable (BoxMesh + couleur unie) — définie mais pas généralisée.
@@ -86,12 +86,12 @@
 ## Jalon 4 — Terrain procédural v1 🗄️ archivé
 > **Arrêté et mis de côté, pas terminé.** Le jalon a produit un générateur qui marche — relief tiré à la graine, vallée, rivière, lac, deux biomes, quatre strates de végétation streamées, sol texturé à cinq matériaux. Ce qui restait à faire (catalogue de features, lieux-dits, grotte, chaîne lointaine, troisième biome) valait un second jalon entier pour un gain qui ne touche jamais le cœur du jeu — les pawns. On s'arrête là.
 >
-> **Conservé sur la branche `archive/terrain-v1`.** Le code n'est pas repris sur la branche principale : la v2 repart d'une base minimale plutôt que de désosser celle-ci. Ce qui a de la valeur en est déjà sorti — les décisions de conception et les gotchas moteur vivent dans STATE, l'inventaire d'assets dans ASSETS.
+> **Conservé sur la branche `Procedural-large-terrain`.** Le générateur n'est pas repris sur la branche principale : la v2 repart d'une carte déclarée plutôt que de désosser celui-ci. Ce qui vivait *autour* du générateur — mesh, semis, biomes, shader de sol, ciel — est resté sur main sans une ligne de changement, parce que rien de tout ça ne connaissait le générateur, seulement ce qu'il publiait. Ce qui a de la valeur en est déjà sorti — les décisions de conception et les gotchas moteur vivent dans STATE, l'inventaire d'assets dans ASSETS.
 >
 > Livré : passes A (relief), A-bis (relief habitable), B1 (canopée), B1-bis (proximité), B2 (strates, occupation, taches, biomes, streaming), B3 (habillage texturé). Non livré : passes C (grotte, falaise, lointain) et D (catalogue de features).
 >
 > **Reste vrai pour la v2, et rien d'autre :**
-> - Une heightmap ne fait pas de verticalité franche — voir STATE §Terrain procédural.
+> - Une heightmap ne fait pas de verticalité franche — voir STATE §Terrain.
 > - La collision terrain se fait en trimesh, pas en `HeightMapShape3D`, dès que la cellule n'est pas à 1 m.
 > - La brume porte la profondeur, pas la géométrie lointaine. Distance d'affichage et densité de brume se règlent de pair.
 > - La vitesse du joueur (~13 m/s) est le double d'un sprint humain. La réduire agrandit la carte sans un triangle de plus — à traiter à la passe de feeling du Jalon 7.
@@ -123,13 +123,19 @@
 ## Jalon 4.5 — Terrain minimal
 > **Reset.** Objectif unique : un terrain jouable qui porte les pawns et de quoi les faire travailler, écrit en repartant de zéro. Ce jalon n'a aucune ambition esthétique — la carte finale sera vraisemblablement faite à la main, en polish tardif. Tout ce qui n'est pas nécessaire à une simulation de colonie n'a pas sa place ici.
 >
-> **Dimensionnement** : la portée de liaison au bunker (Jalon 7) est ce qui fixe la taille utile. Une carte vaut deux fois ce rayon ; au-delà, on paie de la génération pour du terrain où le jeu ne se passe jamais. Point de départ **500 m de côté**, à réviser une fois 50 pawns mesurés dessus — c'est la simulation qui tranche, pas le paysage.
+> **Dimensionnement** : la portée de liaison au bunker (Jalon 7) est ce qui fixe la taille utile. Une carte vaut deux fois ce rayon ; au-delà, on paie de la génération pour du terrain où le jeu ne se passe jamais. Retenu **384 m de côté** (128 cellules de 3 m), à réviser une fois 50 pawns mesurés dessus — c'est la simulation qui tranche, pas le paysage. Le second critère est le temps d'itération : à 1200 m, chaque F5 coûtait dix secondes de génération, ce qui se paie trente fois par soirée de mise au point d'une IA.
 
-### Passe A — géographie de base
-- [ ] Relief : pente de massif d'un côté, plaine de l'autre, un replat plan pour le bunker. Tiré à la graine ou posé en dur, au plus simple — pas de vallée, pas de rivière, pas de lac tant que rien n'en dépend.
-- [ ] Site de grotte publié à l'origine du monde, pour que le bunker s'y pose.
-- [ ] Mesh + collision. Chunks seulement si la mesure les réclame.
-- [ ] Matériau de sol simple. L'habillage à cinq textures se refera quand la simulation tournera.
+### Passe A — géographie de base ✅
+> **Écart assumé avec le plan.** Il était prévu de repartir de zéro, mesh et matériau compris. À l'ouverture du code, le semis, les biomes, le constructeur de mesh et le shader de sol se sont révélés ne connaître que ce que le générateur *publiait* — jamais le générateur. Les garder ne coûtait donc rien et évitait de refaire ce qui marche : seule la fabrique de relief a été remplacée. La rivière, écartée du plan « tant que rien n'en dépend », est venue avec, parce qu'une contrainte de topologie et un point de passage obligé sont précisément ce qu'on veut donner à tester à une IA de déplacement.
+
+- [x] `blockout_heightmap.gd` : plaine à l'altitude zéro, une colline, une rivière et des clairières **déclarées dans la config** — aucun tirage. Publie le contrat de la v1 à l'identique (`heights`, `water_level`, `clearings`, `river_path`, `massif_influence`, `cave_position`/`cave_forward`).
+- [x] Gué : `HeightmapOps.lift_disc()`, symétrique de `carve_channel()`. La rivière se creuse d'un bout à l'autre puis le gué la remonte sous la ligne d'eau — un lit interrompu ferait un pont à sec, pas un passage.
+- [x] Site publié à l'origine du monde (`CaveSite`), orienté à l'opposé de la colline.
+- [x] `TerrainGenConfig` dégraissée : massif, vallée, falaise, plaine, lac et tous les réglages de tirage supprimés (262 → 195 lignes). `world_seed` reste, mais ne pilote plus que le semis.
+- [x] Semis, biomes, mesh par chunks et shader de sol **repris sans modification**. `massif_influence` décrit maintenant la colline : les deux biomes fonctionnent tels quels.
+- [x] Shader d'eau (`assets/water/`, EmacEArt) rapatrié depuis la branche procédurale, où il n'était jamais arrivé sur main. Entrée ajoutée à ATTRIBUTION.
+- [x] Supprimés : `heightmap_generator.gd`, `massif_shape.gd`, `heightmap_signature.gd`, `terrain_test.tscn`. `blockout_test.tscn` devient la scène principale.
+- [x] Échelle des sept essences d'herbe divisée par deux — à 1,30 m tirés, la strate sol masquait un objet posé.
 ### Passe B — ressources dans le terrain
 > C'est la vraie raison d'être du jalon : les pawns doivent avoir de quoi travailler.
 - [ ] Semis simple : arbres, champignons, **rochers et branches** au sol — le tier 1 du GDD, ramassable et récoltable.
@@ -141,8 +147,12 @@
 - [ ] `maxf()` sur l'élévation du soleil dans le composant de proximité du feuillage : la division par `tan(élévation)` peut produire un `inf`, et un `inf` dans une comparaison de distance ne lève rien (report du Jalon 4.4, passe C)
 ### Dette Jalon 4.5
 - Aucune personnalité de carte : pas de lieux-dits, pas de features, une seule composition. Assumé — c'est le polish tardif qui répondra, à la main.
-- Pas de rivière, donc pas de contrainte de topologie. La carte est intégralement traversable.
-- Habillage du sol minimal. À reprendre quand la simulation tiendra son objectif de pawns.
+- **L'emprise de l'herbe est trop faible depuis qu'elle est deux fois plus petite** : l'espacement de la strate sol (0,8 m) n'a pas suivi, donc le sol se voit entre les touffes. Réduire l'espacement ou remonter légèrement l'échelle — les deux se règlent ensemble, pas l'un après l'autre.
+- **La rivière est plate** : son lit est creusé sous une ligne d'eau constante, elle ne descend pas. Invisible sur une carte sans dénivelé général, faux dès qu'on en remettra un.
+- **Position du gué posée à l'estime** (15, 118). À vérifier qu'elle tombe bien sur le tracé après tout déplacement de `river_points`. Rien ne le contrôle : un gué hors du cours ne fait qu'une bosse dans un pré.
+- **`forest_test.tscn` et `forest_scatter.gd` survivent** : ce sont les seules scènes où le bunker monté à la main et les mécaniques de jeu sont testables. À supprimer une fois leur mobilier reporté dans `blockout_test.tscn` — sans quoi il existe deux façons de peupler une forêt dans le projet.
+- Habillage du sol hérité de la v1, non revu pour une carte de cette taille : les seuils du shader sont en mètres absolus alors que la colline plafonne à 45 m. La roche et le sable peuvent ne jamais apparaître.
+- `foliage_view_distance` laissé à 675 m sur une carte de 384 : tout est dessiné, jamais de coupure. C'est délibéré — ça met le scintillement de fondu hors jeu pendant la mise au point des pawns — mais ce n'est pas un réglage tenable.
 ## Jalon 5 — Pawn : socle et passage à l'échelle
 > **Cœur du jeu.** L'objectif chiffré est de simuler **40 à 50 pawns** sans perdre la frame. Ce chiffre n'est pas une ambition d'affichage : c'est ce qui dimensionne l'architecture, et aucun des quatre postes ci-dessous ne se règle après coup.
 
@@ -223,7 +233,7 @@
 ## Features non planifiées
 - **Climat et intempéries** — l'axe est orthogonal à l'heure : le shader gère le moment via l'élévation du soleil, un `SkyProfile` décrit le temps qu'il fait. Changer de temps est un fondu d'un profil vers un autre sur quelques minutes. Contrainte à respecter : un profil ne fait varier que des uniformes, jamais des textures.
 - Deuxième bunker / expansion de zone
-- **Personnalité de carte procédurale** (ex-passe D du Jalon 4) : catalogue de `TerrainFeature` tirées avec quotas, zones dérivées, `Site` publiés, lieux-dits nommés par deux clés du CSV, registre de réservation d'emprise, planche de graines, vérificateur d'invariants. Le raisonnement et le catalogue préliminaire de trente spots vivent sur la branche `archive/terrain-v1`. Abandonné parce que la carte finale sera vraisemblablement faite à la main.
+- **Personnalité de carte procédurale** (ex-passe D du Jalon 4) : catalogue de `TerrainFeature` tirées avec quotas, zones dérivées, `Site` publiés, lieux-dits nommés par deux clés du CSV, registre de réservation d'emprise, planche de graines, vérificateur d'invariants. Le raisonnement et le catalogue préliminaire de trente spots vivent sur la branche `Procedural-large-terrain`. Abandonné parce que la carte finale sera vraisemblablement faite à la main.
 - **Décor lointain** (ex-passe C du Jalon 4) : chaîne de montagnes hors zone jouable, gorge, cascade, rochers posés sur l'escarpement, bordure de zone. Relève du polish tardif.
 - **Habillage riche du sol et de la végétation** : cinq matériaux texturés mélangés par carte de hauteur, quatre strates, taches monochromes, deux biomes. Fonctionnait sur la branche archivée ; se refera si la carte finale le mérite, mais jamais avant que la simulation ne tienne son objectif de pawns.
 - **Rivière et topologie contrainte** : le partage 2/3 – 1/3 non franchissable sans gué faisait beaucoup pour la sensation d'espace. À rouvrir si la carte minimale s'avère trop plate ludiquement.

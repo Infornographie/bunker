@@ -36,9 +36,8 @@ func _ready() -> void:
 	generate()
 
 
-## Exemplaire de travail du matériau de sol, renseigné des grandeurs tirées à la
-## graine. La ressource de config n'est jamais modifiée — même règle que les
-## bruits dupliqués du générateur de relief.
+## Exemplaire de travail du matériau de sol, renseigné des grandeurs de la carte
+## courante. La ressource de config n'est jamais modifiée.
 func _ground_material(water_level: float) -> Material:
 	if config.terrain_material == null:
 		return null
@@ -57,12 +56,13 @@ func generate() -> void:
 	var started := Time.get_ticks_msec()
 	clear()
 
-	var heightmap := HeightmapGenerator.new()
+	var heightmap := BlockoutHeightmap.new()
 	heightmap.generate(config)
 	heights = heightmap.heights
 
 	# Un seul plan pour toute l'eau : le rivage n'est pas dessiné, il est ce qui
-	# dépasse. Le lac déborde de la zone parce que le plan est plus large qu'elle.
+	# dépasse. Le plan est plus large que la zone, donc tout creux sous le niveau
+	# déclaré devient une mare sans qu'on ait à la dessiner.
 	var water := MeshInstance3D.new()
 	water.name = WATER_NODE
 	var surface := PlaneMesh.new()
@@ -73,9 +73,9 @@ func generate() -> void:
 	water.position = Vector3(0.0, heightmap.water_level, 0.0)
 
 	# La carte de biome se calcule entre le relief et le semis : elle se déduit
-	# du premier et n'est lue que par le second. Elle lit l'influence du massif
-	# et non les hauteurs : un étage se déclare sur le relief, pas sur une
-	# altitude que la pente d'écoulement décale d'un bout à l'autre de la carte.
+	# du premier et n'est lue que par le second. Elle lit l'influence du relief
+	# et non les hauteurs : un étage se déclare sur la position dans le relief,
+	# pas sur une altitude qu'un replat ou une berge décale.
 	var biomes := BiomeMap.new()
 	biomes.generate(config, heightmap.massif_influence)
 
@@ -92,10 +92,10 @@ func generate() -> void:
 	var chunks := Node3D.new()
 	chunks.name = CHUNKS_NODE
 	add_child(chunks)
-	# Le matériau du sol est dupliqué une fois pour toute la carte : le niveau de
-	# l'eau est tiré à la graine, et l'écrire sur la ressource de config la
-	# modifierait sur disque. Un exemplaire par chunk, à l'inverse, casserait le
-	# regroupement des appels de dessin.
+	# Le matériau du sol est dupliqué une fois pour toute la carte : y écrire le
+	# niveau de l'eau sur la ressource de config la modifierait sur disque. Un
+	# exemplaire par chunk, à l'inverse, casserait le regroupement des appels de
+	# dessin.
 	var ground := _ground_material(heightmap.water_level)
 	var side := config.chunks_per_side()
 	for cz in side:
