@@ -115,6 +115,28 @@ rochers**, pas au sol.
 | `Rock_Big_1-2` | gris, avec mousse | gros rocher | libre — habillage de l'escarpement (passe C) |
 | `RockPath_*` | gris dalle | **dalle posée par l'homme** | réservé — chemins de piétinement, jamais en semis naturel |
 
+## Bois mort — Forest Free Pack (Ami Polygon, assets/deadwood/)
+
+Onze modèles sur les 38 du pack, en `.glb`. **Échelle métrique réelle, vérifiée
+contre les Quaternius** (`tree_1` du pack fait 6,85 m, `CommonTree_1` 7,26 m) :
+aucune remise à l'échelle. Le reste du pack — arbres, pins, buissons, herbes —
+est écarté, son facettage jure avec Stylized Nature.
+
+| Famille | Dimensions | Port | Emploi |
+|---|---|---|---|
+| `stick_1-3` | 0,54 à 1,02 m de long | **modélisés couchés** | branche ramassable — ressource du tier bois, et butin secondaire d'abattage |
+| `log_1-4` | 1,46 à 3,04 m de long | **modélisés couchés** | tronc couché du sous-bois |
+| `trunk_1-4` | ~0,7 m de haut | debout | souches — décor, et marqueur d'arbre abattu si on veut que la forêt garde la trace du travail des pawns |
+
+> **Les sticks et les logs arrivent couchés**, l'orientation est portée par le
+> modèle. La ligne « troncs tombés — demande un mode de pose couché que
+> `FoliageDef` ne sait pas exprimer », ouverte depuis la passe B2, ne les
+> concerne donc pas : il n'y a rien à coucher.
+
+> Réserve à vérifier en jeu : leur ocre tire plus vers le jaune que les écorces
+> Quaternius. Si l'écart se voit, c'est le premier client de `FoliageDef.tint`,
+> en dette depuis la passe B3 et jamais posé faute d'usage.
+
 ## Textures de sol (assets/ground/textures/)
 
 Cinq matériaux stylisés de **freestylized.com** (licence en CC0 personnalisé, voir ATTRIBUTION), un dossier chacun, employés par `terrain.gdshader`. Tous en **2K** : en 1K, une fois les tuiles agrandies, le grain devenait trop grossier.
@@ -561,16 +583,11 @@ Infos tirées des pages produit — à vérifier au moment de l'achat/téléchar
   sur le plan d'eau. Correction : la licence n'est **pas** CC BY 4.0 comme
   supposé ici — crédit facultatif, mais redistribution des fichiers bruts
   interdite (même limite que les textures freestylized).
-- **[Free Stylized Low Poly Forest Nature Pack](https://amipolygon.itch.io/free-stylized-low-poly-forest-nature-pack)**
-  — 38 modèles : 6 arbres, 3 pins, 3 arbres morts, **4 troncs**, **4 bûches**,
-  **3 bâtons**, 11 herbes, 4 buissons. Gratuit (nom-ton-prix), **FBX et
-  GLB**, usage commercial autorisé, crédit facultatif, revente du pack brut
-  interdite. **Le meilleur candidat de la liste pour le manque « branches /
-  petit bois »**, et il répond du même coup à la ligne « troncs tombés et
-  souches » restée ouverte au semis : trois bâtons couvrent la branche
-  ramassable, quatre bûches et quatre troncs couvrent le tronc couché. GLB
-  natif, donc pas de conversion. Le style stylisé est à comparer aux
-  Quaternius avant intégration — c'est le seul vrai risque.
+- ~~**[Free Stylized Low Poly Forest Nature Pack](https://amipolygon.itch.io/free-stylized-low-poly-forest-nature-pack)**~~
+  — **partiellement intégré** le 07/09 (`assets/deadwood/`, voir l'inventaire
+  plus haut) : onze modèles de bois mort retenus sur trente-huit. Arbres,
+  pins, buissons et herbes écartés — facettage incompatible avec Stylized
+  Nature.
 - **[Foliage Asset Pack](https://melissaz.itch.io/foliage-asset-pack)** —
   11 modèles thème zone humide (dont "une petite loutre"), stylisé, pensé
   Unity. Licence **CC BY-NC-ND 4.0 — pas d'usage commercial ni de dérivé**,
@@ -683,17 +700,10 @@ possédés), et de pistes pour les bâtiments constructibles.
 Pas des packs à trouver précisément, plutôt des trous qui ressortent en
 relisant le GDD en entier — à garder en tête plutôt qu'à traiter maintenant.
 
-- **Branches et petit bois au sol.** Aucun des packs possédés n'en a :
-  Quaternius livre des arbres entiers et des `DeadTree`, Resource Bits deux
-  rondins (`Wood_Log_A`, `Wood_Log_B`). Or la branche est la ressource de
-  départ du tier bois — ramassable sans outil, et butin secondaire de
-  l'abattage. Piste retenue : les **3 bâtons d'amipolygon** (gratuit, GLB,
-  voir Pistes externes). Dépannage sans rien télécharger : un `Wood_Log_A`
-  réduit à ~40 % fait une brindille crédible et ne coûte qu'un `.tres`.
-- **Troncs couchés et souches.** Même angle mort, et il bloque une ligne du
-  semis restée ouverte : `FoliageDef` ne sait pas poser un objet couché
-  (rotation autour de X/Z). L'asset et la fonctionnalité manquent tous les
-  deux — inutile d'écrire la seconde avant d'avoir le premier.
+- ~~**Branches, petit bois, troncs couchés et souches.**~~ **Comblé le 07/09**
+  par `assets/deadwood/` (Ami Polygon) — voir l'inventaire. Le manque avait
+  tenu longtemps sans être relevé : Quaternius ne livre que des arbres
+  entiers et des `DeadTree`, Resource Bits deux rondins.
 
 - **Faune locale, vivante et animée.** Le GDD mentionne une "lignée
   animale" comme motif d'expédition et une "faune dangereuse" au Jalon 12,

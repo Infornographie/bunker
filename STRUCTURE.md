@@ -57,7 +57,7 @@ res://
 │   │   ├── choppable.gd                — hérite Interactable : HP, type d'outil, depleted → 3× pickup
 │   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D), lit ResourceDef
 │   │   ├── construction_site.gd / .tscn
-│   │   ├── tool_pickup.gd              — outil posé au sol, créé dynamiquement par EquipmentController
+│   │   ├── tool_pickup.gd              — outil posé au sol, créé dynamiquement par PlayerEquipment
 │   │   ├── backpack_pickup.gd / .tscn
 │   │   ├── panel/                      — panneaux posés dans le monde (voir § Flux des panneaux)
 │   │   │   ├── world_panel.gd          — suivi d'ancre, billboard axe Y, contrat de case
@@ -81,7 +81,8 @@ res://
 │       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, take_into_hand()
 │       ├── carry_controller.gd         — point unique "en main"
 │       ├── build_mode_controller.gd    — mode construction (B)
-│       ├── equipment_controller.gd     — ceinture + sac à dos, routage ramassage, drop (G)
+│       ├── inventory.gd                — **acteur** : ceinture, poches, sac, slot actif. Un seul signal `changed`. Ni touches, ni HUD, ni viewmodel, ni transform
+│       ├── player_equipment.gd          — **joueur** : habille un Inventory — touches 1-5/molette, hotbar, viewmodel, drop (G)
 │       ├── ui_panel_controller.gd      — arbitre des panneaux
 │       ├── hud/                        — player_hud, crosshair, hotbar
 │       └── tools/tool_controller.gd    — viewmodel 1re personne, swing()
@@ -232,7 +233,13 @@ res://
 - Le scatter doit tourner **après** le terrain et **avant** le bake de `NavigationRegion3D`.
 - La carte d'ouverture (passe B2) se calcule **entre** la strate canopée et la strate sol : elle dépend de ce que la canopée a effectivement posé.
 ### Flux d'équipement
-- `EquipmentController` : ceinture 2 slots (`ToolDef`) + ref `BackpackData`. Pilote `ToolController.equip()`/`unequip()` selon le slot actif.
-- Drop (G) : spawn un `ToolPickup` dynamique ; `interact()` le renvoie en ceinture via `try_store_tool()`.
-- Priorité affichage : Main > Hotbar actif. Hotbar dimmed quand mains occupées.
-- `BackpackData` vit sur l'objet sac, pas sur le joueur — prêt pour des pawns avec leur propre sac.
+- **La coupure acteur / joueur passe ici.** `Inventory` sait ce qui est rangé où : ceinture 2 slots (`ToolDef`), poches, `BackpackData`, slot actif. Il ne sait pas qu'on le regarde. `PlayerEquipment` est la seule classe qui suppose un joueur — clavier, hotbar, main devant une caméra. Un pawn partagera le premier et n'aura pas le second.
+- Sens de la dépendance, à sens unique : `PlayerEquipment` lit et pilote l'inventaire ; l'inventaire ne le connaît pas.
+- **`Inventory` n'a qu'un signal, `changed`**, et `PlayerEquipment` s'y branche pour rafraîchir viewmodel et HUD. Rafraîchir depuis chaque site d'appel était l'ancien schéma : un seul oubli et le HUD ment. Les trois signaux détaillés d'avant (`belt_changed`, `pocket_changed`, `active_slot_changed`) étaient émis sept fois et écoutés zéro — supprimés.
+- Prendre un objet en main n'est pas une mutation de l'inventaire, donc n'émet pas `changed` : `PlayerEquipment._process()` surveille la bascule de `hands_busy()`.
+- Priorité affichage : Main > Hotbar actif. Hotbar grisée quand les mains sont occupées.
+- Drop (G) : spawn un `ToolPickup` dynamique ; `interact()` le renvoie en ceinture via `Inventory.try_store_tool()`.
+- **Ce qui matérialise n'est pas ce qui range** : `backpack_pickup_scene` vit sur `InteractionController`, qui est celui qui sort un sac du dos pour le mettre en main. L'inventaire range des données, il ne sait pas les incarner.
+- Les `Interactable` atteignent le stock par `interactor.inventory`, en duck typing sur l'`InteractionController`.
+- `BackpackData` vit sur l'objet sac, pas sur le joueur — un pawn aura le sien.
+- ⚠️ `hotbar.gd` redéclare ses propres `BELT_COUNT` et `HOTBAR_SIZE`. Même vérité à deux endroits, désormais que `Inventory` est la source évidente — dette, voir ROADMAP Jalon 4.5.

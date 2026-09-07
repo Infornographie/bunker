@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://world/sky/sky_debug_panel.tscn" id="5_sky_debug"]
 [ext_resource type="PackedScene" uid="uid://bxks4paby6ggl" path="res://entities/interactable/forest/oak_choppable.tscn" id="6_choppable"]
 [ext_resource type="PackedScene" uid="uid://ddwvl4p2drvne" path="res://entities/interactable/backpack_pickup.tscn" id="7_backpack"]
+[ext_resource type="PackedScene" uid="uid://bxsorhp7cgmlm" path="res://entities/interactable/forest/mushroom_pickup.tscn" id="8_mushroom"]
 
 [node name="BlockoutTest" type="Node3D" unique_id=912293018 node_paths=PackedStringArray("sun")]
 script = ExtResource("1_controller")
@@ -30,5 +31,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 1, 6)
 
 [node name="BackpackPickup" parent="Props" unique_id=842390497 instance=ExtResource("7_backpack")]
 transform = Transform3D(0.124490514, -0.11908119, 0.10159613, -0.013411716, 0.12121734, 0.15851332, -0.15595585, -0.10547995, 0.06746663, -32.41721, 4.117654, -21.076534)
+
+
+[node name="MushroomPickup" parent="Props" instance=ExtResource("8_mushroom")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1, 9)
+
+[node name="MushroomPickup2" parent="Props" instance=ExtResource("8_mushroom")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.4, 1, 10.2)
+
+[node name="MushroomPickup3" parent="Props" instance=ExtResource("8_mushroom")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 1, 11)
 
 [editable path="SkyRig"]

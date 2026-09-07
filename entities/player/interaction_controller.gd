@@ -8,7 +8,11 @@ class_name InteractionController
 @export var carry_controller: CarryController
 @export var drop_distance: float = 1.5
 @export var build_mode_controller: BuildModeController
-@export var equipment_controller: EquipmentController
+@export var inventory: Inventory
+## Scène complète du sac posé (mesh, collision et échelle corrects).
+## Instanciée ici parce que c'est ici qu'on sort un sac du dos pour le mettre
+## en main — l'inventaire ne sait pas matérialiser ce qu'il range.
+@export var backpack_pickup_scene: PackedScene
 @export var ui_panel_controller: UIPanelController
 
 var _current_target: Interactable
@@ -154,12 +158,12 @@ func _drop_carried_item() -> void:
 
 ## Touche A : gère le cycle sac à dos ↔ main ↔ sol.
 func _handle_backpack_toggle() -> void:
-	if equipment_controller == null:
+	if inventory == null:
 		return
 
 	# Cas 1 : on regarde un BackpackPickup au sol → équiper sur le dos.
-	if _current_target is BackpackPickup and not equipment_controller.has_backpack():
-		equipment_controller.equip_backpack(_current_target.backpack_data)
+	if _current_target is BackpackPickup and not inventory.has_backpack():
+		inventory.equip_backpack(_current_target.backpack_data)
 		_current_target.queue_free()
 		return
 
@@ -169,17 +173,17 @@ func _handle_backpack_toggle() -> void:
 		if carried is BackpackPickup:
 			var data: BackpackData = carried.backpack_data
 			carry_controller.consume()
-			equipment_controller.equip_backpack(data)
+			inventory.equip_backpack(data)
 			if tool_controller:
 				tool_controller.set_tool_visible(true)
 		return
 
 	# Cas 3 : sac sur le dos, mains libres → prendre en main.
-	if equipment_controller.has_backpack() and carry_controller and carry_controller.can_carry():
-		var data := equipment_controller.unequip_backpack()
+	if inventory.has_backpack() and carry_controller and carry_controller.can_carry():
+		var data := inventory.unequip_backpack()
 		var pickup := _spawn_backpack_in_hand(data)
 		if pickup == null:
-			equipment_controller.equip_backpack(data)
+			inventory.equip_backpack(data)
 			return
 		carry_controller.carry(pickup)
 		if tool_controller:
@@ -188,10 +192,10 @@ func _handle_backpack_toggle() -> void:
 
 ## Crée un BackpackPickup depuis la scène (scale et collision corrects).
 func _spawn_backpack_in_hand(data: BackpackData) -> Node3D:
-	if equipment_controller.backpack_pickup_scene == null:
-		push_warning("EquipmentController.backpack_pickup_scene non assignée")
+	if backpack_pickup_scene == null:
+		push_warning("InteractionController.backpack_pickup_scene non assignée")
 		return null
-	var pickup := equipment_controller.backpack_pickup_scene.instantiate()
+	var pickup := backpack_pickup_scene.instantiate()
 	pickup.backpack_data = data
 	get_tree().current_scene.add_child(pickup)
 	return pickup
@@ -199,16 +203,16 @@ func _spawn_backpack_in_hand(data: BackpackData) -> Node3D:
 ## E avec un petit objet sélectionné en poche : livraison à la cible visée
 ## si elle l'accepte, sinon dépose au sol. Retourne true si l'action a eu lieu.
 func _try_use_pocket_item() -> bool:
-	if equipment_controller == null:
+	if inventory == null:
 		return false
-	var resource := equipment_controller.get_active_pocket_item()
+	var resource := inventory.get_active_pocket_item()
 	if resource == null:
 		return false
 
 	# Tentative de livraison (chantier, feu de camp, case de panneau...).
 	if _current_target and _current_target.can_interact(self):
 		if _current_target.receive_resource(resource, 1):
-			equipment_controller.take_active_pocket_item()
+			inventory.take_active_pocket_item()
 			return true
 		# La cible est interactive mais ne veut pas de cet objet : on lui
 		# rend la main plutôt que de lâcher l'objet par terre. Sans ça, viser
@@ -220,7 +224,7 @@ func _try_use_pocket_item() -> bool:
 	var pickup: Node3D = ResourceRegistry.spawn_pickup(resource)
 	if pickup == null:
 		return false
-	equipment_controller.take_active_pocket_item()
+	inventory.take_active_pocket_item()
 	var camera := get_parent() as Camera3D
 	var drop_position := camera.global_position + camera.global_basis.z * -drop_distance
 	get_tree().current_scene.add_child(pickup)
@@ -274,6 +278,6 @@ func get_offered_resource() -> ResourceDef:
 	if carry_controller and carry_controller.is_carrying():
 		var pickup := carry_controller.get_carried_item() as ResourcePickup
 		return pickup.resource_def if pickup else null
-	if equipment_controller:
-		return equipment_controller.get_active_pocket_item()
+	if inventory:
+		return inventory.get_active_pocket_item()
 	return null

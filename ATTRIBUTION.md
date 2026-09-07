@@ -32,6 +32,25 @@ Dossier : `assets/props/`
 
 Feu de camp. Même famille visuelle low poly stylisée que les packs Quaternius, retenu faute d'équivalent chez Quaternius.
 
+### Forest Free Pack — Ami Polygon — **licence propre à l'auteur**
+Dossier : `assets/deadwood/`
+[amipolygon.itch.io/free-stylized-low-poly-forest-nature-pack](https://amipolygon.itch.io/free-stylized-low-poly-forest-nature-pack)
+
+**Onze modèles sur les trente-huit du pack** : `stick_1-3` (branches au sol), `log_1-4` (troncs couchés), `trunk_1-4` (souches). Le reste — arbres, pins, arbres morts, buissons, herbes — n'est **pas** importé : son facettage anguleux jure avec le modelé arrondi de Stylized Nature. Ce qui est pris ici l'est parce que le bois mort posé au sol est mat, brun et petit, donc indifférent à cet écart de style.
+
+Le dossier porte le nom de son usage, pas celui du pack : `deadwood/` = bois mort.
+
+**Licence, telle que publiée par l'auteur :**
+
+> Feel free to use these assets in personal and commercial projects. You can
+> modify them to fit your game. Credit to Ami Polygon is appreciated but not
+> required. Do not resell or redistribute the original asset files as a
+> standalone pack.
+
+> Même limite que les textures de sol et le shader d'eau : usage libre, crédit facultatif (fait ici), redistribution des fichiers bruts interdite.
+
+> Chaque `.glb` embarque sa propre copie de l'atlas (30 Ko). Onze fichiers = onze textures importées et onze matériaux distincts là où un seul suffirait. Sans conséquence au semis (un `MultiMesh` par essence de toute façon), à reprendre si ces essences finissent ailleurs qu'en multimesh.
+
 ### Low Poly Primitive Tools — lowpolyassets — **CC0**
 Dossier : `assets/characters/tools/`
 [lowpolyassets.itch.io/low-poly-primitive-tools](https://lowpolyassets.itch.io/low-poly-primitive-tools)

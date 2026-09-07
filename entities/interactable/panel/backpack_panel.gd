@@ -110,5 +110,5 @@ func _set_slot_content(slot: PanelSlot, resource: ResourceDef) -> void:
 			_backpack_data.pocket_slots[index] = resource
 	refresh()
 	# Le hotbar reflète les poches : le tenir à jour.
-	if _interactor and _interactor.equipment_controller:
-		_interactor.equipment_controller.notify_backpack_changed()
+	if _interactor and _interactor.inventory:
+		_interactor.inventory.notify_backpack_changed()

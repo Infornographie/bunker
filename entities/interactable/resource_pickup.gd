@@ -63,7 +63,7 @@ func _carry_physical(interactor: Node) -> void:
 
 ## SMALL : poches → sac → débordement en main.
 func _absorb_small(interactor: Node) -> void:
-	var eq := _get_equipment_controller(interactor)
+	var eq := _get_inventory(interactor)
 	if eq and eq.try_store_small(resource_def):
 		queue_free()
 		return
@@ -73,7 +73,7 @@ func _absorb_small(interactor: Node) -> void:
 
 ## TOOL : ceinture → débordement en main.
 func _absorb_tool(interactor: Node) -> void:
-	var eq := _get_equipment_controller(interactor)
+	var eq := _get_inventory(interactor)
 	if eq and resource_def.tool_def and eq.try_store_tool(resource_def.tool_def):
 		queue_free()
 		return
@@ -88,7 +88,7 @@ func _get_carry_controller(interactor: Node) -> CarryController:
 	return null
 
 
-func _get_equipment_controller(interactor: Node) -> EquipmentController:
+func _get_inventory(interactor: Node) -> Inventory:
 	if interactor is InteractionController:
-		return interactor.equipment_controller
+		return interactor.inventory
 	return null

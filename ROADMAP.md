@@ -145,7 +145,20 @@
 - [ ] Bake `NavigationRegion3D` après le semis
 - [ ] Corriger dette Jalon 1 (navmesh qui grimpe sur les branches basses) — collision de tronc simplifiée, pas mesh complet
 - [ ] `maxf()` sur l'élévation du soleil dans le composant de proximité du feuillage : la division par `tan(élévation)` peut produire un `inf`, et un `inf` dans une comparaison de distance ne lève rien (report du Jalon 4.4, passe C)
+### Passe B — séparer l'acteur du joueur ✅
+> Fait **avant** les ressources, parce qu'une IA de pawn écrite au-dessus d'un inventaire couplé à une caméra ne se rattrape pas après coup. Aucune abstraction « acteur » créée pour autant : seulement du retrait de dépendance injustifiée.
+
+- [x] `CarryController` sort de sous `Camera3D` et rejoint `CharacterBody3D`. `HandAnchor` reste sous la caméra — c'est du viewmodel — et le lien passe par le `NodePath` déjà exporté.
+- [x] `EquipmentController` scindé : `inventory.gd` (le stock — ceinture, poches, sac, slot actif) et `player_equipment.gd` (touches, hotbar, viewmodel, drop). L'ancien fichier est supprimé.
+- [x] Plus aucun `get_parent() as Camera3D` : l'origine du lâcher se déclare (`drop_origin`). C'était un bug latent autant qu'un couplage — le drop cessait de marcher en silence dès qu'on déplaçait le nœud.
+- [x] Trois signaux morts supprimés (`belt_changed`, `pocket_changed`, `active_slot_changed` : sept émissions, zéro écouteur) au profit d'un seul `changed`, écouté par la vue. Le rafraîchissement passe de « chaque site d'appel y pense » à « on écoute ».
+- [x] `backpack_pickup_scene` passe à `InteractionController` : ce qui range n'est pas ce qui matérialise.
+- [x] Code mort retiré : `_get_equipment_controller()` de `backpack_pickup.gd`, jamais appelé.
+- [x] Les `Interactable` visent `interactor.inventory`.
+
 ### Dette Jalon 4.5
+- **`hotbar.gd` redéclare `BELT_COUNT` et `HOTBAR_SIZE`.** Même vérité à deux endroits depuis qu'`Inventory` les porte. Le rangement demande de choisir si le HUD a le droit de citer `Inventory` — probablement oui, il l'affiche déjà.
+- **`ActionStateMachine` reste couplée au `ToolController`** : elle se connecte à son signal et lui demande `can_swing()`. La découpler maintenant reviendrait à inventer une interface « chose qui sait frapper » avec un seul client. À traiter au Jalon 5, avec le premier pawn qui frappe — c'est lui qui dira quelle forme elle doit prendre.
 - Aucune personnalité de carte : pas de lieux-dits, pas de features, une seule composition. Assumé — c'est le polish tardif qui répondra, à la main.
 - **L'emprise de l'herbe est trop faible depuis qu'elle est deux fois plus petite** : l'espacement de la strate sol (0,8 m) n'a pas suivi, donc le sol se voit entre les touffes. Réduire l'espacement ou remonter légèrement l'échelle — les deux se règlent ensemble, pas l'un après l'autre.
 - **La rivière est plate** : son lit est creusé sous une ligne d'eau constante, elle ne descend pas. Invisible sur une carte sans dénivelé général, faux dès qu'on en remettra un.

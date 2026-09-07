@@ -4,7 +4,7 @@ class_name BackpackPickup
 ## Sac à dos dans le monde — trouvé dans le bunker ou posé par le joueur.
 ## Porte les données d'inventaire (BackpackData). L'objet circule entre :
 ##   - le monde (Interactable au sol, cette scène)
-##   - le dos du joueur (données dans EquipmentController, node détruit)
+##   - le dos du joueur (données dans Inventory, node détruit)
 ##   - les mains (porté par CarryController, même node reparenté)
 ##
 ## E : équiper sur le dos (B.3 changera en "ouvrir l'UI").
@@ -66,11 +66,3 @@ func _physics_process(_delta: float) -> void:
 	var result := space.intersect_ray(query)
 	if result:
 		global_position = result.position + Vector3.UP * ground_offset
-
-
-## --- Utilitaire ---------------------------------------------------------
-
-func _get_equipment_controller(interactor: Node) -> EquipmentController:
-	if interactor is InteractionController:
-		return interactor.equipment_controller
-	return null

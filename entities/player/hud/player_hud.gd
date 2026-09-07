@@ -23,7 +23,7 @@ func hide_prompt() -> void:
 	_prompt_label.visible = false
 
 
-## Appelé par EquipmentController à chaque changement de slot ou de contenu.
+## Appelé par PlayerEquipment à chaque changement de slot ou de contenu.
 func update_hotbar(active_slot: int, belt: Array[ToolDef], backpack_data: BackpackData) -> void:
 	if _hotbar:
 		_hotbar.update(active_slot, belt, backpack_data)

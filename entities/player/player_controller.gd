@@ -36,7 +36,7 @@ class_name PlayerController
 
 ## Mains occupées = ni course ni saut (décision de conception : le portage
 ## d'un objet lourd immobilise le protagoniste au rythme de la marche).
-@export_node_path("Node") var carry_controller_path: NodePath = NodePath("Camera3D/CarryController")
+@export_node_path("Node") var carry_controller_path: NodePath = NodePath("CarryController")
 
 @export_node_path("Camera3D") var camera_path: NodePath = NodePath("Camera3D")
 
