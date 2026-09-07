@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FoliagePatch" format=3]
+
+[ext_resource type="Script" path="res://resources/foliage_patch.gd" id="1_patch"]
+[ext_resource type="Script" path="res://resources/foliage_weight.gd" id="w_script"]
+[ext_resource type="Resource" path="res://resources/foliage/loose_pebble.tres" id="f_pebble"]
+
+[sub_resource type="FastNoiseLite" id="Noise_gate"]
+frequency = 0.03
+fractal_octaves = 2
+
+[sub_resource type="Resource" id="W_pebble"]
+script = ExtResource("w_script")
+def = ExtResource("f_pebble")
+weight = 1.0
+
+[resource]
+script = ExtResource("1_patch")
+id = &"river_shingle"
+noise = SubResource("Noise_gate")
+threshold = 0.25
+density = 2.2
+max_height_above_water = 1.2
+entries = Array[ExtResource("w_script")]([SubResource("W_pebble")])

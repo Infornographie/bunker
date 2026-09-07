@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FoliagePatch" format=3]
+
+[ext_resource type="Script" uid="uid://b7yrb3olga0mj" path="res://resources/foliage_patch.gd" id="1_patch"]
+[ext_resource type="Script" uid="uid://bk7tamevhctnm" path="res://resources/foliage_weight.gd" id="w_script"]
+[ext_resource type="Resource" path="res://resources/foliage/quarry_block_1.tres" id="f_1"]
+[ext_resource type="Resource" path="res://resources/foliage/quarry_block_2.tres" id="f_2"]
+
+[sub_resource type="Resource" id="W_1"]
+script = ExtResource("w_script")
+def = ExtResource("f_1")
+weight = 1.0
+
+[sub_resource type="Resource" id="W_2"]
+script = ExtResource("w_script")
+def = ExtResource("f_2")
+weight = 1.0
+
+[resource]
+script = ExtResource("1_patch")
+id = &"boulder_field"
+clearing_tag = &"quarry"
+density = 3.0
+entries = Array[ExtResource("w_script")]([SubResource("W_1"), SubResource("W_2")])

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="FoliageDef" format=3]
+
+[ext_resource type="Script" path="res://resources/foliage_def.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://assets/nature/meshes/Pebble_Round_1.tscn" id="2_model"]
+[ext_resource type="Script" path="res://resources/resource_drop.gd" id="drop_script"]
+[ext_resource type="Resource" path="res://resources/resources/pebble.tres" id="res_pebble"]
+
+[sub_resource type="Resource" id="Drop_pebble"]
+script = ExtResource("drop_script")
+resource = ExtResource("res_pebble")
+count = 1
+
+[resource]
+script = ExtResource("1_def")
+id = &"loose_pebble"
+model = ExtResource("2_model")
+scale_range = Vector2(0.8, 1.4)
+align_to_slope = 0.95
+embed_depth = 0.015
+base_radius = 0.25
+cover_amount = 0.0
+max_slope_degrees = 40.0
+collider_radius = 0.35
+collider_height = 0.3
+harvest_drops = Array[ExtResource("drop_script")]([SubResource("Drop_pebble")])
+harvest_requires_tool = false
+harvest_health = 1
+harvest_prompt_key = "interact.prompt.pickup"

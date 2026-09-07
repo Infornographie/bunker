@@ -89,6 +89,9 @@ extends Resource
 ## plante peut alors porter un corps sans être exploitable, ce qui est le cas
 ## d'un rocher qu'on contourne.
 @export var harvest_drops: Array[ResourceDrop] = []
+## Faux pour ce qui se ramasse à la main plutôt que de s'abattre : champignons,
+## branches au sol, cailloux. `harvest_tool_type` est alors ignoré.
+@export var harvest_requires_tool: bool = true
 ## Type d'outil qui l'entame. Sans le bon outil, les coups ne font rien.
 @export var harvest_tool_type: ToolDef.ToolType = ToolDef.ToolType.CHOP
 @export_range(1, 50) var harvest_health: int = 3

@@ -57,7 +57,7 @@ res://
 │   │   ├── choppable.gd                — hérite Interactable : HP, type d'outil, depleted → 3× pickup
 │   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D), lit ResourceDef
 │   │   ├── construction_site.gd / .tscn
-│   │   ├── harvestable.gd              — source de récolte : type d'outil qui l'entame + table de butin. Un arbre et un bloc ne diffèrent que par ces deux données
+│   │   ├── harvestable.gd              — source de récolte : outil qui l'entame (ou `requires_tool = false` pour la cueillette à la main) + table de butin. Cueilli, le butin part en poche ; abattu, il tombe au sol
 │   │   ├── foliage_harvestable.gd      — instance de MultiMesh rendue récoltable. StaticBody3D **sans mesh** ; efface son instance (échelle zéro) dans tous les multimesh de son essence à l'épuisement
 │   │   ├── tool_pickup.gd              — outil posé au sol, créé dynamiquement par PlayerEquipment
 │   │   ├── backpack_pickup.gd / .tscn
@@ -90,6 +90,8 @@ res://
 │       └── tools/tool_controller.gd    — viewmodel 1re personne, swing()
 ├── resources/
 │   ├── resource_def.gd                 — Resource : item (CarryType), name_key
+│   ├── resource_drop.gd                — Resource : une ligne de butin (ressource + quantité)
+│   ├── clearing_def.gd                 — (@tool) Resource : un replat déclaré (position, rayon, **tag**). Le tag relie un lieu du terrain à une tache du semis
 │   ├── tool_def.gd                     — Resource : outil data-driven
 │   ├── backpack_data.gd                — Resource : contenu d'un sac
 │   ├── building_def.gd                 — Resource : bâtiment (coûts, collision_shape, scènes)
@@ -97,14 +99,14 @@ res://
 │   ├── recipe_def.gd                   — Resource : recette de transformation
 │   ├── sky_profile.gd                  — Resource : un ciel complet (couleurs jour/aube/couchant/nuit, nuages, disque solaire, lune, courbes de soleil, d'ambiante et de distance de brume). Unité de **climat**, pas de moment
 │   ├── terrain_gen_config.gd           — (@tool) Resource : réglages de génération + convention de grille (grid_size, cell_count, half_size, chunks_per_side, height_index, world_pos, sample_grid, sample_height, chunk_area, stream_tile_area, stream_tiles_per_side). Porte `layers` et `biomes`
-│   ├── foliage_def.gd                  — (@tool) Resource : une essence (id, model, scale_range, random_yaw, min/max_slope_degrees, embed_depth, base_radius, cover_radius, cover_amount, cover_response) — **pas de poids** : il appartient à la composition
+│   ├── foliage_def.gd                  — (@tool) Resource : une essence (id, model, scale_range, random_yaw, min/max_slope_degrees, embed_depth, base_radius, cover_radius, cover_amount, cover_response) plus sa présence physique (collider_radius/height) et sa récolte (harvest_drops, harvest_requires_tool, harvest_tool_type, harvest_health, harvest_prompt_key, harvest_sound) — **pas de poids** : il appartient à la composition
 │   ├── foliage_weight.gd               — (@tool) Resource : une essence et son poids ici (def, weight)
 │   ├── foliage_layer.gd                — (@tool) Resource : une strate (id, spacing, jitter, streamed, stand_noise, stand_blend, clearing_response, clearing_uniform) — la grille, pas le contenu
-│   ├── foliage_patch.gd                — (@tool) Resource : une tache de composition (id, noise, threshold, min/max_slope_degrees, density, entries)
+│   ├── foliage_patch.gd                — (@tool) Resource : une tache de composition (id, noise, threshold, min/max_slope_degrees, max_height_above_water, density, entries) ou, si `clearing_tag` est renseigné, le contenu d'un lieu nommé
 │   ├── biome_def.gd                    — (@tool) Resource : un biome (id, massif_range, massif_falloff, edge_noise, edge_amount, weight_floor, strata) + stratum_for(layer)
 │   ├── biome_stratum.gd                — (@tool) Resource : ce qu'un biome fait pousser dans une strate (layer_id, patches, entries)
 │   │   → la couleur, le port et l'emploi de chaque famille du pack sont dans ASSETS.md
-│   ├── resources/                      — instances ResourceDef (wood, mushroom, grilled_mushroom)
+│   ├── resources/                      — instances ResourceDef (wood, branch, pebble, stone_block, mushroom, grilled_mushroom)
 │   ├── recipes/                        — instances RecipeDef
 │   ├── tools/wooden_axe.tres
 │   ├── buildings/                      — campfire.tres, campfire_shape.tres
@@ -183,7 +185,7 @@ res://
 - Les meshes sont **extraits** de la scène du modèle, une fois par essence et mis en cache. Les matériaux posés en surcharge de surface sur le `MeshInstance3D` sont recopiés dans le mesh : un multimesh ne connaît que les matériaux du mesh lui-même.
 - Répartition en grille jitterée globale, parcourue par chunk. **Les deux bornes de la grille s'arrondissent au supérieur**, et la fin d'un chunk est la même expression que le début du suivant — sinon une colonne de plantation se perd à chaque frontière et la grille se voit dans la canopée.
 - Rejets, dans cet ordre : sous l'eau, dans une clairière (probabilité croissante sur la distance d'adoucissement — la lisière n'est pas dessinée, elle est le dégradé), dans le lit de la rivière, puis pente trop forte pour l'essence tirée.
-- **Le choix d'essence se fait au point, jamais au chunk.** Chaque essence a son champ de bruit propre ; son poids local est son poids propre modulé par ce champ élevé à `stand_sharpness`. Une sélection par chunk produirait une couture rectiligne à chaque frontière.
+- **Le choix d'essence se fait au point, jamais au chunk.** Chaque essence a son champ de bruit propre ; l'essence est désignée par une roue dont la position se lit sur ce champ, mêlée au tirage à hauteur de `stand_blend`. Une sélection par chunk produirait une couture rectiligne à chaque frontière.
 - Le gain de performance vient de la même mécanique : au cœur d'un peuplement, les autres essences ne sont jamais tirées, donc leur multimesh n'existe pas dans ce chunk.
 - `FoliageScatter.chunk_nodes` (`Vector2i` → `Node3D`) est le point d'entrée de `FoliageProximity` vers les chunks. Ni le nom du nœud ni la boîte englobante du multimesh ne sont une seconde source de vérité : le premier se périme au renommage, la seconde n'est pas calculée à la sortie du semis.
 - **Les strates se sèment l'une après l'autre, chacune sur toute la carte**, parce qu'une strate lit l'occupation laissée par les précédentes et qu'un arbre déborde chez le chunk voisin.
@@ -206,10 +208,16 @@ res://
 - **Aucun corps dans `stream_tile()`** : une tuile streamée est jetée et resemée au passage, donc ce qu'on y récolterait réapparaîtrait.
 - ⚠️ `Interactable` étend `PhysicsBody3D`, natif **abstrait** : un corps interactif créé en code se construit en `StaticBody3D.new()` + `set_script()`, propriétés écrites en `set()`.
 
+### Flux des lieux nommés
+- `TerrainGenConfig.clearings` est un `Array[ClearingDef]` (position, rayon, `tag`). `BlockoutHeightmap` publie la géométrie en `clearings` (`PackedVector3Array`, lu dans les boucles chaudes du semis) et les identités en `clearing_tags`, **indexées pareil**. La clairière du bunker est toujours l'index 0, tag `bunker`.
+- Un `FoliagePatch` dont le `clearing_tag` est non vide ne se déclare que dans les clairières de ce nom, et y remplace la composition. Il **ignore alors son bruit et sa bande de pente** : les critères ne se cumulent pas, sinon une tache posée à la main ne couvrirait son lieu qu'en partie.
+- ⚠️ Les critères de l'**essence** (`min_slope_degrees`, `max_slope_degrees`) s'appliquent toujours. Un lieu déclaré a besoin d'essences qui acceptent son terrain — une clairière est aplanie, donc rien qui exige de la pente n'y poussera.
+- L'identité du lieu ne se résout que si `openness < 1.0`, donc jamais hors clairière : `openness` est déjà calculé pour tous les candidats.
+
 ### Flux d'action (swing outil)
 - `ActionStateMachine.use_tool_on(target, on_impact, reach_distance)` appelle `ToolController.swing()` et écoute son signal `swing_impact` en retour. La SM pilote le controller, jamais l'inverse.
 - Au `swing_impact`, la SM exécute le `Callable` fourni par l'appelant, uniquement si la cible est encore valide.
-- `Choppable.receive_tool_hit()` : vérifie le type d'outil, décrémente HP, émet `depleted` → spawn 3 `ResourcePickup`, hook `chop_sound` → `SoundManager`.
+- `Harvestable.receive_tool_hit()` : vérifie le type d'outil, décrémente les PV, puis `_deplete()` → émet `depleted`, sème le butin (`ResourceDrop`) et se libère. `hit_sound` → `SoundManager` à chaque coup.
 ### Flux d'interaction / portage
 - `InteractionController` : raycast vers un `Interactable`, gère le prompt (fix `tree_exiting` sur la cible). Le prompt vient de `Interactable.get_prompt_key(interactor)`, surchargeable — c'est ce qui rend le verbe contextuel.
 - Ordre des branches sur E, et il compte : objet lourd en main → livraison ou dépose ; petit objet en poche active → livraison ; sinon `interact()`. Une cible qui **refuse** rend la main à la branche suivante au lieu de faire tomber l'objet.

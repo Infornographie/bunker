@@ -11,8 +11,19 @@ class_name Harvestable
 
 signal depleted
 
-## Type d'outil qui entame cette source. Un autre type ne fait rien du tout :
-## c'est le verrou, la puissance de l'outil n'est qu'une vitesse.
+## Faux pour ce qui se ramasse à la main : un champignon, une branche au sol,
+## un caillou. La source répond alors à la touche d'interaction au lieu du clic
+## d'outil, `required_tool_type` est ignoré, et un seul geste suffit quels que
+## soient les PV.
+##
+## C'est le même objet dans les deux cas, et c'est voulu : ce qui distingue
+## cueillir de couper est le geste, pas la nature de ce qu'on récolte. Un
+## `Gatherable` écrit à côté aurait recopié la table de butin, les piles et la
+## destruction pour changer un mode d'entrée.
+@export var requires_tool: bool = true
+## Type d'outil qui entame cette source, quand elle en demande un. Un autre type
+## ne fait rien du tout : c'est le verrou, la puissance de l'outil n'est qu'une
+## vitesse.
 @export var required_tool_type: ToolDef.ToolType = ToolDef.ToolType.CHOP
 @export var max_health: int = 3
 @export var hit_sound: AudioStream
@@ -39,6 +50,13 @@ func _ready() -> void:
 ## réel passe par `receive_tool_hit()`, appelé que la cible soit interactable
 ## ou non (voir `InteractionController._try_use_tool()`).
 func can_interact(interactor: Node) -> bool:
+	if _is_depleted:
+		return false
+	if not requires_tool:
+		# Cueillir demande seulement d'avoir les mains libres — le butin doit
+		# pouvoir aller quelque part.
+		var carry := _get_carry_controller(interactor)
+		return carry == null or carry.can_carry()
 	var tool_controller := _get_tool_controller(interactor)
 	if tool_controller == null or not tool_controller.can_swing():
 		return false
@@ -46,22 +64,83 @@ func can_interact(interactor: Node) -> bool:
 	return tool != null and tool.tool_type == required_tool_type
 
 
-## La récolte se déclenche au clic (use_tool), cible valide ou non — pas via la
-## touche d'interaction générique (E).
+## La récolte à l'outil se déclenche au clic, cible valide ou non ; la cueillette
+## passe par la touche d'interaction générique.
 func uses_tool_trigger() -> bool:
-	return true
+	return requires_tool
+
+
+## Cueillette : un geste, et la source est vidée quels que soient ses PV. Doser
+## une cueillette en plusieurs appuis n'aurait aucune lecture pour le joueur.
+func interact(interactor: Node) -> void:
+	if requires_tool or _is_depleted:
+		return
+	if not can_interact(interactor):
+		return
+	_is_depleted = true
+	depleted.emit()
+	# Ce qui est cueilli à la main part **dans les poches**, pas au sol. Le
+	# faire tomber pour le ramasser aussitôt ajoute un geste que personne n'a
+	# demandé : le joueur a déjà exprimé son intention en appuyant sur E.
+	# Ce qui ne rentre pas retombe, et c'est le seul cas où il y a un objet
+	# physique à ramasser.
+	var leftovers: Array[ResourceDrop] = []
+	var inventory := _get_inventory(interactor)
+	for drop in drops:
+		if drop == null or drop.resource == null:
+			continue
+		var stored := 0
+		if inventory != null:
+			for i in drop.count:
+				if not _store(inventory, drop.resource):
+					break
+				stored += 1
+		if stored < drop.count:
+			var rest := ResourceDrop.new()
+			rest.resource = drop.resource
+			rest.count = drop.count - stored
+			leftovers.append(rest)
+	if not leftovers.is_empty():
+		var kept := drops
+		drops = leftovers
+		_spawn_drops(Vector3.ZERO, global_position)
+		drops = kept
+	queue_free()
+
+
+## Range une ressource selon son type de portage. Même routage que le ramassage
+## d'un pickup au sol — il n'existe qu'une façon de ranger quelque chose.
+func _store(inventory: Inventory, resource: ResourceDef) -> bool:
+	match resource.carry_type:
+		ResourceDef.CarryType.SMALL:
+			return inventory.try_store_small(resource)
+		ResourceDef.CarryType.TOOL:
+			return resource.tool_def != null and inventory.try_store_tool(resource.tool_def)
+		_:
+			return false
+
+
+func _get_inventory(interactor: Node) -> Inventory:
+	if interactor is InteractionController:
+		return interactor.inventory
+	return null
 
 
 func receive_tool_hit(tool: ToolDef, hit_origin: Vector3 = Vector3.ZERO) -> void:
-	if tool == null or tool.tool_type != required_tool_type or _is_depleted:
+	if not requires_tool or _is_depleted:
+		return
+	if tool == null or tool.tool_type != required_tool_type:
 		return
 	if hit_sound:
 		SoundManager.play_sfx(hit_sound, global_position)
 	_health -= tool.damage
 	if _health > 0:
 		return
+	_deplete(global_position, hit_origin)
+
+
+func _deplete(spawn_position: Vector3, hit_origin: Vector3) -> void:
 	_is_depleted = true
-	var spawn_position := global_position
 	depleted.emit()
 	_spawn_drops(hit_origin, spawn_position)
 	queue_free()
@@ -107,4 +186,10 @@ func _spawn_drops(hit_origin: Vector3, spawn_position: Vector3) -> void:
 func _get_tool_controller(interactor: Node) -> ToolController:
 	if interactor is InteractionController:
 		return interactor.tool_controller
+	return null
+
+
+func _get_carry_controller(interactor: Node) -> CarryController:
+	if interactor is InteractionController:
+		return interactor.carry_controller
 	return null

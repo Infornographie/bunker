@@ -31,7 +31,15 @@ var water_level: float
 
 ## Replats publiés pour le semis, en (x, z, rayon). La clairière du bunker est
 ## toujours la première.
+##
+## Reste un `PackedVector3Array` et non un tableau de `ClearingDef` : le semis
+## le parcourt dans ses boucles chaudes, et une géométrie compacte s'y lit sans
+## déréférencer un objet par candidat.
 var clearings: PackedVector3Array
+## Identité de chaque replat, **indexée comme `clearings`**. Lue seulement une
+## fois qu'un candidat est déjà tombé dans une clairière — donc jamais dans la
+## boucle chaude.
+var clearing_tags: Array[StringName] = []
 
 ## Tracé de la rivière, tel que déclaré dans la config.
 var river_path: PackedVector2Array
@@ -90,14 +98,18 @@ func _hill_profile(point: Vector2) -> float:
 ## d'arbres.
 func _flatten_clearings() -> void:
 	clearings = PackedVector3Array()
+	clearing_tags = []
 	clearings.append(Vector3(0.0, 0.0, _cfg.bunker_radius))
-	for spot in _cfg.clearings:
-		clearings.append(spot)
-
+	clearing_tags.append(&"bunker")
 	_ops.flatten_disc(Vector2.ZERO, _cfg.bunker_radius, _cfg.bunker_falloff,
 			_cfg.bunker_max_delta, 1.0)
+
 	for spot in _cfg.clearings:
-		_ops.flatten_disc(Vector2(spot.x, spot.y), spot.z, _cfg.clearing_falloff,
+		if spot == null:
+			continue
+		clearings.append(Vector3(spot.position.x, spot.position.y, spot.radius))
+		clearing_tags.append(spot.tag)
+		_ops.flatten_disc(spot.position, spot.radius, _cfg.clearing_falloff,
 				_cfg.clearing_max_delta, _cfg.clearing_flatten_strength)
 
 

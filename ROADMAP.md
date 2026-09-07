@@ -25,7 +25,7 @@
 - [x] `CharacterBody3D` + input (locomotion, caméra, franchissement de marches auto via test_move)
 - [x] Système d'interaction (raycast/zone), prompts world-space → `Interactable`/`InteractionController`/`Choppable`, dégâts synchronisés sur `swing_impact`
 - [x] Récolte : `Choppable` fait tomber 3 `ResourcePickup` physiques, ramassables (E) et portables via `CarryController`
-- [x] Sound manager de base (`autoloads/sound_manager.gd`) → SFX ponctuels positionnés, hook posé sur `Choppable.chop_sound`
+- [x] Sound manager de base (`autoloads/sound_manager.gd`) → SFX ponctuels positionnés, hook posé sur la source de récolte (`Harvestable.hit_sound` depuis le Jalon 4.5)
 - [x] Système d'outils tenus (viewmodel 1ère personne, `ToolDef` data-driven) → hache en bois fonctionnelle
 - [x] Construction data-driven (`BuildingDefs`) — blueprint au sol, détection de collision, livraison physique, feu de camp
 - [x] Ceinture d'outils (2 slots, barre 1-2)
@@ -168,9 +168,19 @@
 - [x] **Dette Jalon 1 payée** : la collision du chêne était un `ConcavePolygonShape3D` de 530 000 caractères — le mesh complet, feuillage compris, ce qui faisait grimper le navmesh dans les branches. Remplacée par un cylindre de tronc, la scène passe de 531 Ko à 1,8 Ko. Toute la forêt suit la même règle.
 - [x] Enfoncement des arbres réduit de moitié, corps posés au niveau du sol, sons branchés : coupe sur les vingt essences d'arbres, minage (CC0, CamoMano) sur les `rock_medium` et l'affleurement.
 
+### Passe D — lieux nommés et cueillette ✅
+- [x] `ClearingDef` : les clairières portent position, rayon et un `tag`. `FoliagePatch.clearing_tag` y attache une composition ; non vide, il remplace bruit et bande de pente.
+- [x] `FoliagePatch.max_height_above_water` : critère de berge. Le semis connaissait déjà hauteur et niveau d'eau, mais aucune donnée ne dit « à quelle distance de la rivière ».
+- [x] `Harvestable.requires_tool = false` : cueillette à la touche d'interaction, butin routé vers l'inventaire, surplus au sol.
+- [x] Strate `gatherable` (non streamée) : branches (préférant l'ombre via `cover_response`) et cailloux, plus trois taches — `stony_slope` (pente > 12°), `river_shingle` (< 1,2 m au-dessus de l'eau) et `mushroom_grove` (clairière `mushrooms`).
+- [x] Clairière `quarry` avec ses propres `quarry_block` en `Rock_Big`, sans contrainte de pente — les rochers de versant s'y refusaient.
+- [x] Enfoncement à plat corrigé sur les 26 essences dotées d'un corps, déclaré explicitement partout.
+
 ### Dette Jalon 4.5
 - **Le semis crée une `CylinderShape3D` par corps** (~4 000 ressources), parce que l'échelle est tirée par instance. Partager une forme par essence demanderait d'arrondir l'échelle par paliers. À mesurer avant de s'en occuper : rien n'indique aujourd'hui que ça coûte.
 - **`scree` ne contient plus que `grass_wispy_rock`** depuis que les rochers en sont sortis : un éboulis réduit à de l'herbe rase. Les neuf `pebble_square` orphelins depuis la passe B3 sont les candidats pour le regarnir — ils avaient été retirés délibérément, donc à trancher plutôt qu'à faire.
+- **La strate `gatherable` pose ~1 900 corps de plus** (5 913 au total, 715 ms de semis contre 523). Toujours acceptable, mais c'est le poste qui a le plus grossi : si le semis devient gênant, c'est son `spacing` (6 m) qu'on monte en premier.
+- **Deux `.tres` par espèce de champignon** (`mushroom_common` décoratif, `gathered_mushroom_common` récoltable) : la même espèce sert de décor de sous-bois et de ressource de bosquet. Acceptable à deux espèces, à revoir si le catalogue grossit — la sortie propre serait un champ « récoltable » sur l'essence plutôt qu'un doublon.
 - **Seulement ~70 rochers par carte** (`min_slope_degrees = 14` les réserve aux versants), concentrés sur la colline. Suffisant pour tester, à revoir si le minage devient une activité de pawn courante — leviers : l'espacement de la strate ou le seuil de pente.
 - **Le dossier `entities/interactable/forest/` contient désormais la pierre.** Nom devenu faux ; le renommer touche des UID, à faire au prochain remaniement de ce dossier.
 - **`hotbar.gd` redéclare `BELT_COUNT` et `HOTBAR_SIZE`.** Même vérité à deux endroits depuis qu'`Inventory` les porte. Le rangement demande de choisir si le HUD a le droit de citer `Inventory` — probablement oui, il l'affiche déjà.

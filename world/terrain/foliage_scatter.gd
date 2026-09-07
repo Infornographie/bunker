@@ -94,6 +94,10 @@ class Palette:
 	## Bande de pente où la tache existe.
 	var min_slope := 0.0
 	var max_slope := 90.0
+	## Clairière où cette tache s'installe. Non vide, elle décide seule.
+	var clearing_tag := &""
+	## Hauteur maximale au-dessus de l'eau ; négatif = aucun critère.
+	var max_above_water := -1.0
 
 	## Essence désignée par la roue en ce point. Un appel de bruit, un seul.
 	func pick(point: Vector2, roll: float) -> FoliageDef:
@@ -105,10 +109,21 @@ class Palette:
 		return defs[defs.size() - 1]
 
 	## Vrai si cette palette prend la main en ce point.
-	func covers(point: Vector2, slope: float) -> bool:
+	##
+	## Une tache attachée à un lieu ne consulte ni bruit ni pente : elle *est*
+	## le contenu de ce lieu. Les deux critères ne se cumulent pas — une tache
+	## qui devrait à la fois tomber dans la bonne clairière et passer un seuil
+	## de bruit ne s'y déclarerait qu'en partie, ce qui est exactement ce qu'on
+	## cherche à éviter en la posant à la main.
+	func covers(point: Vector2, slope: float, clearing: StringName,
+			above_water: float) -> bool:
+		if clearing_tag != &"":
+			return clearing_tag == clearing
 		if gate == null:
 			return true
 		if slope < min_slope or slope > max_slope:
+			return false
+		if max_above_water >= 0.0 and above_water > max_above_water:
 			return false
 		return 0.5 + 0.5 * gate.get_noise_2dv(point) > threshold
 
@@ -149,6 +164,7 @@ var chunk_nodes: Dictionary = {}
 var _cfg: TerrainGenConfig
 var _heights: PackedFloat32Array
 var _clearings: PackedVector3Array
+var _clearing_tags: Array[StringName] = []
 var _river: PackedVector2Array
 var _water_level: float
 var _biomes: BiomeMap
@@ -156,10 +172,12 @@ var _biomes: BiomeMap
 
 ## Construit tout le feuillage. Retourne un Node3D à parenter dans la scène.
 func scatter(cfg: TerrainGenConfig, heights: PackedFloat32Array, clearings: PackedVector3Array,
-		river: PackedVector2Array, water_level: float, biomes: BiomeMap) -> Node3D:
+		clearing_tags: Array[StringName], river: PackedVector2Array, water_level: float,
+		biomes: BiomeMap) -> Node3D:
 	_cfg = cfg
 	_heights = heights
 	_clearings = clearings
+	_clearing_tags = clearing_tags
 	_river = river
 	_water_level = water_level
 	_biomes = biomes
@@ -302,6 +320,8 @@ func _palettes_of(layer: FoliageLayer, layer_index: int) -> Array:
 			palette.density = patch.density
 			palette.min_slope = patch.min_slope_degrees
 			palette.max_slope = patch.max_slope_degrees
+			palette.clearing_tag = patch.clearing_tag
+			palette.max_above_water = patch.max_height_above_water
 			built.append(palette)
 		var base := _palette(_usable_entries(stratum.entries, owner), layer.stand_noise,
 				layer.stand_blend, layer_index, biome_index, 0)
@@ -428,13 +448,20 @@ func _scatter_area(layer: FoliageLayer, palettes_by_biome: Array, layer_index: i
 			# palette *et* essence, sinon la moitié du tapis basculerait dans
 			# une autre plaque ou un autre patch. C'est ce qui fait qu'une
 			# clairière est une unité et pas un morceau de forêt sans arbres.
+			# L'identité du lieu ne se cherche que si le candidat est déjà dans
+			# une clairière — `openness` le dit sans rien coûter, il est déjà
+			# calculé. Hors clairière, aucun index n'est résolu.
 			var sample := point
 			var uniform := false
-			if layer.clearing_uniform and openness < 1.0:
+			var clearing_tag := &""
+			if openness < 1.0:
 				var index := _clearing_index(clearings, clearings_near, point)
 				if index >= 0:
-					sample = Vector2(clearings[index].x, clearings[index].y)
-					uniform = true
+					if index < _clearing_tags.size():
+						clearing_tag = _clearing_tags[index]
+					if layer.clearing_uniform:
+						sample = Vector2(clearings[index].x, clearings[index].y)
+						uniform = true
 
 			# Quel biome décide, et donc dans quelles palettes on cherche. Lu au
 			# point d'échantillonnage : une clairière uniforme appartient à un
@@ -454,7 +481,7 @@ func _scatter_area(layer: FoliageLayer, palettes_by_biome: Array, layer_index: i
 			# sait pas imbriquer les types de tableaux — et affecter son
 			# `Variant` à une variable typée fait échouer la compilation.
 			for candidate: Palette in palettes:
-				if candidate.covers(sample, gate_slope):
+				if candidate.covers(sample, gate_slope, clearing_tag, height - water_level):
 					palette = candidate
 					break
 			if palette == null:
@@ -648,6 +675,7 @@ func _build_bodies(chunk: Node3D, def: FoliageDef, transforms: Array,
 			body.set_script(_HARVESTABLE_SCRIPT)
 			body.set("multimeshes", multimeshes)
 			body.set("instance_index", i)
+			body.set("requires_tool", def.harvest_requires_tool)
 			body.set("required_tool_type", def.harvest_tool_type)
 			body.set("max_health", def.harvest_health)
 			body.set("drops", def.harvest_drops)

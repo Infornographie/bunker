@@ -83,8 +83,8 @@ func generate() -> void:
 	# colorer le sol de ce qui pousse dessus.
 	var scatter := FoliageScatter.new()
 	var foliage_started := Time.get_ticks_msec()
-	var foliage := scatter.scatter(config, heights, heightmap.clearings, heightmap.river_path,
-			heightmap.water_level, biomes)
+	var foliage := scatter.scatter(config, heights, heightmap.clearings,
+			heightmap.clearing_tags, heightmap.river_path, heightmap.water_level, biomes)
 	var foliage_elapsed := Time.get_ticks_msec() - foliage_started
 	foliage.name = FOLIAGE_NODE
 	add_child(foliage)

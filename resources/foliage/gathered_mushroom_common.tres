@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="FoliageDef" format=3]
+
+[ext_resource type="Script" path="res://resources/foliage_def.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://assets/nature/meshes/Mushroom_Common.tscn" id="2_model"]
+[ext_resource type="Script" path="res://resources/resource_drop.gd" id="drop_script"]
+[ext_resource type="Resource" path="res://resources/resources/mushroom.tres" id="res_mushroom"]
+
+[sub_resource type="Resource" id="Drop_mushroom"]
+script = ExtResource("drop_script")
+resource = ExtResource("res_mushroom")
+count = 1
+
+[resource]
+script = ExtResource("1_def")
+id = &"gathered_mushroom_common"
+model = ExtResource("2_model")
+scale_range = Vector2(0.9, 1.4)
+embed_depth = 0.04
+base_radius = 0.3
+cover_amount = 0.0
+max_slope_degrees = 25.0
+collider_radius = 0.3
+collider_height = 0.35
+harvest_drops = Array[ExtResource("drop_script")]([SubResource("Drop_mushroom")])
+harvest_requires_tool = false
+harvest_health = 1
+harvest_prompt_key = "interact.prompt.pickup"

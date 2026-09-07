@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="TerrainGenConfig" format=3 uid="uid://dudcemthchqc4"]
 
 [ext_resource type="Script" uid="uid://cgr78oi5viv6v" path="res://resources/terrain_gen_config.gd" id="1_config"]
+[ext_resource type="Script" path="res://resources/clearing_def.gd" id="clearing_script"]
 [ext_resource type="Shader" uid="uid://d1hk4oi75x8p6" path="res://world/terrain/terrain.gdshader" id="2_shader"]
 [ext_resource type="Script" uid="uid://c5smwg870yhrm" path="res://resources/foliage_layer.gd" id="3_layer"]
 [ext_resource type="Resource" uid="uid://ctvsruqvytdxu" path="res://resources/foliage_layers/canopy.tres" id="4_canopy"]
 [ext_resource type="Resource" uid="uid://bcskrhi73ac7d" path="res://resources/foliage_layers/understory.tres" id="5_understory"]
 [ext_resource type="Resource" path="res://resources/foliage_layers/boulder.tres" id="6_boulder"]
+[ext_resource type="Resource" path="res://resources/foliage_layers/gatherable.tres" id="6_gatherable"]
 [ext_resource type="Resource" uid="uid://b4ekd0iy1yyss" path="res://resources/foliage_layers/shrub.tres" id="6_shrub"]
 [ext_resource type="Resource" uid="uid://l8jt03qmfspv" path="res://resources/foliage_layers/ground.tres" id="7_ground"]
 [ext_resource type="Texture2D" uid="uid://cfmfm32lb0aej" path="res://assets/ground/textures/cliff_rocks_02_2k/cliff_rocks_02_baseColor_2k.png" id="11_jr2ob"]
@@ -107,13 +109,31 @@ shader_parameter/sand_band = 3.5
 shader_parameter/tint_scale = 0.03
 shader_parameter/tint_strength = 0.130000006175
 
+[sub_resource type="Resource" id="Clearing_0"]
+script = ExtResource("clearing_script")
+position = Vector2(100.0, -60.0)
+radius = 30.0
+tag = &"quarry"
+
+[sub_resource type="Resource" id="Clearing_1"]
+script = ExtResource("clearing_script")
+position = Vector2(-40.0, 40.0)
+radius = 24.0
+tag = &"mushrooms"
+
+[sub_resource type="Resource" id="Clearing_2"]
+script = ExtResource("clearing_script")
+position = Vector2(150.0, 30.0)
+radius = 20.0
+tag = &""
+
 [resource]
 script = ExtResource("1_config")
 world_seed = 1234
 river_points = PackedVector2Array(-192, 150, -40, 108, 70, 128, 192, 86)
-clearings = PackedVector3Array(100, -60, 30, -40, 40, 24, 150, 30, 20)
+clearings = Array[ExtResource("clearing_script")]([SubResource("Clearing_0"), SubResource("Clearing_1"), SubResource("Clearing_2")])
 clearing_falloff = 18.0
-layers = Array[ExtResource("3_layer")]([ExtResource("4_canopy"), ExtResource("5_understory"), ExtResource("6_boulder"), ExtResource("6_shrub"), ExtResource("7_ground")])
+layers = Array[ExtResource("3_layer")]([ExtResource("4_canopy"), ExtResource("5_understory"), ExtResource("6_boulder"), ExtResource("6_gatherable"), ExtResource("6_shrub"), ExtResource("7_ground")])
 biomes = Array[ExtResource("biome_script")]([ExtResource("biome_forest_light"), ExtResource("biome_conifer")])
 foliage_view_distance = 675.0
 foliage_fade_margin = 225.0

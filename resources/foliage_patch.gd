@@ -20,6 +20,16 @@ extends Resource
 ## Identifiant stable, pour les messages de génération.
 @export var id: StringName
 
+## Identité de clairière où cette tache s'installe. **Non vide, elle remplace
+## entièrement le bruit et la bande de pente** : la tache n'existe alors que
+## dans les clairières portant ce tag, et y existe toujours. C'est ce qui permet
+## de poser un coin à champignons à un endroit *décidé*, là où un bruit ne sait
+## produire que des taches réparties.
+##
+## Le terrain et le semis restent ignorants l'un de l'autre : le premier nomme
+## des lieux, le second dit ce qui pousse dans un lieu de ce nom.
+@export var clearing_tag: StringName = &""
+
 ## Bruit qui décide où la tache se forme. Sa fréquence donne la taille des
 ## taches : basse pour de grands parterres, haute pour de petits bosquets.
 @export var noise: FastNoiseLite
@@ -34,6 +44,13 @@ extends Resource
 ## et s'y refuser elle-même faute de pente — le replat reste nu.
 @export_range(0.0, 90.0) var min_slope_degrees: float = 0.0
 @export_range(0.0, 90.0) var max_slope_degrees: float = 90.0
+
+## Hauteur maximale au-dessus du plan d'eau où la tache peut se former, en
+## mètres. **Négatif = aucun critère.** C'est ce qui décrit une berge : le semis
+## connaît déjà la hauteur du point et le niveau de l'eau, mais aucune donnée ne
+## dit « à quelle distance de la rivière » — et une bande basse le long du cours
+## est exactement ce qu'on cherche à décrire.
+@export var max_height_above_water: float = -1.0
 
 ## Densité relative dans la tache. Au-dessus de 1, la tache est plus fournie que
 ## la strate autour — c'est ce qui fait qu'un parterre d'herbe se voit comme un

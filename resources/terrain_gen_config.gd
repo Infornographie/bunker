@@ -70,11 +70,10 @@ extends Resource
 @export var bunker_max_delta: float = 12.0
 
 @export_group("Clairières")
-## Replats déclarés, en (x, z, rayon). La clairière du bunker n'est pas dans
+## Replats déclarés, avec leur identité. La clairière du bunker n'est pas dans
 ## cette liste : elle est posée à part parce que sa position est une contrainte,
 ## pas un réglage.
-@export var clearings: PackedVector3Array = PackedVector3Array([
-	Vector3(100.0, -60.0, 30.0), Vector3(-40.0, 40.0, 24.0), Vector3(150.0, 30.0, 20.0)])
+@export var clearings: Array[ClearingDef] = []
 ## Distance d'adoucissement au-delà du rayon.
 @export var clearing_falloff: float = 26.0
 ## Écart de hauteur au-delà duquel un replat renonce à aplanir.

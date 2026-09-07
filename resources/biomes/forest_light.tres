@@ -41,6 +41,12 @@
 [ext_resource type="Resource" path="res://resources/foliage/rock_medium_2.tres" id="f_rock_medium_2"]
 [ext_resource type="Resource" path="res://resources/foliage/rock_medium_3.tres" id="f_rock_medium_3"]
 [ext_resource type="Resource" path="res://resources/foliage/rock_medium_4.tres" id="f_rock_medium_4"]
+[ext_resource type="Resource" path="res://resources/foliage_patches/boulder_field.tres" id="p_boulder_field"]
+[ext_resource type="Resource" path="res://resources/foliage/deadwood_branch.tres" id="f_deadwood_branch"]
+[ext_resource type="Resource" path="res://resources/foliage/loose_pebble.tres" id="f_loose_pebble"]
+[ext_resource type="Resource" path="res://resources/foliage_patches/stony_slope.tres" id="p_stony_slope"]
+[ext_resource type="Resource" path="res://resources/foliage_patches/river_shingle.tres" id="p_river_shingle"]
+[ext_resource type="Resource" path="res://resources/foliage_patches/mushroom_grove.tres" id="p_mushroom_grove"]
 
 [sub_resource type="Resource" id="FoliageWeight_canopy_tall_thick_1"]
 script = ExtResource("weight_script")
@@ -213,7 +219,24 @@ weight = 1.0
 [sub_resource type="Resource" id="BiomeStratum_boulder"]
 script = ExtResource("stratum_script")
 layer_id = &"boulder"
+patches = Array[ExtResource("patch_script")]([ExtResource("p_boulder_field")])
 entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_boulder_rock_medium_1"), SubResource("FoliageWeight_boulder_rock_medium_2"), SubResource("FoliageWeight_boulder_rock_medium_3"), SubResource("FoliageWeight_boulder_rock_medium_4")])
+
+[sub_resource type="Resource" id="FoliageWeight_gatherable_branch"]
+script = ExtResource("weight_script")
+def = ExtResource("f_deadwood_branch")
+weight = 3.0
+
+[sub_resource type="Resource" id="FoliageWeight_gatherable_pebble"]
+script = ExtResource("weight_script")
+def = ExtResource("f_loose_pebble")
+weight = 1.0
+
+[sub_resource type="Resource" id="BiomeStratum_gatherable"]
+script = ExtResource("stratum_script")
+layer_id = &"gatherable"
+patches = Array[ExtResource("patch_script")]([ExtResource("p_mushroom_grove"), ExtResource("p_river_shingle"), ExtResource("p_stony_slope")])
+entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_gatherable_branch"), SubResource("FoliageWeight_gatherable_pebble")])
 
 [resource]
 script = ExtResource("biome_script")
@@ -222,4 +245,4 @@ massif_range = Vector2(0, 0.42)
 massif_falloff = 0.15
 edge_amount = 0.0
 weight_floor = 0.05
-strata = Array[ExtResource("stratum_script")]([SubResource("BiomeStratum_canopy"), SubResource("BiomeStratum_understory"), SubResource("BiomeStratum_boulder"), SubResource("BiomeStratum_shrub"), SubResource("BiomeStratum_ground")])
+strata = Array[ExtResource("stratum_script")]([SubResource("BiomeStratum_canopy"), SubResource("BiomeStratum_understory"), SubResource("BiomeStratum_boulder"), SubResource("BiomeStratum_gatherable"), SubResource("BiomeStratum_shrub"), SubResource("BiomeStratum_ground")])

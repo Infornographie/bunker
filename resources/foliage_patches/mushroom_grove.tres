@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FoliagePatch" format=3]
+
+[ext_resource type="Script" path="res://resources/foliage_patch.gd" id="1_patch"]
+[ext_resource type="Script" path="res://resources/foliage_weight.gd" id="w_script"]
+[ext_resource type="Resource" path="res://resources/foliage/gathered_mushroom_common.tres" id="f_common"]
+[ext_resource type="Resource" path="res://resources/foliage/gathered_mushroom_redcap.tres" id="f_redcap"]
+
+[sub_resource type="Resource" id="W_common"]
+script = ExtResource("w_script")
+def = ExtResource("f_common")
+weight = 2.0
+
+[sub_resource type="Resource" id="W_redcap"]
+script = ExtResource("w_script")
+def = ExtResource("f_redcap")
+weight = 1.0
+
+[resource]
+script = ExtResource("1_patch")
+id = &"mushroom_grove"
+clearing_tag = &"mushrooms"
+density = 3.0
+entries = Array[ExtResource("w_script")]([SubResource("W_common"), SubResource("W_redcap")])
