@@ -2,6 +2,20 @@
 
 [ext_resource type="Script" path="res://resources/foliage_def.gd" id="1_def"]
 [ext_resource type="PackedScene" path="res://assets/nature/meshes/GiantPine_4.tscn" id="2_model"]
+[ext_resource type="Script" path="res://resources/resource_drop.gd" id="drop_script"]
+[ext_resource type="Resource" path="res://resources/resources/branch.tres" id="res_branch"]
+[ext_resource type="Resource" path="res://resources/resources/wood.tres" id="res_wood"]
+[ext_resource type="AudioStream" path="res://assets/sounds/593857__igroglaz__chop2.mp3" id="snd_chop"]
+
+[sub_resource type="Resource" id="Drop_giant_pine_4_0"]
+script = ExtResource("drop_script")
+resource = ExtResource("res_wood")
+count = 6
+
+[sub_resource type="Resource" id="Drop_giant_pine_4_1"]
+script = ExtResource("drop_script")
+resource = ExtResource("res_branch")
+count = 3
 
 [resource]
 script = ExtResource("1_def")
@@ -9,7 +23,14 @@ id = &"giant_pine_4"
 model = ExtResource("2_model")
 scale_range = Vector2(0.9, 1.2)
 max_slope_degrees = 42.0
-embed_depth = 0.5
+embed_depth = 0.25
 base_radius = 2.0
 cover_radius = 6.5
 cover_amount = 0.4
+collider_radius = 0.6
+collider_height = 11.0
+harvest_drops = Array[ExtResource("drop_script")]([SubResource("Drop_giant_pine_4_0"), SubResource("Drop_giant_pine_4_1")])
+harvest_tool_type = 0
+harvest_health = 6
+harvest_prompt_key = "interact.prompt.chop"
+harvest_sound = ExtResource("snd_chop")

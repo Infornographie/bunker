@@ -2,6 +2,20 @@
 
 [ext_resource type="Script" uid="uid://dugmoq2v6exlf" path="res://resources/foliage_def.gd" id="1_def"]
 [ext_resource type="PackedScene" uid="uid://r6htar24c0fs" path="res://assets/nature/meshes/Rock_Medium_1.tscn" id="2_model"]
+[ext_resource type="Script" path="res://resources/resource_drop.gd" id="drop_script"]
+[ext_resource type="Resource" path="res://resources/resources/stone_block.tres" id="res_block"]
+[ext_resource type="Resource" path="res://resources/resources/pebble.tres" id="res_pebble"]
+[ext_resource type="AudioStream" path="res://assets/sounds/431019__camomano__stone-hit.mp3" id="snd_stone"]
+
+[sub_resource type="Resource" id="Drop_rock_medium_1_0"]
+script = ExtResource("drop_script")
+resource = ExtResource("res_block")
+count = 2
+
+[sub_resource type="Resource" id="Drop_rock_medium_1_1"]
+script = ExtResource("drop_script")
+resource = ExtResource("res_pebble")
+count = 2
 
 [resource]
 script = ExtResource("1_def")
@@ -13,3 +27,10 @@ max_slope_degrees = 70.0
 align_to_slope = 0.5
 embed_depth = 0.35
 cover_amount = 0.0
+collider_radius = 1.1
+collider_height = 2.0
+harvest_drops = Array[ExtResource("drop_script")]([SubResource("Drop_rock_medium_1_0"), SubResource("Drop_rock_medium_1_1")])
+harvest_tool_type = 1
+harvest_health = 4
+harvest_prompt_key = "interact.prompt.mine"
+harvest_sound = ExtResource("snd_stone")

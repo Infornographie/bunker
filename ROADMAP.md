@@ -156,7 +156,23 @@
 - [x] Code mort retiré : `_get_equipment_controller()` de `backpack_pickup.gd`, jamais appelé.
 - [x] Les `Interactable` visent `interactor.inventory`.
 
+### Passe C — ressources et récolte ✅
+- [x] `ResourceDrop` : une ligne de butin (ressource + quantité). Remplace `drop_resource`/`pickup_count`, qui ne savaient exprimer qu'une seule sorte.
+- [x] `Choppable` généralisé en `Harvestable` : `required_tool_type` + table de `drops`. Pas de `Mineable` jumeau.
+- [x] Ressources **branche**, **caillou** (SMALL) et **bloc de pierre** (HAND), avec leurs scènes de pickup et leurs clés CSV.
+- [x] `ToolDef` **pioche en bois** — le modèle était déjà importé et `ToolType.MINE` existait ; il manquait un grip et un `.tres`. En ceinture au démarrage avec la hache.
+- [x] `stone_outcrop.tscn` : `Rock_Big_1` en `MINE`, 5 PV, 2 blocs + 3 cailloux.
+- [x] **La forêt est récoltable** : `FoliageDef` gagne un corps de collision (cylindre de tronc, sans mesh) et ses champs de récolte ; `FoliageHarvestable` efface l'instance du multimesh à l'épuisement. 24 essences dotées — les cinq familles d'arbres et les `rock_medium`.
+- [x] Strate `boulder` (non streamée) : les `rock_medium` quittent le patch `scree` de la strate `ground`, où ils étaient semés sans corps donc non minables. Retirés de `scree` en même temps — sans quoi ils auraient été semés deux fois, dont une en fantômes.
+- [x] Butin du chêne et des essences : rondins **et** branches à la hache, blocs **et** cailloux à la pioche.
+- [x] **Dette Jalon 1 payée** : la collision du chêne était un `ConcavePolygonShape3D` de 530 000 caractères — le mesh complet, feuillage compris, ce qui faisait grimper le navmesh dans les branches. Remplacée par un cylindre de tronc, la scène passe de 531 Ko à 1,8 Ko. Toute la forêt suit la même règle.
+- [x] Enfoncement des arbres réduit de moitié, corps posés au niveau du sol, sons branchés : coupe sur les vingt essences d'arbres, minage (CC0, CamoMano) sur les `rock_medium` et l'affleurement.
+
 ### Dette Jalon 4.5
+- **Le semis crée une `CylinderShape3D` par corps** (~4 000 ressources), parce que l'échelle est tirée par instance. Partager une forme par essence demanderait d'arrondir l'échelle par paliers. À mesurer avant de s'en occuper : rien n'indique aujourd'hui que ça coûte.
+- **`scree` ne contient plus que `grass_wispy_rock`** depuis que les rochers en sont sortis : un éboulis réduit à de l'herbe rase. Les neuf `pebble_square` orphelins depuis la passe B3 sont les candidats pour le regarnir — ils avaient été retirés délibérément, donc à trancher plutôt qu'à faire.
+- **Seulement ~70 rochers par carte** (`min_slope_degrees = 14` les réserve aux versants), concentrés sur la colline. Suffisant pour tester, à revoir si le minage devient une activité de pawn courante — leviers : l'espacement de la strate ou le seuil de pente.
+- **Le dossier `entities/interactable/forest/` contient désormais la pierre.** Nom devenu faux ; le renommer touche des UID, à faire au prochain remaniement de ce dossier.
 - **`hotbar.gd` redéclare `BELT_COUNT` et `HOTBAR_SIZE`.** Même vérité à deux endroits depuis qu'`Inventory` les porte. Le rangement demande de choisir si le HUD a le droit de citer `Inventory` — probablement oui, il l'affiche déjà.
 - **`ActionStateMachine` reste couplée au `ToolController`** : elle se connecte à son signal et lui demande `can_swing()`. La découpler maintenant reviendrait à inventer une interface « chose qui sait frapper » avec un seul client. À traiter au Jalon 5, avec le premier pawn qui frappe — c'est lui qui dira quelle forme elle doit prendre.
 - Aucune personnalité de carte : pas de lieux-dits, pas de features, une seule composition. Assumé — c'est le polish tardif qui répondra, à la main.

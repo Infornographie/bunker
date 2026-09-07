@@ -140,5 +140,7 @@ Le pack livre aussi 27 presets — des `ShaderMaterial` et des `Sky` tout faits.
 > Le shader du pack livre son propre `triplanar.gdshaderinc`, qui n'est inclus par rien dans `main.gdshader`. Il n'a pas été copié.
 ## Audio
  
-- **chop2.mp3** — igroglaz — **CC0** (SFX coupe du bois, hook posé, asset non encore branché)
+- **chop2.mp3** — igroglaz — **CC0** (SFX coupe du bois, branché sur les essences d'arbres et sur `oak_tree.tscn`)
   [freesound.org/s/593857](https://freesound.org/s/593857/)
+- **stone-hit.mp3** — CamoMano — **CC0** (SFX minage — « hitting a rock with a hatchet », branché sur les `rock_medium` et sur `stone_outcrop.tscn`)
+  [freesound.org/s/431019](https://freesound.org/s/431019/)

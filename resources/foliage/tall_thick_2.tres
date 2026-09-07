@@ -2,6 +2,20 @@
 
 [ext_resource type="Script" path="res://resources/foliage_def.gd" id="1_def"]
 [ext_resource type="PackedScene" path="res://assets/nature/meshes/TallThick_2.tscn" id="2_model"]
+[ext_resource type="Script" path="res://resources/resource_drop.gd" id="drop_script"]
+[ext_resource type="Resource" path="res://resources/resources/branch.tres" id="res_branch"]
+[ext_resource type="Resource" path="res://resources/resources/wood.tres" id="res_wood"]
+[ext_resource type="AudioStream" path="res://assets/sounds/593857__igroglaz__chop2.mp3" id="snd_chop"]
+
+[sub_resource type="Resource" id="Drop_tall_thick_2_0"]
+script = ExtResource("drop_script")
+resource = ExtResource("res_wood")
+count = 6
+
+[sub_resource type="Resource" id="Drop_tall_thick_2_1"]
+script = ExtResource("drop_script")
+resource = ExtResource("res_branch")
+count = 3
 
 [resource]
 script = ExtResource("1_def")
@@ -10,7 +24,14 @@ model = ExtResource("2_model")
 scale_range = Vector2(0.9, 1.15)
 random_yaw = true
 max_slope_degrees = 35.0
-embed_depth = 0.5
+embed_depth = 0.25
 base_radius = 2.2
 cover_radius = 7.5
 cover_amount = 0.42
+collider_radius = 0.65
+collider_height = 9.0
+harvest_drops = Array[ExtResource("drop_script")]([SubResource("Drop_tall_thick_2_0"), SubResource("Drop_tall_thick_2_1")])
+harvest_tool_type = 0
+harvest_health = 6
+harvest_prompt_key = "interact.prompt.chop"
+harvest_sound = ExtResource("snd_chop")

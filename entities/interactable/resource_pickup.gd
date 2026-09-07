@@ -8,7 +8,7 @@ class_name ResourcePickup
 var _fall_direction: Vector3 = Vector3.ZERO
 
 
-## Appelé par Choppable._spawn_pickup() avant add_child, pour orienter la
+## Appelé par Harvestable._spawn_drops() avant add_child, pour orienter la
 ## chute vers l'avant du coup plutôt qu'aléatoirement.
 func set_fall_direction(direction: Vector3) -> void:
 	_fall_direction = direction

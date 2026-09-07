@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://by88t0rcjhwbo" path="res://entities/player/carry_controller.gd" id="6_bectd"]
 [ext_resource type="Script" path="res://entities/player/player_equipment.gd" id="7_7thud"]
 [ext_resource type="Script" path="res://entities/player/inventory.gd" id="11_inventory"]
+[ext_resource type="Resource" path="res://resources/tools/wooden_pickaxe.tres" id="12_pickaxe"]
 [ext_resource type="Resource" uid="uid://bcysmn7sp7y5a" path="res://resources/buildings/campfire.tres" id="7_a1qjk"]
 [ext_resource type="PackedScene" uid="uid://bwdnti672a2j7" path="res://entities/player/hud/player_hud.tscn" id="7_qiwj3"]
 [ext_resource type="Script" uid="uid://ch5bhk78mm7sm" path="res://resources/tool_def.gd" id="8_j3ovn"]
@@ -76,7 +77,7 @@ drop_origin = NodePath("..")
 [node name="Inventory" type="Node" parent="CharacterBody3D" node_paths=PackedStringArray("carry_controller")]
 script = ExtResource("11_inventory")
 carry_controller = NodePath("../CarryController")
-starting_tools = Array[ExtResource("8_j3ovn")]([ExtResource("3_fkugw")])
+starting_tools = Array[ExtResource("8_j3ovn")]([ExtResource("3_fkugw"), ExtResource("12_pickaxe")])
 
 [node name="CarryController" type="Node3D" parent="CharacterBody3D" unique_id=1987434561 node_paths=PackedStringArray("hand_anchor")]
 script = ExtResource("6_bectd")

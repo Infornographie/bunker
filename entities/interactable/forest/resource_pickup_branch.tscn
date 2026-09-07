@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://entities/interactable/resource_pickup.gd" id="1_script"]
+[ext_resource type="Resource" path="res://resources/resources/branch.tres" id="2_res"]
+[ext_resource type="PackedScene" path="res://assets/deadwood/models/stick_1.glb" id="3_model"]
+
+[sub_resource type="BoxShape3D" id="Shape"]
+size = Vector3(1.26, 0.24, 0.35)
+
+[node name="ResourcePickup_Branch" type="RigidBody3D"]
+can_sleep = false
+continuous_cd = true
+script = ExtResource("1_script")
+resource_def = ExtResource("2_res")
+
+[node name="Stick" parent="." instance=ExtResource("3_model")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape")

@@ -118,7 +118,15 @@ var _parts_cache: Dictionary = {}
 ## refait en boucle, et il croît avec le nombre de biomes.
 var _palettes_cache: Dictionary = {}
 ## Nombre d'instances effectivement posées, pour le compte-rendu de génération.
+## Couche par défaut + « Obstacles » : la première pour le raycast
+## d'interaction, la seconde pour que le joueur et les pawns butent dessus.
+const _BODY_LAYER: int = (1 << 0) | (1 << 2)
+const _HARVESTABLE_SCRIPT: GDScript = preload("res://entities/interactable/foliage_harvestable.gd")
+
 var placed_count: int = 0
+## Corps de collision posés — mesurable, parce que c'est le seul poste que
+## cette passe ajoute et qu'on veut savoir ce qu'il coûte.
+var body_count: int = 0
 ## Compte par strate, dans l'ordre de semis. C'est le chiffre qu'on regarde pour
 ## régler un espacement : un total global ne dit pas quelle strate a débordé.
 var placed_per_layer: Array[int] = []
@@ -596,9 +604,71 @@ func _build_chunk_node(cfg: TerrainGenConfig, placements: Dictionary, cx: int, c
 	var chunk := Node3D.new()
 	chunk.name = "foliage_%d_%d" % [cx, cz]
 	for def: FoliageDef in placements:
+		var built: Array[MultiMesh] = []
 		for part in _parts_of(def):
-			chunk.add_child(_build_multimesh(cfg, def, part, placements[def]))
+			var node := _build_multimesh(cfg, def, part, placements[def])
+			chunk.add_child(node)
+			built.append(node.multimesh)
+		_build_bodies(chunk, def, placements[def], built)
 	return chunk
+
+
+## Pose un corps de collision par instance, pour les essences qui en demandent
+## un. Sans mesh : le multimesh dessine déjà la plante, le corps n'existe que
+## pour être touché par le raycast et pour barrer le passage.
+##
+## Les corps ne sont posés qu'ici, jamais dans `stream_tile()` : les strates
+## streamées sont l'herbe et les buissons, qu'on traverse et qui ne se
+## récoltent pas. Elles ont un `collider_radius` à zéro, mais la règle vaut
+## aussi à l'envers — une tuile de streaming est jetée et resemée au passage
+## du joueur, ce qui ferait réapparaître ce qu'on y aurait récolté.
+func _build_bodies(chunk: Node3D, def: FoliageDef, transforms: Array,
+		multimeshes: Array[MultiMesh]) -> void:
+	if def.collider_radius <= 0.0:
+		return
+
+	var harvestable: bool = not def.harvest_drops.is_empty()
+	for i in transforms.size():
+		var t: Transform3D = transforms[i]
+		# L'échelle est tirée par instance et vit dans le transform. La sortir
+		# ici plutôt que de scaler le corps : un `CollisionShape3D` scalé est
+		# mal supporté, une forme dimensionnée ne pose aucun problème.
+		var scale: float = t.basis.get_scale().y
+		var shape := CylinderShape3D.new()
+		shape.radius = def.collider_radius * scale
+		shape.height = def.collider_height * scale
+
+		# `Interactable` étend `PhysicsBody3D`, qui est abstrait : ses classes
+		# filles ne s'instancient pas par `new()`. Le corps se construit donc
+		# en `StaticBody3D` et reçoit son script — même motif que le
+		# `ToolPickup` créé au vol par `PlayerEquipment`. Les propriétés du
+		# script s'écrivent alors en dynamique, l'analyseur ne les connaît pas.
+		var body := StaticBody3D.new()
+		if harvestable:
+			body.set_script(_HARVESTABLE_SCRIPT)
+			body.set("multimeshes", multimeshes)
+			body.set("instance_index", i)
+			body.set("required_tool_type", def.harvest_tool_type)
+			body.set("max_health", def.harvest_health)
+			body.set("drops", def.harvest_drops)
+			body.set("prompt_key", def.harvest_prompt_key)
+			body.set("hit_sound", def.harvest_sound)
+		body.name = "%s_%d" % [def.id, i]
+		body.collision_layer = _BODY_LAYER
+		# Le corps se pose **au niveau du sol**, pas à l'origine du modèle.
+		# Celle-ci est enfoncée de `_sink()` pour que la plante ne flotte pas
+		# sur une pente — un artifice d'affichage, qui n'a rien à faire dans
+		# la présence physique : le cylindre commencerait sous terre, et le
+		# butin en tomberait plus bas encore, sous la carte.
+		var ground_y := _cfg.sample_height(_heights, Vector2(t.origin.x, t.origin.z))
+		body.position = Vector3(t.origin.x, ground_y, t.origin.z)
+
+		var collision := CollisionShape3D.new()
+		collision.shape = shape
+		collision.position.y = shape.height * 0.5
+		body.add_child(collision)
+		chunk.add_child(body)
+		body_count += 1
 
 
 func _build_multimesh(cfg: TerrainGenConfig, def: FoliageDef, part: Part, transforms: Array) -> MultiMeshInstance3D:

@@ -24,6 +24,10 @@
 [ext_resource type="Resource" uid="uid://douxv5svimjbc" path="res://resources/foliage_patches/scree.tres" id="p_scree"]
 [ext_resource type="Script" uid="uid://dx8q2o0qarpld" path="res://resources/biome_stratum.gd" id="stratum_script"]
 [ext_resource type="Script" uid="uid://bk7tamevhctnm" path="res://resources/foliage_weight.gd" id="weight_script"]
+[ext_resource type="Resource" path="res://resources/foliage/rock_medium_1.tres" id="f_rock_medium_1"]
+[ext_resource type="Resource" path="res://resources/foliage/rock_medium_2.tres" id="f_rock_medium_2"]
+[ext_resource type="Resource" path="res://resources/foliage/rock_medium_3.tres" id="f_rock_medium_3"]
+[ext_resource type="Resource" path="res://resources/foliage/rock_medium_4.tres" id="f_rock_medium_4"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_edge"]
 frequency = 0.0035
@@ -129,10 +133,35 @@ layer_id = &"ground"
 patches = Array[ExtResource("patch_script")]([ExtResource("p_scree"), ExtResource("p_mushroom_spot")])
 entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_ground_grass_wispy_short"), SubResource("FoliageWeight_ground_grass_wispy_tall"), SubResource("FoliageWeight_ground_clover_2"), SubResource("FoliageWeight_ground_plant_5")])
 
+[sub_resource type="Resource" id="FoliageWeight_boulder_rock_medium_1"]
+script = ExtResource("weight_script")
+def = ExtResource("f_rock_medium_1")
+weight = 1.0
+
+[sub_resource type="Resource" id="FoliageWeight_boulder_rock_medium_2"]
+script = ExtResource("weight_script")
+def = ExtResource("f_rock_medium_2")
+weight = 1.0
+
+[sub_resource type="Resource" id="FoliageWeight_boulder_rock_medium_3"]
+script = ExtResource("weight_script")
+def = ExtResource("f_rock_medium_3")
+weight = 1.0
+
+[sub_resource type="Resource" id="FoliageWeight_boulder_rock_medium_4"]
+script = ExtResource("weight_script")
+def = ExtResource("f_rock_medium_4")
+weight = 1.0
+
+[sub_resource type="Resource" id="BiomeStratum_boulder"]
+script = ExtResource("stratum_script")
+layer_id = &"boulder"
+entries = Array[ExtResource("weight_script")]([SubResource("FoliageWeight_boulder_rock_medium_1"), SubResource("FoliageWeight_boulder_rock_medium_2"), SubResource("FoliageWeight_boulder_rock_medium_3"), SubResource("FoliageWeight_boulder_rock_medium_4")])
+
 [resource]
 script = ExtResource("biome_script")
 id = &"conifer_highland"
 massif_range = Vector2(0.5, 1)
 massif_falloff = 0.15
 edge_noise = SubResource("FastNoiseLite_edge")
-strata = Array[ExtResource("stratum_script")]([SubResource("BiomeStratum_canopy"), SubResource("BiomeStratum_understory"), SubResource("BiomeStratum_shrub"), SubResource("BiomeStratum_ground")])
+strata = Array[ExtResource("stratum_script")]([SubResource("BiomeStratum_canopy"), SubResource("BiomeStratum_understory"), SubResource("BiomeStratum_boulder"), SubResource("BiomeStratum_shrub"), SubResource("BiomeStratum_ground")])

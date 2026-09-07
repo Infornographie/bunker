@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ResourceDef" format=3]
+
+[ext_resource type="Script" path="res://resources/resource_def.gd" id="1_def"]
+
+[resource]
+script = ExtResource("1_def")
+id = "pebble"
+name_key = "resource.pebble.name"
+carry_type = 1

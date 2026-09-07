@@ -9,6 +9,7 @@ interact.prompt.feed_fire,Feed,Alimenter
 interact.prompt.inspect_fire,Examine fire,Examiner le feu
 interact.prompt.interact,Interact,Interagir
 interact.prompt.light_fire,Light,Allumer
+interact.prompt.mine,Mine,Extraire
 interact.prompt.open_backpack,Open backpack,Ouvrir le sac
 interact.prompt.pickup,Pick up,Ramasser
 interact.prompt.put,Put,Poser
@@ -16,11 +17,15 @@ interact.prompt.take,Take,Prendre
 ,,
 ,=== RESOURCES ===,
 resource.grilled_mushroom.name,Grilled mushroom,Champignon grillé
+resource.branch.name,Branch,Branche
 resource.mushroom.name,Mushroom,Champignon
+resource.pebble.name,Pebble,Caillou
+resource.stone_block.name,Stone block,Bloc de pierre
 resource.wood.name,Wood,Bois
 ,,
 ,=== TOOLS ===,
 tool.wooden_axe.name,Wooden axe,Hache en bois
+tool.wooden_pickaxe.name,Wooden pickaxe,Pioche en bois
 ,,
 ,=== BUILDINGS ===,
 building.campfire.name,Campfire,Feu de camp

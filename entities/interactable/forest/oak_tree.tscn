@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://bxks4paby6ggl"]
+
+[ext_resource type="Script" path="res://entities/interactable/harvestable.gd" id="1_gbyqs"]
+[ext_resource type="PackedScene" uid="uid://bt7hfcs6h3xha" path="res://assets/nature/models/CommonTree_1.gltf" id="2_mir7k"]
+[ext_resource type="AudioStream" uid="uid://6l12h67unphm" path="res://assets/sounds/593857__igroglaz__chop2.mp3" id="2_nw3iq"]
+[ext_resource type="Resource" uid="uid://cc1jos21u05lp" path="res://resources/resources/wood.tres" id="3_mwppb"]
+[ext_resource type="Script" path="res://resources/resource_drop.gd" id="4_drop"]
+[ext_resource type="Resource" path="res://resources/resources/branch.tres" id="5_branch"]
+
+[sub_resource type="Resource" id="Drop_wood"]
+script = ExtResource("4_drop")
+resource = ExtResource("3_mwppb")
+count = 3
+
+[sub_resource type="Resource" id="Drop_branch"]
+script = ExtResource("4_drop")
+resource = ExtResource("5_branch")
+count = 2
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_trunk"]
+height = 5.0
+radius = 0.32
+
+[node name="OakTree" type="StaticBody3D" unique_id=655245046]
+collision_layer = 5
+collision_mask = 5
+script = ExtResource("1_gbyqs")
+hit_sound = ExtResource("2_nw3iq")
+drops = Array[ExtResource("4_drop")]([SubResource("Drop_wood"), SubResource("Drop_branch")])
+prompt_key = "interact.prompt.chop"
+
+[node name="CommonTree_12" parent="." unique_id=1831634335 instance=ExtResource("2_mir7k")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0024485588, 0.006596327, -0.0057959557)
+
+[node name="CommonTree_1" parent="CommonTree_12" index="0" unique_id=1698507776]
+layers = 5
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1981837601]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+shape = SubResource("CylinderShape3D_trunk")
+
+[editable path="CommonTree_12"]

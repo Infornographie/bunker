@@ -5,9 +5,10 @@
 [ext_resource type="PackedScene" uid="uid://06k6adpsbv7e" path="res://entities/player/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" uid="uid://d1a2pi25ythqw" path="res://world/sky/sky_rig.tscn" id="4_sky"]
 [ext_resource type="PackedScene" path="res://world/sky/sky_debug_panel.tscn" id="5_sky_debug"]
-[ext_resource type="PackedScene" uid="uid://bxks4paby6ggl" path="res://entities/interactable/forest/oak_choppable.tscn" id="6_choppable"]
+[ext_resource type="PackedScene" uid="uid://bxks4paby6ggl" path="res://entities/interactable/forest/oak_tree.tscn" id="6_choppable"]
 [ext_resource type="PackedScene" uid="uid://ddwvl4p2drvne" path="res://entities/interactable/backpack_pickup.tscn" id="7_backpack"]
 [ext_resource type="PackedScene" uid="uid://bxsorhp7cgmlm" path="res://entities/interactable/forest/mushroom_pickup.tscn" id="8_mushroom"]
+[ext_resource type="PackedScene" path="res://entities/interactable/forest/stone_outcrop.tscn" id="9_outcrop"]
 
 [node name="BlockoutTest" type="Node3D" unique_id=912293018 node_paths=PackedStringArray("sun")]
 script = ExtResource("1_controller")
@@ -26,7 +27,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.801096, 3, -18.688911)
 
 [node name="Props" type="Node3D" parent="." unique_id=1876775789]
 
-[node name="OakChoppable" parent="Props" unique_id=2139812555 instance=ExtResource("6_choppable")]
+[node name="OakTree" parent="Props" unique_id=2139812555 instance=ExtResource("6_choppable")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 1, 6)
 
 [node name="BackpackPickup" parent="Props" unique_id=842390497 instance=ExtResource("7_backpack")]
@@ -41,5 +42,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.4, 1, 10.2)
 
 [node name="MushroomPickup3" parent="Props" instance=ExtResource("8_mushroom")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 1, 11)
+
+[node name="StoneOutcrop" parent="Props" instance=ExtResource("9_outcrop")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0, -4)
 
 [editable path="SkyRig"]

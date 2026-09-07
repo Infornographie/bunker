@@ -21,7 +21,7 @@
 [ext_resource type="PackedScene" uid="uid://dykuv8hfxsx7m" path="res://assets/sci_fi/Modular SciFi MegaKit/glTF/Walls/WallBand_Straight.gltf" id="22_o6f7v"]
 [ext_resource type="PackedScene" uid="uid://bevggxbwcubgn" path="res://assets/sci_fi/Modular SciFi MegaKit/glTF/Platforms/Platform_Stairs_4.gltf" id="22_pl3hj"]
 [ext_resource type="PackedScene" uid="uid://caynr3qoyjdie" path="res://assets/sci_fi/Modular SciFi MegaKit/glTF/Platforms/Door_Frame_A.gltf" id="23_8nmbq"]
-[ext_resource type="PackedScene" uid="uid://bxks4paby6ggl" path="res://entities/interactable/forest/oak_choppable.tscn" id="23_uqwbu"]
+[ext_resource type="PackedScene" uid="uid://bxks4paby6ggl" path="res://entities/interactable/forest/oak_tree.tscn" id="23_uqwbu"]
 [ext_resource type="PackedScene" uid="uid://drddn06sopxsx" path="res://assets/sci_fi/Modular SciFi MegaKit/glTF/Walls/TopSimple_Straight.gltf" id="24_mw5x5"]
 [ext_resource type="PackedScene" uid="uid://c7cl1gyk87fw2" path="res://assets/sci_fi/Modular SciFi MegaKit/glTF/Platforms/Platform_Squares_Curve.gltf" id="25_ib5dv"]
 [ext_resource type="PackedScene" uid="uid://n0i618meqgq1" path="res://assets/sci_fi/Modular SciFi MegaKit/glTF/Platforms/Platform_Squares.gltf" id="26_864m6"]

@@ -57,6 +57,8 @@ res://
 │   │   ├── choppable.gd                — hérite Interactable : HP, type d'outil, depleted → 3× pickup
 │   │   ├── resource_pickup.gd          — hérite Interactable (RigidBody3D), lit ResourceDef
 │   │   ├── construction_site.gd / .tscn
+│   │   ├── harvestable.gd              — source de récolte : type d'outil qui l'entame + table de butin. Un arbre et un bloc ne diffèrent que par ces deux données
+│   │   ├── foliage_harvestable.gd      — instance de MultiMesh rendue récoltable. StaticBody3D **sans mesh** ; efface son instance (échelle zéro) dans tous les multimesh de son essence à l'épuisement
 │   │   ├── tool_pickup.gd              — outil posé au sol, créé dynamiquement par PlayerEquipment
 │   │   ├── backpack_pickup.gd / .tscn
 │   │   ├── panel/                      — panneaux posés dans le monde (voir § Flux des panneaux)
@@ -194,6 +196,16 @@ res://
 - La file est triée par distance, le plus proche semé en premier : l'herbe pousse sous les pieds du joueur avant de pousser au loin.
 - `FoliageProximity` est le point unique où le feuillage réagit à la distance. Tout s'y calcule **dans le repère du nœud de feuillage**, celui des emprises publiées — le nœud de terrain peut être tourné et déplacé dans sa scène.
 - `foliage_view_distance` et `foliage_fade_margin` sont posés sur chaque `MultiMeshInstance3D`. Ils se règlent **de pair avec le brouillard de profondeur** du `WorldEnvironment` : c'est la brume qui doit masquer la coupure. Depuis le cycle jour/nuit, cette brume est une **courbe** du `SkyProfile` et non une valeur fixe — c'est sa valeur minimale sur la journée qui doit tenir la coupure.
+### Flux de récolte
+- **Ce qui est dessiné et ce qui est présent sont deux choses.** Le `MultiMesh` dessine la plante ; `FoliageScatter._build_bodies()` pose à côté un `StaticBody3D` **sans mesh** par instance dont le `FoliageDef` a un `collider_radius > 0`. Un corps nu ne coûte ni appel de dessin ni ombre — lui donner un mesh rendrait à la scène les milliers d'objets de dessin que le multimesh existe pour éviter.
+- Le corps se pose **au niveau du sol** (`cfg.sample_height`), jamais à l'origine du modèle : celle-ci est enfoncée de `_sink()` pour l'affichage, et hériter de cet enfoncement enterre le cylindre et fait tomber le butin sous la carte.
+- Le cylindre couvre le **tronc**, pas la couronne : une collision qui épouse le feuillage est ce qui fait grimper le navmesh dans les branches.
+- `harvest_drops` vide = corps sans récolte (un obstacle qu'on contourne). Non vide = le corps reçoit le script `FoliageHarvestable`.
+- À l'épuisement, `FoliageHarvestable` met son instance à l'**échelle zéro** dans tous les multimesh de son essence — jamais un retrait, qui décalerait les index de tous les corps voisins. Le multimesh **est** le registre de ce qui a été récolté ; il n'y a pas de seconde liste.
+- **Une essence récoltable ne peut pas appartenir à une strate streamée** : `boulder` existe précisément pour sortir les rochers de `ground`. Elle est ordonnée après `understory` et avant `shrub`, pour que son occupation soit lue par les strates basses.
+- **Aucun corps dans `stream_tile()`** : une tuile streamée est jetée et resemée au passage, donc ce qu'on y récolterait réapparaîtrait.
+- ⚠️ `Interactable` étend `PhysicsBody3D`, natif **abstrait** : un corps interactif créé en code se construit en `StaticBody3D.new()` + `set_script()`, propriétés écrites en `set()`.
+
 ### Flux d'action (swing outil)
 - `ActionStateMachine.use_tool_on(target, on_impact, reach_distance)` appelle `ToolController.swing()` et écoute son signal `swing_impact` en retour. La SM pilote le controller, jamais l'inverse.
 - Au `swing_impact`, la SM exécute le `Callable` fourni par l'appelant, uniquement si la cible est encore valide.

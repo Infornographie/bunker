@@ -20,7 +20,7 @@ func get_prompt_key(_interactor: Node) -> String:
 
 ## Indique si cette interaction se déclenche via l'outil en main (clic gauche,
 ## action "use_tool") ou via la touche d'interaction générique (E, "interact").
-## Par défaut : générique. Choppable la surcharge (voir choppable.gd).
+## Par défaut : générique. `Harvestable` la surcharge (voir harvestable.gd).
 func uses_tool_trigger() -> bool:
 	return false
 

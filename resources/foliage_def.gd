@@ -12,9 +12,8 @@ extends Resource
 ## biome et presque rien dans un autre, et un poids porté ici obligerait à
 ## écrire la composition d'une strate à deux endroits.
 ##
-## Volontairement limité à ce que la passe courante consomme : les paramètres de
-## récolte (PV, outil, ressource lâchée) et les tags de propriété du Jalon 10
-## s'ajouteront quand il y aura quelqu'un pour les lire.
+## Volontairement limité à ce que la passe courante consomme : les tags de
+## propriété du Jalon 9 s'ajouteront quand il y aura quelqu'un pour les lire.
 
 ## Identifiant stable. Sert de clé de cache — jamais un nom affiché.
 @export var id: StringName
@@ -67,3 +66,31 @@ extends Resource
 ## d'accepter un candidat. L'herbe décroît, les champignons croissent, une
 ## fougère de sous-bois fait une cloche. Nulle = indifférente.
 @export var cover_response: Curve
+
+
+@export_group("Présence physique")
+## Rayon du cylindre de collision, en mètres, à l'échelle 1. **À zéro, aucun
+## corps n'est posé** : l'essence reste du décor pur, ce qui est le cas de
+## l'herbe, des fleurs et de tout ce qu'on traverse.
+##
+## Le corps posé n'a **pas de mesh** : le `MultiMesh` continue de dessiner la
+## plante, le corps ne fait qu'exister pour le raycast d'interaction et pour
+## bloquer le passage. Un corps nu ne coûte rien au rendu — lui donner un mesh
+## rendrait à la scène les milliers d'objets de dessin que le multimesh existe
+## précisément pour éviter.
+@export_range(0.0, 4.0, 0.05) var collider_radius: float = 0.0
+## Hauteur du cylindre, en mètres à l'échelle 1. Pour un arbre c'est le tronc,
+## pas la couronne : une collision qui épouse le feuillage est ce qui fait
+## grimper le navmesh dans les branches.
+@export_range(0.1, 30.0, 0.1) var collider_height: float = 2.0
+
+@export_group("Récolte")
+## Ce qui tombe quand l'essence est épuisée. **Vide = rien à récolter** : la
+## plante peut alors porter un corps sans être exploitable, ce qui est le cas
+## d'un rocher qu'on contourne.
+@export var harvest_drops: Array[ResourceDrop] = []
+## Type d'outil qui l'entame. Sans le bon outil, les coups ne font rien.
+@export var harvest_tool_type: ToolDef.ToolType = ToolDef.ToolType.CHOP
+@export_range(1, 50) var harvest_health: int = 3
+@export var harvest_prompt_key: String = "interact.prompt.chop"
+@export var harvest_sound: AudioStream

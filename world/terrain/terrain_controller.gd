@@ -128,11 +128,12 @@ func generate() -> void:
 	var per_biome := PackedStringArray()
 	for index in scatter.placed_per_biome.size():
 		per_biome.append("%s %d" % [config.biomes[index].id, scatter.placed_per_biome[index]])
-	print("Feuillage semé en %d ms — %d chunks, %d instances (%s) — biomes : %s." % [
+	print("Feuillage semé en %d ms — %d chunks, %d instances (%s), %d corps — biomes : %s." % [
 		foliage_elapsed,
 		foliage.get_child_count() - 1,
 		scatter.placed_count,
 		", ".join(per_layer),
+		scatter.body_count,
 		", ".join(per_biome),
 	])
 
