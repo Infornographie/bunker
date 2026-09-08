@@ -2,8 +2,8 @@
  
 ## État au 07/09/2026
  
-- **Jalon courant** : 4.5 clos — le terrain minimal porte tout ce qu'il faut pour occuper des pawns : forêt et rochers récoltables, ressources au sol ramassables, deux lieux nommés, un établi, un dépôt, trois bâtiments constructibles. Reste le navmesh.
-- **Jalon suivant** : 5 — Pawn : socle et passage à l'échelle (cible 40-50 pawns simultanés). Les cinq verbes qu'ils auront à arbitrer existent : ramasser, abattre, miner, déposer, fabriquer.
+- **Jalon courant** : 5 — Pawn : socle et passage à l'échelle (cible 40-50 pawns simultanés). Passe A close : le terrain est navigable. Reste un pawn qui marche, puis le banc de mesure.
+- **Jalon suivant** : 6 — Tableau de tâches, utility AI et fatigue.
 Socle : Godot 4.7.2, renderer Forward+. Avancement détaillé → ROADMAP.md.
 ## Décisions de conception
  
@@ -58,6 +58,17 @@ Choix retenus actuellement pour guider le développement — pas gravés dans le
 - **Un budget se compte dans l'unité du problème.** Tout semis étalé se plafonne en **millisecondes**, jamais en nombre de tuiles ou de chunks : une unité comptée en tuiles redevient fausse dès qu'on change une taille, un espacement ou de machine. Un garde-fou en tuiles a déjà laissé passer 800 ms de gel.
 - **Mesurer avant de conclure.** Sur le semis v1, l'estimation à vue donnait 70 ms par chunk et le chronomètre 400 : sans la mesure, le correctif aurait été dimensionné six fois trop petit.
 - **Un choix fait par chunk produit une couture par chunk.** Ce qui doit varier continûment se décide au point, jamais par cellule de découpage.
+
+### Navigation (Jalon 5, passe A)
+- **Le navmesh se bake après le semis, et se régénère comme le terrain.** Il doit connaître les troncs, donc il ne peut pas exister avant eux ; et comme les nœuds générés, il n'est jamais sérialisé. Une seule chose est éditable à l'inspecteur — le gabarit d'agent — parce qu'un rayon qu'on ne peut pas régler sans rouvrir un `.gd` ne se règle jamais.
+- **La géométrie source se désigne par un groupe, pas par une liste.** La région lit `navmesh_source`, porté par le `TerrainController`, et parcourt ses descendants. Tout ce que la génération ajoute dessous y entre sans recensement — c'est ce qui évite une seconde liste de « choses qui barrent le passage » à tenir à jour en parallèle des couches de collision.
+- **Ce qui bloque un pawn se déclare en couche de collision, pas en second champ.** Le bake ne lit que les corps statiques sur Ground et Obstacles : les rondins et pickups (`RigidBody3D`) sont ignorés par leur type, les cases de panneau par leur couche. Un navmesh troué par une interface serait une belle surprise.
+- **Recast rastérise : toute distance donnée en mètres est arrondie au voxel supérieur, en silence.** Un `agent_radius` de 0,4 sur une cellule de 0,3 devient 0,6 sans qu'aucun chiffre du projet ne le dise, et les pawns gardent 20 cm de trop autour de chaque tronc. Toutes les grandeurs d'agent doivent tomber sur un multiple entier de la cellule — d'où l'alignement de tout sur **0,2 m**, rayon et marche à 2 voxels exacts.
+- **C'est la carte de navigation qui fait foi, pas le navmesh.** `[navigation] 3d/default_cell_size` et `default_cell_height` dans `project.godot` sont la source de vérité ; un navmesh baké dans une grille et navigué dans une autre produit des erreurs de rastérisation sur les bords, avec avertissement mais sans échec.
+- **Le gabarit de l'agent est celui du joueur, délibérément** : rayon 0,4 et hauteur 1,8 sont sa capsule, la marche franchissable de 0,4 est son `step_height` de 0,35 arrondi au voxel. Ce que le joueur franchit sans y penser, un pawn le franchit aussi — et l'écart entre les deux ne peut pas dériver sans qu'on le décide.
+- **`filter_low_hanging_obstacles` remplace une couche de collision qu'on aurait sinon dû inventer.** Les ~1 900 objets de cueillette sont sur Obstacles comme les arbres et font 30 cm de haut : chacun aurait creusé un disque infranchissable de 60 cm. Le filtre les rend franchissables *par le dessus*, sous la même hauteur de marche. Distinguer « ce qui bloque » de « ce qui se ramasse » par une nouvelle couche aurait marché aussi, en obligeant à trancher au cas par cas pour chaque essence — le voxel le fait tout seul, et sur le bon critère.
+- **Un navmesh baké une fois ne connaît pas ce qu'on construit ensuite.** Le re-baker coûte 1,6 s ; la réponse est un `NavigationObstacle3D` sur les bâtiments, qui se déclare à l'instanciation et ne demande aucun recalcul.
+- Mesuré sur 384 m : **1 654 ms de bake, 48 420 polygones**.
 
 ### Simulation des pawns et liaison au bunker
 - **La cible chiffrée est une contrainte d'architecture, pas une ambition d'affichage.** 40 à 50 pawns simultanés : ce nombre décide de la forme du code avant la première ligne, parce qu'aucun des quatre postes coûteux ne se corrige après coup — évaluation IA, requêtes de chemin, animation/physique, et le nombre de `_process()`.
@@ -148,6 +159,7 @@ Bugs rencontrés et leur fix — pas des décisions de conception, des gotchas t
 - **Un masque binaire dans une heightmap creuse une marche** : le vallonnement effacé sur la falaise passait de 14 m à 0 d'un sommet de grille au suivant, gravant une rainure verticale sur toute la paroi. Tout masque qui module une amplitude doit déborder et s'éteindre progressivement. Ce bug ne se voit pas en vérifiant des chiffres, seulement en regardant le résultat.
 - **Un `MultiMesh` ne connaît que les matériaux du mesh lui-même.** Les matériaux posés en surcharge de surface sur un `MeshInstance3D` doivent être recopiés dans le mesh, sinon les instances sortent blanches.
 - **Godot considère front-facing les triangles en sens horaire.** Pour une grille XZ vue du dessus, l'ordre `(x,z) → (x+1,z) → (x,z+1)` donne des faces tournées vers le ciel.
+- **Une `Callable` bindée n'est jamais égale à elle-même d'un appel à l'autre.** `signal.is_connected(f.bind(x))` renvoie donc toujours faux, et une garde écrite ainsi laisse s'empiler une connexion de plus à chaque passage — le signal se déclenche alors deux fois, trois fois, avec les anciennes valeurs liées. Ce qui doit survivre entre deux appels est un membre, pas un argument lié.
 - **`HeightMapShape3D` échantillonne à 1 unité fixe** : l'utiliser avec une cellule différente oblige à scaler le `CollisionShape3D` de façon non uniforme, ce que Godot supporte mal. Sur un terrain à cellule ≠ 1 m, le trimesh issu du mesh lui-même est plus sûr et évite une deuxième source de vérité.
 - **Un `Sky` en `process_mode = REALTIME` exige un `radiance_size` ≤ 256.** Au-delà, Godot retombe silencieusement en incrémental et l'ambiante traîne derrière le ciel au lieu de le suivre.
 - **Un pack livré avec son projet Godot porte des chemins absolus** (`res://Materials/…`) valables à la racine de *son* projet. À la copie, réécrire les chemins dans ses `.tres` et `.tscn`, et supprimer ses `.import`/`.uid` pour laisser Godot réimporter.

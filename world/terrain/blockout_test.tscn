@@ -12,10 +12,27 @@
 [ext_resource type="PackedScene" path="res://entities/interactable/buildings/workbench.tscn" id="10_workbench"]
 [ext_resource type="PackedScene" path="res://entities/interactable/buildings/storage_pallet.tscn" id="11_pallet"]
 
-[node name="BlockoutTest" type="Node3D" unique_id=912293018 node_paths=PackedStringArray("sun")]
+[sub_resource type="NavigationMesh" id="NavigationMesh_pawn"]
+geometry_parsed_geometry_type = 1
+geometry_collision_mask = 6
+geometry_source_geometry_mode = 1
+geometry_source_group_name = &"navmesh_source"
+cell_size = 0.2
+cell_height = 0.2
+agent_height = 1.8
+agent_radius = 0.4
+agent_max_climb = 0.4
+agent_max_slope = 45.0
+filter_low_hanging_obstacles = true
+
+[node name="BlockoutTest" type="Node3D" unique_id=912293018 groups=["navmesh_source"] node_paths=PackedStringArray("sun", "navigation")]
 script = ExtResource("1_controller")
 config = ExtResource("2_config")
 sun = NodePath("SkyRig/Sun")
+navigation = NodePath("Navigation")
+
+[node name="Navigation" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_pawn")
 
 [node name="SkyRig" parent="." unique_id=1271209145 node_paths=PackedStringArray("sun", "world_environment") instance=ExtResource("4_sky")]
 sun = NodePath("Sun")

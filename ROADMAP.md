@@ -142,9 +142,7 @@
 - [ ] Chaque essence semée est **récoltable** : `FoliageDef` gagne ses champs de récolte (PV, type d'outil, `drop_resource`), et un arbre proche bascule en instance abattable. Un décor qu'on ne peut pas exploiter ne sert à rien à ce stade.
 - [ ] Densités réglées pour que le tier 1 soit montable sans traverser la carte.
 ### Passe C — navigation
-- [ ] Bake `NavigationRegion3D` après le semis
-- [ ] Corriger dette Jalon 1 (navmesh qui grimpe sur les branches basses) — collision de tronc simplifiée, pas mesh complet
-- [ ] `maxf()` sur l'élévation du soleil dans le composant de proximité du feuillage : la division par `tan(élévation)` peut produire un `inf`, et un `inf` dans une comparaison de distance ne lève rien (report du Jalon 4.4, passe C)
+> Reportée au Jalon 5, dont elle est devenue la passe A : un navmesh n'a de sens que le jour où quelque chose s'en sert.
 ### Passe B — séparer l'acteur du joueur ✅
 > Fait **avant** les ressources, parce qu'une IA de pawn écrite au-dessus d'un inventaire couplé à une caméra ne se rattrape pas après coup. Aucune abstraction « acteur » créée pour autant : seulement du retrait de dépendance injustifiée.
 
@@ -217,6 +215,19 @@
 - `foliage_view_distance` laissé à 675 m sur une carte de 384 : tout est dessiné, jamais de coupure. C'est délibéré — ça met le scintillement de fondu hors jeu pendant la mise au point des pawns — mais ce n'est pas un réglage tenable.
 ## Jalon 5 — Pawn : socle et passage à l'échelle
 > **Cœur du jeu.** L'objectif chiffré est de simuler **40 à 50 pawns** sans perdre la frame. Ce chiffre n'est pas une ambition d'affichage : c'est ce qui dimensionne l'architecture, et aucun des quatre postes ci-dessous ne se règle après coup.
+>
+> **Animations** : les personnages du pack Quaternius embarquent leurs 24 animations sur leur propre squelette (`Idle`, `Walk`, `Run`, `Interact`, `Punch`, `Death`…), soit le vocabulaire complet du jalon. La Universal Animation Library est écartée : son squelette est celui du mannequin Unreal (`pelvis`, `calf_l`, `hand_l`) et ne partage **qu'un os sur 62** avec celui des personnages. L'y brancher demande un retarget complet (`BoneMap` + `SkeletonProfileHumanoid`) — à traiter au chassis robot, Jalon 7, et pas avant.
+
+### Passe A — navigation ✅
+- [x] `NavigationRegion3D` dans `blockout_test.tscn`, bakée sur thread en fin de `TerrainController.generate()` — après le semis, puisque le navmesh doit connaître les troncs
+- [x] Géométrie source désignée par le groupe `navmesh_source` porté par le contrôleur, et non par une liste : tout ce que la génération ajoute sous lui y entre sans recensement
+- [x] Corps statiques uniquement, masque Ground + Obstacles — les `RigidBody3D` posés au sol et les cases de panneau (couche « UI 3D ») sont hors du bake
+- [x] Gabarit d'agent aligné sur la capsule du joueur : rayon 0,4, hauteur 1,8, marche franchissable 0,4 (son `step_height` de 0,35 arrondi au-dessus)
+- [x] `filter_low_hanging_obstacles` : les ~1 900 objets de cueillette (30 cm de haut, couche Obstacles) se franchissent par-dessus au lieu de creuser chacun un disque infranchissable
+- [x] Grille de navigation alignée sur 0,2 m — section `[navigation]` dans `project.godot` et `cell_size` du navmesh. Rayon et marche tombent sur 2 voxels exacts, plus aucun arrondi silencieux
+- [x] **Dette Jalon 1 close** : le navmesh ne grimpe plus dans les branches — les collisions de tronc avaient déjà été simplifiées en cylindres à la passe C du Jalon 4.5
+- [x] **Report du Jalon 4.4 clos sans correctif** : le `maxf()` sur l'élévation du soleil était déjà dans `_shadow_drift()`, doublé d'un plafond `minf()` sur la longueur d'ombre. Dette payée à l'écriture, jamais cochée
+- Mesuré : **1 654 ms de bake, 48 420 polygones** sur 384 m
 
 - [ ] Pawn dormant scripté (état sommeil → réveil via interaction robot)
 - [ ] `ActionStateMachine` pawn (idle / se_deplacer / tâche_courante) via `NavigationAgent3D` — prépare les états `EVALUATING`/`INTERRUPTED` du Jalon 6
@@ -226,6 +237,10 @@
 - [ ] **Banc de mesure** : bouton « spawner N pawns », compteurs de temps IA / nav / frame. Sans lui, « 50 pawns » est une intention et pas une cible — même rôle que `HeightmapSignature` au Jalon 4.
 - [ ] Sélection de pawn — réutilisée par la roue de réaction au Jalon 7, à déclarer dans `UIPanelController.exclusive_modes`
 - [ ] Ordres directs minimaux (suivre / reste / va-là)
+### Dette Jalon 5
+- **Un bâtiment construit en cours de partie ne bloque rien.** Le navmesh est baké une fois à la génération ; un feu de camp ou un établi posé après n'y figure pas. La sortie propre est un `NavigationObstacle3D` sur les bâtiments — jamais un re-bake, qui coûterait 1,6 s à chaque construction. À trancher avant que les pawns ne circulent dans une base bâtie.
+- **Le feu de camp n'a pas de couche de collision déclarée** (défaut, 1) : il serait invisible au bake même posé à la main. Symptôme du même trou que les chunks de terrain au Jalon 4.5 — tout `PhysicsBody3D` doit déclarer sa couche.
+- **48 420 polygones de navmesh** : c'est là-dessus que 50 pawns calculeront leurs chemins. Leviers si le banc de mesure le désigne : `edge_max_error` et `detail_sample_distance`, qui simplifient le maillage sans toucher au gabarit d'agent. À ne pas actionner avant la mesure.
 ## Jalon 6 — Tableau de tâches, utility AI et fatigue
 > Fusion de l'ancien portage temps réel et de l'ancien tableau de tâches : la fatigue n'a d'existence que comme terme du score, et un score sans fatigue se réécrit dès qu'elle arrive.
 

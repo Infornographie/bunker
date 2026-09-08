@@ -21,10 +21,17 @@ const PROXIMITY_NODE := "Proximity"
 ## où est le sol : `TerrainGenConfig.sample_height()` les interroge.
 var heights: PackedFloat32Array
 
+var _bake_started: int = 0
+
 @export var config: TerrainGenConfig
 ## Soleil de la scène. `FoliageProximity` y lit la portée des ombres et la
 ## direction d'éclairage pour trier les chunks qui projettent une ombre utile.
 @export var sun: DirectionalLight3D
+## Région de navigation de la scène. Elle est bakée à la fin de `generate()` :
+## le navmesh doit connaître les troncs, donc il ne peut pas exister avant le
+## semis. Le nœud vit dans la scène, pas ici, pour que les gabarits d'agent
+## (rayon, hauteur, marche franchissable) restent réglables à l'inspecteur.
+@export var navigation: NavigationRegion3D
 
 @export_tool_button("Régénérer") var regenerate_action: Callable = generate
 @export_tool_button("Effacer") var clear_action: Callable = clear
@@ -115,6 +122,8 @@ func generate() -> void:
 	cave.position = heightmap.cave_position
 	cave.look_at(heightmap.cave_position + heightmap.cave_forward, Vector3.UP)
 
+	_bake_navigation()
+
 	print("Terrain généré en %d ms — %d chunks, %d sommets, eau à %.1f m, %d clairières." % [
 		Time.get_ticks_msec() - started,
 		chunks.get_child_count(),
@@ -135,6 +144,44 @@ func generate() -> void:
 		", ".join(per_layer),
 		scatter.body_count,
 		", ".join(per_biome),
+	])
+
+
+## Lance le bake du navmesh sur un thread. La géométrie source n'est pas
+## désignée ici : la région lit le groupe `navmesh_source`, porté par ce nœud,
+## et parcourt ses descendants. Tout ce que la génération ajoute sous le
+## contrôleur y entre donc sans qu'on ait à le recenser — c'est ce qui évite
+## une seconde liste de « choses qui bloquent le passage » à tenir à jour.
+##
+## Seuls les **corps statiques** sont lus, sur les couches Ground et Obstacles :
+## les chunks apportent leur trimesh, les troncs et rochers leurs cylindres. Les
+## `RigidBody3D` posés au sol (rondins, pickups) sont ignorés, et les cases de
+## panneau (couche « UI 3D ») aussi — un navmesh troué par une interface serait
+## une belle surprise.
+##
+## Comme le terrain, le navmesh se régénère et ne se sauvegarde pas.
+func _bake_navigation() -> void:
+	if navigation == null:
+		push_warning("TerrainController : aucune NavigationRegion3D assignée, pas de navmesh.")
+		return
+	if navigation.navigation_mesh == null:
+		push_warning("TerrainController : la région de navigation n'a pas de NavigationMesh.")
+		return
+
+	# L'instant de départ est un membre et non un argument lié : une `Callable`
+	# bindée n'est jamais égale à elle-même d'un appel à l'autre, donc
+	# `is_connected()` ne la reconnaîtrait pas et chaque régénération ajouterait
+	# une connexion de plus.
+	_bake_started = Time.get_ticks_msec()
+	if not navigation.bake_finished.is_connected(_on_bake_finished):
+		navigation.bake_finished.connect(_on_bake_finished)
+	navigation.bake_navigation_mesh(true)
+
+
+func _on_bake_finished() -> void:
+	print("Navmesh baké en %d ms — %d polygones." % [
+		Time.get_ticks_msec() - _bake_started,
+		navigation.navigation_mesh.get_polygon_count(),
 	])
 
 
