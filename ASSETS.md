@@ -383,16 +383,38 @@ et la peau/texture est modifiable pour multiplier encore les variantes.
   "pawn ordinaire", les tenues plus marquées (`Suit`, `King`, `Witch`,
   `Punk`) comme signal visuel d'un passé spécifique si cette piste est
   retenue — dont le pawn "financier" évoqué sous Resource Bits (`Suit`).
-- **Prochaine étape concrète (pas maintenant) :** ouvrir les `.blend`/`.fbx`
-  pour compter les variantes de corps/visage natives, et vérifier la
-  compatibilité du rig avec Universal Animation Library / UAL2 ci-dessous.
+- **Ouvert au Jalon 5.** `Worker.gltf` est importé dans
+  `assets/characters/pawns/` comme premier pawn. Les glTF « Individual
+  Characters » sont autonomes (buffer embarqué, **aucune texture**, matériaux
+  à plat) et embarquent **24 animations** sur leur propre squelette : `Idle`,
+  `Idle_Neutral`, `Walk`, `Run`, `Run_Back/Left/Right`, `Interact`,
+  `Punch_Left/Right`, `Kick_*`, `Sword_Slash`, `Roll`, `HitRecieve`, `Death`,
+  `Wave`, plus les poses d'arme à feu. Marcher, attendre, ramasser, frapper,
+  tomber : tout le Jalon 5 est là.
+- **Coût de dessin à surveiller :** `Worker` sort **13 surfaces** (4 meshes,
+  13 primitives). À 50 pawns, 650 objets de dessin resoumis par cascade
+  d'ombre — le poste exact qui a coûté cher au Jalon 4. La variante modulaire
+  (`Body`/`Head`/`Feet`/`Legs` séparés) est donc écartée : elle multiplierait
+  encore ce nombre pour de la variété qu'un matériau peut donner.
+- **Le rig n'est PAS celui de la Universal Animation Library** — voir
+  ci-dessous, c'est la découverte structurante du Jalon 5.
 - **Hors sujet pour le robot.** Ce sont des humains — le chassis du robot
   (Jalon 6) est un problème séparé, pas couvert par ces packs.
 
 ### Universal Animation Library / Universal Animation Library 2 (Quaternius)
 
-Bibliothèques d'animations génériques sur rig humanoïde standard,
-compatibles avec les packs de persos ci-dessus.
+Bibliothèques d'animations génériques sur rig humanoïde standard.
+
+> ⚠️ **Incompatibles avec les persos ci-dessus sans retarget.** Vérifié au
+> Jalon 5 en comparant les squelettes des glTF : `Worker` a 62 os nommés
+> maison (`Hips`, `Chest`, `Foot.L`, `Index1.R`), UAL1 en a 65 au nommage du
+> mannequin Unreal (`pelvis`, `calf_l`, `hand_l`, `ball_leaf_r`). **Un seul os
+> commun sur 62.** Les brancher demande un `BoneMap` + `SkeletonProfileHumanoid`
+> complet, soit une passe entière. Reporté au chassis robot (Jalon 7) ; les
+> pawns se contentent des animations embarquées, qui suffisent.
+>
+> Les fichiers `_RM` ont la root motion bakée : ce sont les **autres** qu'il
+> faudra, le déplacement venant du `NavigationAgent3D`.
 
 - **Usage prévu, déjà nommé en dette.** La dette Jalon 3 mentionne déjà
   "intégration Universal Animation Library 2, à revalider au chassis robot

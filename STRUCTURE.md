@@ -47,7 +47,9 @@ res://
 │   │   └── meshes/                     — une scène par modèle ; c'est de là que le scatter extrait les meshes
 │   ├── sci_fi/                         — Quaternius Modular SciFi MegaKit
 │   ├── survival/                       — KayKit Resource Bits (survival) : sac à dos, feu de camp
-│   ├── characters/tools/                — Low Poly Primitive Tools : onze outils en bois, hache et pioche en pierre, leurs grips (voir ASSETS.md)
+│   ├── characters/
+│   │   ├── tools/                      — Low Poly Primitive Tools : onze outils en bois, hache et pioche en pierre, leurs grips (voir ASSETS.md)
+│   │   └── pawns/worker.gltf           — Ultimate Modular Men : premier pawn, autonome (buffer embarqué, sans texture), 24 animations sur son propre squelette
 │   ├── workshop/                        — Fantasy Props MegaKit : l'établi et ses textures de trim
 │   ├── props/                           — Resource Bits : feu de camp, rondin, palette
 │   ├── deadwood/                        — Ami Polygon : branches, troncs couchés, souches
@@ -82,9 +84,14 @@ res://
 │   │       ├── mushroom_pickup.tscn
 │   │       ├── oak_choppable.tscn
 │   │       └── resource_pickup_wood.tscn
+│   ├── locomotion/
+│   │   └── step_up.gd                  — `StepUp.try_step()` : franchissement des obstacles bas, partagé joueur ↔ pawn. Sa hauteur doit rester égale à l'`agent_max_climb` du navmesh
+│   ├── pawn/
+│   │   ├── pawn.tscn                   — CharacterBody3D + NavigationAgent3D + modèle. Capsule et gabarit d'agent identiques au joueur
+│   │   └── pawn.gd                     — `PawnController` : IDLE / MOVING. `_think()` décide, `_locomote()` exécute — la ligne que le PawnManager et le LOD viendront couper
 │   └── player/
 │       ├── player.tscn
-│       ├── player_controller.gd        — CharacterBody3D, locomotion, marches auto, sprint + saut, mode vol debug noclip (toggle_flight_mode, voir INPUTS.md)
+│       ├── player_controller.gd        — CharacterBody3D, locomotion, sprint + saut, mode vol debug noclip (toggle_flight_mode, voir INPUTS.md). Les marches auto sont déléguées à `StepUp`
 │       ├── action_state_machine.gd     — IDLE / USING_TOOL
 │       ├── interaction_controller.gd   — raycast, prompt, arbitre outil vs portage, take_into_hand()
 │       ├── carry_controller.gd         — point unique "en main"

@@ -229,15 +229,31 @@
 - [x] **Report du Jalon 4.4 clos sans correctif** : le `maxf()` sur l'élévation du soleil était déjà dans `_shadow_drift()`, doublé d'un plafond `minf()` sur la longueur d'ombre. Dette payée à l'écriture, jamais cochée
 - Mesuré : **1 654 ms de bake, 48 420 polygones** sur 384 m
 
-- [ ] Pawn dormant scripté (état sommeil → réveil via interaction robot)
-- [ ] `ActionStateMachine` pawn (idle / se_deplacer / tâche_courante) via `NavigationAgent3D` — prépare les états `EVALUATING`/`INTERRUPTED` du Jalon 6
+### Passe B — un pawn qui marche ✅
+- [x] `Worker.gltf` importé (`assets/characters/pawns/`) — un personnage entier plutôt que la variante modulaire : celle-ci multiplierait les surfaces, et la variété se paiera au matériau
+- [x] `entities/pawn/` : `PawnController` (`CharacterBody3D` + `NavigationAgent3D`), deux états `IDLE`/`MOVING`, destination tirée au hasard, animations du pack pilotées par la vitesse **réelle**
+- [x] `_think()` décide, `_locomote()` exécute — la ligne exacte que le `PawnManager` et le niveau 2 du LOD viendront couper
+- [x] `StepUp` extrait de `PlayerController` dans `entities/locomotion/` : joueur et pawn franchissent les obstacles bas par le même code, à la même hauteur que l'`agent_max_climb` du navmesh
+- [x] `simplify_path` sur l'agent — sans lui, un chemin de 193 m sortait à 197 points, un par arête de polygone
+- [x] Trace de mise au point (`debug_trace`) : départ, chemin, arrivée, attente
+
+### Passe C — passage à l'échelle
 - [ ] **`PawnManager`** : point de tick unique, évaluation découpée en tranches sous budget en millisecondes. Jamais un `_process()` par pawn.
-- [ ] **LOD de simulation à trois niveaux**, conçu dès le premier pawn : proche et visible = squelette animé + `CharacterBody3D` ; loin = interpolation le long du chemin, sans skinning ni physique ; hors liaison = abstrait, sans nœud dans la scène. Le troisième niveau est ce qui rendra les expéditions du Jalon 12 gratuites.
-- [ ] **Requêtes de chemin asynchrones**, avec une file plafonnée. C'est le poste qui sature en premier.
-- [ ] **Banc de mesure** : bouton « spawner N pawns », compteurs de temps IA / nav / frame. Sans lui, « 50 pawns » est une intention et pas une cible — même rôle que `HeightmapSignature` au Jalon 4.
+- [ ] **Banc de mesure** : bouton « spawner N pawns », compteurs de temps IA / nav / frame
+- [ ] **Requêtes de chemin asynchrones**, avec une file plafonnée
+- [ ] **LOD de simulation à trois niveaux**, dimensionné par ce que le banc mesure
+
+### Passe D — socle de jeu
+- [ ] Pawn dormant scripté (état sommeil → réveil via interaction robot)
+- [ ] États `EVALUATING`/`INTERRUPTED` dans l'`ActionStateMachine` du pawn — préparent le Jalon 6
 - [ ] Sélection de pawn — réutilisée par la roue de réaction au Jalon 7, à déclarer dans `UIPanelController.exclusive_modes`
 - [ ] Ordres directs minimaux (suivre / reste / va-là)
 ### Dette Jalon 5
+- **`Worker` sort 13 surfaces** (4 meshes, 13 primitives) : à 50 pawns, 650 objets de dessin resoumis par cascade d'ombre — le poste exact qui a coûté cher au Jalon 4. À mesurer au banc avant d'y toucher ; le levier serait un mesh fusionné par archétype.
+- **Le pawn se tick lui-même** (`_physics_process`), ce que la passe C doit retirer. Assumé, et c'est la raison pour laquelle toute la décision est déjà isolée dans `_think()`.
+- **La hauteur de marche est écrite à deux endroits** — `step_height` du pawn et `agent_max_climb` du navmesh — parce qu'elle vit dans deux moteurs. Elles doivent rester égales : le bake déclare franchissable ce qui est plus bas que la seconde, et un corps qui s'y cogne s'arrête net sur un chemin valide, sans erreur. Aucun contrôle ne le vérifie aujourd'hui.
+- **Pas d'évitement entre pawns** (`avoidance_enabled = false`). Le RVO coûte cher à 50 agents ; à rouvrir au banc de mesure, pas avant.
+- **`debug_trace` imprime par pawn** : instrument de la passe B, à retirer quand le banc prendra le relais.
 - **Un bâtiment construit en cours de partie ne bloque rien.** Le navmesh est baké une fois à la génération ; un feu de camp ou un établi posé après n'y figure pas. La sortie propre est un `NavigationObstacle3D` sur les bâtiments — jamais un re-bake, qui coûterait 1,6 s à chaque construction. À trancher avant que les pawns ne circulent dans une base bâtie.
 - **Le feu de camp n'a pas de couche de collision déclarée** (défaut, 1) : il serait invisible au bake même posé à la main. Symptôme du même trou que les chunks de terrain au Jalon 4.5 — tout `PhysicsBody3D` doit déclarer sa couche.
 - **48 420 polygones de navmesh** : c'est là-dessus que 50 pawns calculeront leurs chemins. Leviers si le banc de mesure le désigne : `edge_max_error` et `detail_sample_distance`, qui simplifient le maillage sans toucher au gabarit d'agent. À ne pas actionner avant la mesure.

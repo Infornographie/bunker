@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://entities/interactable/forest/stone_outcrop.tscn" id="9_outcrop"]
 [ext_resource type="PackedScene" path="res://entities/interactable/buildings/workbench.tscn" id="10_workbench"]
 [ext_resource type="PackedScene" path="res://entities/interactable/buildings/storage_pallet.tscn" id="11_pallet"]
+[ext_resource type="PackedScene" path="res://entities/pawn/pawn.tscn" id="12_pawn"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_pawn"]
 geometry_parsed_geometry_type = 1
@@ -70,5 +71,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1, -6)
 
 [node name="StoragePallet" parent="Props" instance=ExtResource("11_pallet")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 1, -3)
+
+[node name="Pawns" type="Node3D" parent="."]
+
+[node name="Pawn" parent="Pawns" instance=ExtResource("12_pawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 3, -16)
+debug_trace = true
 
 [editable path="SkyRig"]

@@ -34,6 +34,14 @@ Dossier : `assets/workshop/`
 
 Le dossier porte l'usage : `workshop/` = mobilier d'atelier construit par le joueur.
 
+### Ultimate Modular Men — Quaternius — **CC0**
+Dossier : `assets/characters/pawns/`
+[quaternius.com](https://quaternius.com/)
+
+**Un personnage sur les 21 des deux packs** : `Worker.gltf` (1,86 m), premier pawn. Le glTF est autonome — buffer embarqué, aucune texture, matériaux à plat — donc un seul fichier à verser.
+
+Il embarque ses 24 animations sur son propre squelette (`Idle`, `Walk`, `Run`, `Interact`, `Punch_*`, `Death`…), ce qui couvre tout le vocabulaire du Jalon 5 sans retarget.
+
 ### Resource Bits — Kay Lousberg — **CC0**
 Dossier : `assets/props/`
 [kaylousberg.itch.io/resource-bits](https://kaylousberg.itch.io/resource-bits)

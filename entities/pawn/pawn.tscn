@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://entities/pawn/pawn.gd" id="1_pawn"]
+[ext_resource type="PackedScene" path="res://assets/characters/pawns/worker.gltf" id="2_model"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pawn"]
+radius = 0.4
+height = 1.8
+
+[node name="Pawn" type="CharacterBody3D"]
+collision_layer = 1
+collision_mask = 3
+script = ExtResource("1_pawn")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_pawn")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 1
+simplify_path = true
+simplify_epsilon = 0.4
+avoidance_enabled = false
+
+[node name="Model" parent="." instance=ExtResource("2_model")]

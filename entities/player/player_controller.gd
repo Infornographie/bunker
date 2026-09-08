@@ -170,32 +170,11 @@ func _physics_process_flight(delta: float) -> void:
 	var speed := flight_speed * (flight_boost_multiplier if Input.is_action_pressed("sprint") else 1.0)
 	global_position += move * speed * delta
 
-## Simule un "step-up" (Godot n'en a pas d'intégré pour CharacterBody3D) :
-## si un déplacement horizontal est bloqué par un obstacle bas (contremarche
-## d'escalier, rebord), on teste si la même trajectoire passerait plus haut ;
-## si oui, on remonte le joueur pour qu'il se pose sur la marche au lieu de
-## rester coincé contre elle. Ne fait rien face à un vrai mur (bloqué même
-## en haut) ou si rien n'obstrue le chemin (cas normal, sort tôt).
+## Franchissement des obstacles bas. La mécanique elle-même vit dans `StepUp` :
+## les pawns en ont besoin à l'identique, et deux copies dériveraient — d'autant
+## que la hauteur de marche doit rester accordée à celle du navmesh.
 func _try_step_up(direction: Vector3) -> void:
-	var motion := direction * step_check_distance
-
-	if not test_move(global_transform, motion):
-		return  # rien ne bloque à hauteur actuelle, pas de marche à franchir
-
-	var raised_transform := global_transform
-	raised_transform.origin += Vector3.UP * step_height
-
-	if test_move(raised_transform, motion):
-		return  # bloqué même en hauteur -> vrai mur, pas une marche franchissable
-
-	# Le chemin est libre une fois surélevé : on redescend depuis là pour se
-	# poser précisément sur la marche plutôt que de rester en l'air.
-	var settle_transform := raised_transform
-	settle_transform.origin += motion
-
-	var collision := KinematicCollision3D.new()
-	if test_move(settle_transform, Vector3.DOWN * step_height, collision):
-		global_position += Vector3.UP * step_height + collision.get_travel()
+	StepUp.try_step(self, direction, step_height, step_check_distance)
 
 # --- Notes d'intégration ---
 # - Ce script attend un Camera3D enfant nommé "Camera3D" par défaut (modifiable
