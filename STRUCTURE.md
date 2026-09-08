@@ -72,6 +72,8 @@ res://
 │   │   │   └── recipe_panel.gd / .tscn      — panneau d'un site de transformation. Ne cite aucun bâtiment : hôte en duck typing, colonne de combustible seulement si l'hôte en expose un
 │   │   ├── buildings/
 │   │   │   ├── workbench.gd / .tscn        — établi. Ne fait presque rien : cible du raycast, ouvre le panneau, route les dépôts vers son TransformationSite
+│   │   │   ├── storage_pallet.gd / .tscn   — palette. E dépose ou reprend selon ce qu'on tient ; route vers son StorageSite
+│   │   │   ├── storage_site.gd             — contenu d'un dépôt, en liste. La disposition (grille, couches croisées, pyramide) se déduit du rang et du footprint de chaque ressource ; la pose s'aligne sur la boîte englobante mesurée
 │   │   │   ├── campfire.gd / .tscn
 │   │   │   ├── transformation_site.gd
 │   │   │   └── flame_light_flicker.gd
@@ -113,7 +115,7 @@ res://
 │   ├── resources/                      — instances ResourceDef (wood, branch, pebble, stone_block, mushroom, grilled_mushroom)
 │   ├── recipes/                        — instances RecipeDef (grilled_mushroom, les quatre outils)
 │   ├── tools/                          — wooden_axe, wooden_pickaxe, stone_axe, stone_pickaxe
-│   ├── buildings/                      — campfire.tres, campfire_shape.tres, workbench.tres
+│   ├── buildings/                      — campfire.tres, campfire_shape.tres, workbench.tres, pallet.tres
 │   ├── sky/                            — instances SkyProfile : clear_day, cold_clear, warm_haze, overcast
 │   ├── terrain/default_terrain.tres    — instance TerrainGenConfig ; porte en sous-ressources les FastNoiseLite, le ShaderMaterial du sol et le matériau de l'eau
 │   ├── foliage/                        — instances FoliageDef, une par essence
@@ -217,6 +219,13 @@ res://
 - Un `FoliagePatch` dont le `clearing_tag` est non vide ne se déclare que dans les clairières de ce nom, et y remplace la composition. Il **ignore alors son bruit et sa bande de pente** : les critères ne se cumulent pas, sinon une tache posée à la main ne couvrirait son lieu qu'en partie.
 - ⚠️ Les critères de l'**essence** (`min_slope_degrees`, `max_slope_degrees`) s'appliquent toujours. Un lieu déclaré a besoin d'essences qui acceptent son terrain — une clairière est aplanie, donc rien qui exige de la pente n'y poussera.
 - L'identité du lieu ne se résout que si `openness < 1.0`, donc jamais hors clairière : `openness` est déjà calculé pour tous les candidats.
+
+### Flux de stockage
+- `StorageSite` tient deux listes (petits objets, gros objets) et **rien d'autre** : la position de chaque exemplaire se déduit de son rang. Aucun corps physique n'est empilé.
+- `try_insert()` route sur le `carry_type`, comme `Inventory` pour le ramassage — le dépôt n'invente pas une seconde règle de tri. `take_last()` rend les gros d'abord : ils sont au-dessus.
+- La disposition lit `ResourceDef.footprint` (longueur × largeur), `stack_height` et `stack_style`. Rapport longueur/largeur > 1,5 ⇒ **couches croisées à 90°**, pas et colonnes échangés avec la rotation.
+- ⚠️ La pose s'aligne sur la **boîte englobante mesurée** du nœud instancié, pas sur son origine : les pivots des assets ne sont pas conventionnels. Le parcours des AABB accumule les transforms jusqu'au dépôt plutôt que de passer par les coordonnées globales — la palette doit rester posable sous un nœud tourné.
+- La collision du contenu est une boîte unique redimensionnée à chaque changement, désactivée à vide.
 
 ### Flux d'action (swing outil)
 - `ActionStateMachine.use_tool_on(target, on_impact, reach_distance)` appelle `ToolController.swing()` et écoute son signal `swing_impact` en retour. La SM pilote le controller, jamais l'inverse.

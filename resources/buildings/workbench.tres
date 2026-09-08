@@ -4,6 +4,8 @@
 [ext_resource type="PackedScene" path="res://entities/interactable/buildings/workbench.tscn" id="2_scene"]
 [ext_resource type="Script" path="res://resources/resource_cost.gd" id="3_cost"]
 [ext_resource type="Resource" path="res://resources/resources/wood.tres" id="4_wood"]
+[ext_resource type="Resource" path="res://resources/resources/branch.tres" id="5_branch"]
+[ext_resource type="Resource" path="res://resources/resources/stone_block.tres" id="6_block"]
 
 [sub_resource type="BoxShape3D" id="Shape"]
 size = Vector3(2.02, 0.89, 1.02)
@@ -11,7 +13,17 @@ size = Vector3(2.02, 0.89, 1.02)
 [sub_resource type="Resource" id="Cost_wood"]
 script = ExtResource("3_cost")
 resource = ExtResource("4_wood")
-amount = 4
+amount = 8
+
+[sub_resource type="Resource" id="Cost_branch"]
+script = ExtResource("3_cost")
+resource = ExtResource("5_branch")
+amount = 6
+
+[sub_resource type="Resource" id="Cost_block"]
+script = ExtResource("3_cost")
+resource = ExtResource("6_block")
+amount = 3
 
 [resource]
 script = ExtResource("1_def")
@@ -21,4 +33,4 @@ ghost_scene = ExtResource("2_scene")
 built_scene = ExtResource("2_scene")
 collision_shape = SubResource("Shape")
 collision_shape_position = Vector3(0, 0.445, 0)
-costs = Array[ExtResource("3_cost")]([SubResource("Cost_wood")])
+costs = Array[ExtResource("3_cost")]([SubResource("Cost_wood"), SubResource("Cost_branch"), SubResource("Cost_block")])

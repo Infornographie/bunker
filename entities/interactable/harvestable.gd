@@ -92,7 +92,7 @@ func interact(interactor: Node) -> void:
 		var stored := 0
 		if inventory != null:
 			for i in drop.count:
-				if not _store(inventory, drop.resource):
+				if not inventory.try_store(drop.resource):
 					break
 				stored += 1
 		if stored < drop.count:
@@ -113,17 +113,6 @@ func interact(interactor: Node) -> void:
 			carry.carry(spawned[0])
 	queue_free()
 
-
-## Range une ressource selon son type de portage. Même routage que le ramassage
-## d'un pickup au sol — il n'existe qu'une façon de ranger quelque chose.
-func _store(inventory: Inventory, resource: ResourceDef) -> bool:
-	match resource.carry_type:
-		ResourceDef.CarryType.SMALL:
-			return inventory.try_store_small(resource)
-		ResourceDef.CarryType.TOOL:
-			return resource.tool_def != null and inventory.try_store_tool(resource.tool_def)
-		_:
-			return false
 
 
 func _get_inventory(interactor: Node) -> Inventory:

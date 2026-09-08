@@ -154,6 +154,21 @@ func try_store_tool(tool_def: ToolDef) -> bool:
 	return false
 
 
+## Range une ressource selon son type de portage. **Seul point où le routage
+## est écrit** : le ramassage au sol, la cueillette et la reprise dans un dépôt
+## posaient la même question et y répondaient chacun à leur façon.
+func try_store(resource: ResourceDef) -> bool:
+	if resource == null:
+		return false
+	match resource.carry_type:
+		ResourceDef.CarryType.SMALL:
+			return try_store_small(resource)
+		ResourceDef.CarryType.TOOL:
+			return resource.tool_def != null and try_store_tool(resource.tool_def)
+		_:
+			return false
+
+
 ## Place un petit objet dans les poches puis le stockage du sac. True si absorbé.
 func try_store_small(resource: ResourceDef) -> bool:
 	if _backpack_data == null:

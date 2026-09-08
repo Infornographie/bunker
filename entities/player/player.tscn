@@ -11,6 +11,9 @@
 [ext_resource type="Script" path="res://entities/player/player_equipment.gd" id="7_7thud"]
 [ext_resource type="Script" path="res://entities/player/inventory.gd" id="11_inventory"]
 [ext_resource type="Resource" path="res://resources/tools/wooden_pickaxe.tres" id="12_pickaxe"]
+[ext_resource type="Script" path="res://resources/building_def.gd" id="13_building_def"]
+[ext_resource type="Resource" path="res://resources/buildings/pallet.tres" id="14_pallet"]
+[ext_resource type="Resource" path="res://resources/buildings/workbench.tres" id="15_workbench"]
 [ext_resource type="Resource" uid="uid://bcysmn7sp7y5a" path="res://resources/buildings/campfire.tres" id="7_a1qjk"]
 [ext_resource type="PackedScene" uid="uid://bwdnti672a2j7" path="res://entities/player/hud/player_hud.tscn" id="7_qiwj3"]
 [ext_resource type="Script" uid="uid://ch5bhk78mm7sm" path="res://resources/tool_def.gd" id="8_j3ovn"]
@@ -59,7 +62,7 @@ ui_panel_controller = NodePath("../UIPanelController")
 
 [node name="BuildModeController" type="Node3D" parent="CharacterBody3D/Camera3D" unique_id=2112869161 node_paths=PackedStringArray("carry_controller", "action_state_machine")]
 script = ExtResource("6_7thud")
-building_def = ExtResource("7_a1qjk")
+building_defs = Array[ExtResource("13_building_def")]([ExtResource("7_a1qjk"), ExtResource("14_pallet"), ExtResource("15_workbench")])
 carry_controller = NodePath("../../CarryController")
 action_state_machine = NodePath("../ActionStateMachine")
 ground_mask = 4294901762

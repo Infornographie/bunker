@@ -2,8 +2,8 @@
  
 ## État au 07/09/2026
  
-- **Jalon courant** : 4.5 — Terrain minimal. Le blockout est en place et jouable : plaine, colline, rivière avec gué, quatre clairières, le semis et le ciel repris tels quels. Restent les ressources récoltables et le navmesh.
-- **Jalon suivant** : 5 — Pawn : socle et passage à l'échelle (cible 40-50 pawns simultanés).
+- **Jalon courant** : 4.5 clos — le terrain minimal porte tout ce qu'il faut pour occuper des pawns : forêt et rochers récoltables, ressources au sol ramassables, deux lieux nommés, un établi, un dépôt, trois bâtiments constructibles. Reste le navmesh.
+- **Jalon suivant** : 5 — Pawn : socle et passage à l'échelle (cible 40-50 pawns simultanés). Les cinq verbes qu'ils auront à arbitrer existent : ramasser, abattre, miner, déposer, fabriquer.
 Socle : Godot 4.7.2, renderer Forward+. Avancement détaillé → ROADMAP.md.
 ## Décisions de conception
  
@@ -85,6 +85,14 @@ Choix retenus actuellement pour guider le développement — pas gravés dans le
 - **`embed_depth` est l'enfoncement sur terrain plat**, ni plus ni moins : `_sink` s'y réduit quand la pente est nulle. Il ne doit couvrir que le micro-relief entre deux sommets de grille, jamais la hauteur de l'évasement d'un modèle — sinon les racines passent sous terre et il ne sort qu'un tronc. C'est le terme de pente qui empêche le flottement sur versant, pas lui.
 - **Une ligne de butin, une pile.** Les piles se répartissent en cercle autour du point de chute : empiler des branches sur des rondins les fait tomber du sommet et rebondir n'importe où. Le nombre de lignes valides se compte avant de calculer les angles, pour qu'un butin à ressource unique ne se retrouve pas décalé sans raison.
 
+### Stockage et construction (Jalon 4.5, passe F)
+- **Le contenu est une liste ; la pile est un affichage.** Empiler de vrais corps donnerait des bûches qui roulent, une pile qui s'effondre au chargement et rien de fiable à viser. La position de chaque objet se déduit de son rang : « reprendre celui du dessus » est la dernière entrée, un pawn qui dépose n'a rien à viser, rien ne peut s'écrouler.
+- **La mise en place lit la ressource, jamais une constante.** `footprint` est un `Vector2` (longueur × largeur) : un scalaire ne peut pas décrire une branche d'1,3 m sur 30 cm, et fait forcément soit se traverser les objets longs, soit gaspiller la place des ronds. Un objet dont le rapport dépasse 1,5 voit ses couches **croisées à 90°**, comme une pile de bois — décidé par la forme, sans champ à régler.
+- **Un objet se pose sur sa boîte englobante mesurée, pas sur son origine.** Le pivot d'un asset est tantôt son centre, tantôt sa base, et rien ne le dit : un décalage réglé par ressource marche jusqu'au prochain import. Mesurer marche pour ceux qu'on n'a pas encore.
+- **La collision du contenu est une boîte unique qui monte avec la pile**, pas une forme par objet : on veut marcher et poser dessus, pas viser un rondin en particulier. Désactivée à vide.
+- **Rien dans `StorageSite` ne suppose un joueur** : `try_insert()`, `take_last()`, `peek_last()`, `contents()`. Le `StoragePallet` n'est que la cible du raycast qui route vers lui, comme l'établi vers son `TransformationSite`.
+- **Un seul nœud écrit le prompt.** `InteractionController` l'efface chaque frame en mode construction ; c'est donc lui qui y affiche le nom du bâtiment sélectionné. Deux émetteurs sur le même HUD, et celui qui passe en dernier gagne la frame.
+
 ### Joueur, actions, interfaces
 - **Joueur** : franchissement automatique de marches basses (step_height 0.35m, ajustable, via test_move). Course (Shift, ×1.6) et saut (Espace, coyote time 0.12s) implantés dans `player_controller.gd`. Les deux sont bloqués quand `CarryController` tient un objet lourd. Kick de FOV pendant la course, lissé au `lerpf` par frame plutôt qu'en `Tween`. Valeurs de feeling exposées à l'inspecteur, pas encore réglées finement. Course et saut gratuits — dette énergie rattachée au Jalon 7.
 - **Mode vol (debug)** : `toggle_flight_mode` sur **F11**, implanté directement dans `player_controller.gd` (`_physics_process_flight`). Noclip — ignore gravité et collision, position translatée directement. Remplace l'ancien `FreecamController`/`DebugCameraSwitch` (caméra détachée, supprimés) : voler avec le joueur lui-même évite de revenir au point de départ à la désactivation.
@@ -101,6 +109,7 @@ Choix retenus actuellement pour guider le développement — pas gravés dans le
 - **Un outil fabriqué est un `ResourcePickup` de type TOOL**, pas un `ToolPickup`. Le routage TOOL → ceinture existait déjà et n'a rien de spécifique aux outils lâchés à la main. Corollaire : chaque outil a un `ResourceDef` qui pointe son `ToolDef`, ce qui le rend produisible par une recette et posable dans une scène.
 - **Le tier d'outil est un contenu, pas un système.** Bois et pierre ne diffèrent que par un `ToolDef` (dégâts, durée de swing, modèle) et une recette. Aucun code ne connaît la notion de palier — c'est ce qui laisse la porte ouverte à la piste manche + tête sans rien avoir à défaire.
 - **Ressource proposée à une cible** : `InteractionController.get_offered_resource()` = source unique (main d'abord, sinon poche active). Le calcul ne doit jamais être refait localement.
+- **Un seul routage de rangement** : `Inventory.try_store()`. Le ramassage au sol, la cueillette et la reprise dans un dépôt posaient la même question — où va cet objet selon son `carry_type` — et y répondaient chacun à leur façon. Le repli est toujours poches → sac → main, jamais « par terre ».
 - **Une seule façon d'obtenir un pickup** : `ResourceRegistry.spawn_pickup(ResourceDef)`. `Choppable` porte un `drop_resource`, pas une `PackedScene`.
 - **Localisation** (Jalon 3.5) : dev en **anglais**, **français** disponible. `translations/strings.csv`, clés `namespace.section.key`, autoload `Locale` (fallback `en`), bascule debug **F10**.
   Règle structurante : **aucun texte affichable en dehors du CSV**. Le `tr()` ne vit qu'aux **trois points d'affichage** listés dans STRUCTURE §Flux de localisation.

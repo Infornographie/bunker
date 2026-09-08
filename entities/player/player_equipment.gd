@@ -82,11 +82,9 @@ func _refresh() -> void:
 
 
 func _spawn_pocket_view(res: ResourceDef) -> void:
-	var instance: Node3D = ResourceRegistry.spawn_pickup(res)
+	var instance: Node3D = ResourceRegistry.spawn_display(res)
 	if instance == null:
 		return
-	# Le viewmodel est décoratif : pas de physique ni de collision.
-	_strip_physics(instance)
 	hand_anchor.add_child(instance)
 	instance.position = Vector3.ZERO
 	instance.rotation = Vector3.ZERO
@@ -98,17 +96,6 @@ func _clear_pocket_view() -> void:
 		_pocket_view_instance.queue_free()
 		_pocket_view_instance = null
 
-
-## Désactive collision et physique d'une instance affichée en viewmodel.
-func _strip_physics(node: Node) -> void:
-	if node is CollisionObject3D:
-		var body: CollisionObject3D = node
-		body.collision_layer = 0
-		body.collision_mask = 0
-		if node is RigidBody3D:
-			node.set("freeze", true)
-	for child in node.get_children():
-		_strip_physics(child)
 
 
 ## --- Touches ------------------------------------------------------------

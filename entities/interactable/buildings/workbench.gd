@@ -34,11 +34,6 @@ func interact(interactor: Node) -> void:
 	interactor.open_object_panel(self, panel_scene)
 
 
-func _get_offered_resource(interactor: Node) -> ResourceDef:
-	if interactor is InteractionController:
-		return interactor.get_offered_resource()
-	return null
-
 
 ## Un seul point d'entrée pour les dépôts, celui du E en jeu comme celui du
 ## panneau — l'établi n'ouvre pas un second chemin de livraison.

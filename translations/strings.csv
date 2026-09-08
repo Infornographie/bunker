@@ -31,6 +31,7 @@ tool.stone_pickaxe.name,Stone pickaxe,Pioche en pierre
 ,,
 ,=== BUILDINGS ===,
 building.campfire.name,Campfire,Feu de camp
+building.pallet.name,Pallet,Palette
 building.workbench.name,Workbench,Établi
 ,,
 ,=== RECIPES ===,

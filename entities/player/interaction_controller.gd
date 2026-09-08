@@ -58,7 +58,14 @@ func _refresh_prompt() -> void:
 	if hud == null:
 		return
 	if build_mode_controller and build_mode_controller.is_active():
-		hud.hide_prompt()
+		# En construction, le prompt annonce le bâtiment sélectionné. C'est ici
+		# et pas dans `BuildModeController` parce qu'un seul nœud écrit le
+		# prompt : deux émetteurs, et celui qui passe en dernier gagne la frame.
+		var building := build_mode_controller.current_def()
+		if building != null:
+			hud.show_prompt(building.name_key)
+		else:
+			hud.hide_prompt()
 		hud.set_targeting(false)
 		return
 	# Une cible qui accepte ce qu'on tient a priorité sur le simple dépôt au

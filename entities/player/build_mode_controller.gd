@@ -11,16 +11,22 @@ class_name BuildModeController
 ##
 ## Actions Input Map attendues (à créer dans le projet) :
 ## - toggle_build_mode : entrer/sortir du mode
-## - rotate_ghost : tourner le fantôme (pas de ROTATION_STEP_DEG)
+## - rotate_ghost / rotate_ghost_reverse : tourner le fantôme (pas de ROTATION_STEP_DEG)
 ## - confirm_placement : valider la pose
-## - cancel_build_mode : annuler et sortir
+## - select_slot_1..5 : choisir le bâtiment (réemploi des touches du hotbar,
+##   libres pendant le mode ; la molette, elle, est prise par la rotation)
 ## - free_placement_modifier (maintenue, ex: Shift) : désactive le snap grille
 
 const GRID_CELL_SIZE: float = 1.0
 const ROTATION_STEP_DEG: float = 45.0
 const MAX_PLACEMENT_DISTANCE: float = 5.0
 
-@export var building_def: BuildingDef
+## Bâtiments constructibles, dans l'ordre de sélection : les touches 1-5 les
+## choisissent pendant le mode construction. Elles y sont libres —
+## `PlayerEquipment` ignore ses entrées tant que le mode est actif — et pas la
+## molette, déjà prise par la rotation du blueprint. Pas de touche neuve, pas
+## de menu : le rang dans cette liste est le chiffre à presser.
+@export var building_defs: Array[BuildingDef] = []
 @export var carry_controller: CarryController
 @export var action_state_machine: ActionStateMachine
 @export var world_parent: Node3D
@@ -37,6 +43,13 @@ var _active: bool = false
 var _ghost: Node3D
 var _ghost_material_valid: StandardMaterial3D
 var _ghost_material_invalid: StandardMaterial3D
+## Les touches de sélection, dans l'ordre. Ce sont celles du hotbar, réemployées
+## faute d'être utilisées en construction — ajouter cinq actions qui feraient
+## doublon avec elles serait cinq bindings de plus à tenir cohérents.
+const _SELECT_ACTIONS: Array[StringName] = [&"select_slot_1", &"select_slot_2",
+		&"select_slot_3", &"select_slot_4", &"select_slot_5"]
+
+var _selected: int = 0
 var _rotation_y: float = 0.0
 var _placement_valid: bool = false
 var _placement_transform: Transform3D
@@ -52,6 +65,26 @@ func _ready() -> void:
 func is_active() -> bool:
 	return _active
 
+
+## Bâtiment actuellement sélectionné, ou null si la liste est vide.
+func current_def() -> BuildingDef:
+	if building_defs.is_empty():
+		return null
+	return building_defs[clampi(_selected, 0, building_defs.size() - 1)]
+
+
+func _select_building(index: int) -> void:
+	if index == _selected or index >= building_defs.size():
+		return
+	_selected = index
+	# Le fantôme est reconstruit plutôt que retexturé : deux bâtiments n'ont ni
+	# la même scène ni la même emprise. L'orientation, elle, se conserve — la
+	# perdre à chaque cran de molette rendrait la comparaison pénible.
+	var kept_rotation := _rotation_y
+	_exit_build_mode()
+	_enter_build_mode()
+	_rotation_y = kept_rotation
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_build_mode"):
 		if _active:
@@ -61,6 +94,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if not _active:
 		return
+	for i in mini(building_defs.size(), _SELECT_ACTIONS.size()):
+		if event.is_action_pressed(_SELECT_ACTIONS[i]):
+			_select_building(i)
+			return
 	if event.is_action_pressed("rotate_ghost"):
 		_rotation_y += deg_to_rad(ROTATION_STEP_DEG)
 	elif event.is_action_pressed("rotate_ghost_reverse"):
@@ -69,6 +106,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_confirm_placement()
 
 func _enter_build_mode() -> void:
+	var building_def := current_def()
 	if building_def == null or building_def.ghost_scene == null:
 		return
 	if carry_controller and carry_controller.is_carrying():
@@ -116,7 +154,8 @@ func _update_ghost_transform() -> void:
 	_ghost.global_transform = _placement_transform
 
 func _update_overlap_check() -> void:
-	if building_def.collision_shape == null:
+	var building_def := current_def()
+	if building_def == null or building_def.collision_shape == null:
 		_placement_valid = true
 	else:
 		var space_state := get_world_3d().direct_space_state
@@ -134,7 +173,7 @@ func _confirm_placement() -> void:
 	var construction_scene: PackedScene = load("res://entities/interactable/construction_site.tscn")
 	var parent := world_parent if world_parent else get_tree().current_scene
 	var site := construction_scene.instantiate()
-	site.building_def = building_def
+	site.building_def = current_def()
 	parent.add_child(site)
 	site.global_transform = _placement_transform
 	_exit_build_mode()

@@ -120,7 +120,7 @@
 - **`sun_off_threshold` coupe l'ombre, jamais la lumière** : le soleil reste toujours visible, sinon le ciel perd `LIGHT0_DIRECTION`. Une directionnelle à énergie nulle reste soumise au rendu — coût mesuré négligeable, à revérifier si le budget lumière devient serré.
 - **Répartition et durée du cycle posées à l'œil** (30 min, 5/10/6/9). À revalider quand les pawns auront des activités qui dépendent de l'heure.
 - **Brume et ambiante réglées au jugé**, y compris la nuit. La courbe de brume doit rester assez courte à toute heure pour masquer la coupure du feuillage : c'est son **minimum** sur la journée qui compte, pas sa valeur de midi.
-## Jalon 4.5 — Terrain minimal
+## Jalon 4.5 — Terrain minimal ✅
 > **Reset.** Objectif unique : un terrain jouable qui porte les pawns et de quoi les faire travailler, écrit en repartant de zéro. Ce jalon n'a aucune ambition esthétique — la carte finale sera vraisemblablement faite à la main, en polish tardif. Tout ce qui n'est pas nécessaire à une simulation de colonie n'a pas sa place ici.
 >
 > **Dimensionnement** : la portée de liaison au bunker (Jalon 7) est ce qui fixe la taille utile. Une carte vaut deux fois ce rayon ; au-delà, on paie de la génération pour du terrain où le jeu ne se passe jamais. Retenu **384 m de côté** (128 cellules de 3 m), à réviser une fois 50 pawns mesurés dessus — c'est la simulation qui tranche, pas le paysage. Le second critère est le temps d'itération : à 1200 m, chaque F5 coûtait dix secondes de génération, ce qui se paie trente fois par soirée de mise au point d'une IA.
@@ -185,13 +185,25 @@
 - [x] `BuildingDef` de l'établi (4 bois), prêt pour le jour où le mode construction saura choisir un bâtiment.
 - [x] Cueillette : le repli est poches → sac → **main**, comme le ramassage d'un pickup, et non plus « au sol ».
 
+### Passe F — stockage et construction ✅
+- [x] `StorageSite` : contenu en liste, disposition déduite du rang. Deux zones, un point d'entrée qui route sur le `carry_type`. API sans joueur (`try_insert`, `take_last`, `peek_last`, `contents`).
+- [x] `StoragePallet` (`Pallet_Wood`, Resource Bits CC0) : E dépose ou reprend selon ce qu'on tient.
+- [x] `ResourceDef` gagne `footprint` (Vector2), `stack_height` et `stack_style` : la mise en place lit la ressource. Couches croisées automatiques pour les objets allongés.
+- [x] Pose alignée sur la **boîte englobante mesurée**, pas sur l'origine du modèle — les pivots des assets ne sont pas conventionnels.
+- [x] Collision de contenu : une boîte qui monte avec la pile, désactivée à vide.
+- [x] `Inventory.try_store()` : le routage de rangement, écrit une seule fois, remplace les trois copies (ramassage, cueillette, reprise).
+- [x] `ResourceRegistry.spawn_display()` : l'exemplaire décoratif au même endroit que le pickup réel.
+- [x] **Dette Jalon 3 payée** : `BuildModeController` prend un `Array[BuildingDef]`, sélection sur les touches 1-5, nom affiché au réticule. Trois bâtiments : feu de camp, palette (2 bois), établi (8 bois + 6 branches + 3 blocs) — de quoi donner un chantier long et multi-sources aux pawns.
+- [x] Action morte `cancel_build_mode` retirée de l'Input Map ; contrôle croisé Input Map ↔ code ↔ INPUTS.md passé.
+
 ### Dette Jalon 4.5
 - **Le semis crée une `CylinderShape3D` par corps** (~4 000 ressources), parce que l'échelle est tirée par instance. Partager une forme par essence demanderait d'arrondir l'échelle par paliers. À mesurer avant de s'en occuper : rien n'indique aujourd'hui que ça coûte.
 - **`scree` ne contient plus que `grass_wispy_rock`** depuis que les rochers en sont sortis : un éboulis réduit à de l'herbe rase. Les neuf `pebble_square` orphelins depuis la passe B3 sont les candidats pour le regarnir — ils avaient été retirés délibérément, donc à trancher plutôt qu'à faire.
 - **La strate `gatherable` pose ~1 900 corps de plus** (5 913 au total, 715 ms de semis contre 523). Toujours acceptable, mais c'est le poste qui a le plus grossi : si le semis devient gênant, c'est son `spacing` (6 m) qu'on monte en premier.
 - **Deux `.tres` par espèce de champignon** (`mushroom_common` décoratif, `gathered_mushroom_common` récoltable) : la même espèce sert de décor de sous-bois et de ressource de bosquet. Acceptable à deux espèces, à revoir si le catalogue grossit — la sortie propre serait un champ « récoltable » sur l'essence plutôt qu'un doublon.
 - **Seulement ~70 rochers par carte** (`min_slope_degrees = 14` les réserve aux versants), concentrés sur la colline. Suffisant pour tester, à revoir si le minage devient une activité de pawn courante — leviers : l'espacement de la strate ou le seuil de pente.
-- **L'établi n'est pas constructible en jeu.** `BuildModeController` n'expose qu'un seul `building_def` ; c'est la dette Jalon 3 (« pas de menu de sélection de bâtiment ») qui devient bloquante avec un second bâtiment. En attendant, l'établi est posé à la main dans `blockout_test.tscn`.
+- **Le fantôme se reconstruit à chaque changement de bâtiment** (`_exit` + `_enter`). Correct mais brutal : à cinq bâtiments et un fantôme lourd, ça se sentira. L'orientation, elle, est préservée à la main.
+- **Le sélecteur est plafonné à cinq bâtiments**, faute de touches. Au-delà, il faudra un vrai sélecteur — et c'est le moment où la molette redeviendra tentante, donc où il faudra trancher avec la rotation.
 - **Deux représentations d'un outil au sol** : `ToolPickup`, créé au vol quand on lâche un outil de la ceinture, et `ResourcePickup` de type TOOL, produit par une recette. Les deux se ramassent en ceinture. Unifier demande de retrouver un `ResourceDef` depuis un `ToolDef` — donc un registre inverse ; à faire quand la casse d'outil imposera de toucher à cette zone.
 - **Le dossier `entities/interactable/forest/` contient désormais la pierre.** Nom devenu faux ; le renommer touche des UID, à faire au prochain remaniement de ce dossier.
 - **`hotbar.gd` redéclare `BELT_COUNT` et `HOTBAR_SIZE`.** Même vérité à deux endroits depuis qu'`Inventory` les porte. Le rangement demande de choisir si le HUD a le droit de citer `Inventory` — probablement oui, il l'affiche déjà.

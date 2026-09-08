@@ -7,3 +7,6 @@ script = ExtResource("1_def")
 id = "pebble"
 name_key = "resource.pebble.name"
 carry_type = 1
+stack_style = 0
+footprint = Vector2(0.3, 0.24)
+stack_height = 0.1

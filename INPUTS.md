@@ -36,6 +36,7 @@ Un panneau se referme aussi tout seul quand on s'éloigne de son ancre, ou quand
 - **B** — ouvrir / fermer le mode construction (`toggle_build_mode`)
 - **Clic gauche** — valider la pose du blueprint (`confirm_placement`)
 - **Molette haut / bas** — rotation du blueprint (`rotate_ghost` / `rotate_ghost_reverse`, pas de 45°)
+- **1-5** — choisir le bâtiment à poser (`select_slot_1` … `select_slot_5`, réemploi des touches du hotbar). Le rang dans `BuildModeController.building_defs` est le chiffre à presser ; le nom du bâtiment sélectionné s'affiche au réticule. La molette **n'est pas** le sélecteur : elle est déjà la rotation.
 - **Shift (maintenu)** — free placing (`free_placement_modifier`, désactive le snap grille)
 Le mode construction et les panneaux s'excluent mutuellement : `UIPanelController` arbitre les deux sens.
 ## Debug
@@ -49,6 +50,7 @@ Le mode construction et les panneaux s'excluent mutuellement : `UIPanelControlle
 Aucune n'est arbitrée par l'Input Map : ce sont les contrôleurs qui garantissent l'exclusivité. Toute modification de ces gardes doit repasser par ici.
  
 - **Shift** : `sprint` en locomotion, `free_placement_modifier` en mode construction, boost en vol. Contextes exclusifs (on ne pose pas un blueprint en courant, on ne vole pas en construisant).
-- **Molette** : `rotate_ghost`/`rotate_ghost_reverse` et `cycle_slot_prev`/`cycle_slot_next` partagent les boutons 4 et 5. Exclusivité tenue par le garde `_active` de `BuildModeController`.
+- **Molette** : `rotate_ghost`/`rotate_ghost_reverse` et `cycle_slot_prev`/`cycle_slot_next` partagent les boutons 4 et 5. Exclusivité tenue par le garde `_active` de `BuildModeController`. ⚠️ C'est pour ça que le choix de bâtiment est sur **1-5** et pas sur la molette : la brancher là aurait mangé la rotation du blueprint, sans erreur ni symptôme visible ailleurs.
+- **1-5** : `select_slot_1..5` servent au hotbar hors construction, et au choix du bâtiment pendant. Exclusivité tenue par le retour anticipé de `PlayerEquipment._unhandled_input()` quand le mode construction est actif — le même garde qui libère déjà la molette.
 - **Clic gauche** : `use_tool` et `confirm_placement` partagent le bouton 1. Exclusivité tenue par la désactivation d'`InteractionController` pendant le mode construction.
 - **E** : un seul binding, mais plusieurs branches dans `InteractionController._unhandled_input()`, et **leur ordre est une règle de conception** — objet lourd en main d'abord, puis petit objet en poche active, puis `interact()` sur la cible. Une cible qui refuse la ressource proposée rend la main à la branche suivante au lieu de faire tomber l'objet. Toute branche ajoutée se place en connaissance de cet ordre.

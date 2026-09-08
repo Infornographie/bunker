@@ -8,3 +8,6 @@ id = "mushroom"
 name_key = "resource.mushroom.name"
 carry_type = 1
 metadata/_custom_type_script = "uid://b7ww6eyv8f76p"
+stack_style = 0
+footprint = Vector2(0.32, 0.32)
+stack_height = 0.22

@@ -74,6 +74,32 @@ func spawn_pickup(resource: ResourceDef) -> Node3D:
 	return scene.instantiate()
 
 
+## Exemplaire **décoratif** d'une ressource : même modèle, sans physique ni
+## collision. Sert partout où l'on montre un objet sans qu'il existe dans le
+## monde — objet en main via une poche, contenu d'un stockage.
+##
+## Vit ici et pas chez ses appelants parce que « comment on obtient le visuel
+## d'une ressource » est la même question que « comment on obtient son pickup »,
+## et que la réponse ne doit exister qu'une fois.
+func spawn_display(resource: ResourceDef) -> Node3D:
+	var instance := spawn_pickup(resource)
+	if instance == null:
+		return null
+	_strip_physics(instance)
+	return instance
+
+
+func _strip_physics(node: Node) -> void:
+	if node is CollisionObject3D:
+		var body: CollisionObject3D = node
+		body.collision_layer = 0
+		body.collision_mask = 0
+		if node is RigidBody3D:
+			node.set("freeze", true)
+	for child in node.get_children():
+		_strip_physics(child)
+
+
 ## --- Scan ---------------------------------------------------------------
 
 func _scan_all() -> void:
