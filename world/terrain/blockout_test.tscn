@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://ddwvl4p2drvne" path="res://entities/interactable/backpack_pickup.tscn" id="7_backpack"]
 [ext_resource type="PackedScene" uid="uid://bxsorhp7cgmlm" path="res://entities/interactable/forest/mushroom_pickup.tscn" id="8_mushroom"]
 [ext_resource type="PackedScene" path="res://entities/interactable/forest/stone_outcrop.tscn" id="9_outcrop"]
+[ext_resource type="PackedScene" path="res://entities/interactable/buildings/workbench.tscn" id="10_workbench"]
 
 [node name="BlockoutTest" type="Node3D" unique_id=912293018 node_paths=PackedStringArray("sun")]
 script = ExtResource("1_controller")
@@ -45,5 +46,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 1, 11)
 
 [node name="StoneOutcrop" parent="Props" instance=ExtResource("9_outcrop")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0, -4)
+
+[node name="Workbench" parent="Props" instance=ExtResource("10_workbench")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1, -6)
 
 [editable path="SkyRig"]

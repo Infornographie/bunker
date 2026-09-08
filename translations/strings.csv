@@ -26,9 +26,16 @@ resource.wood.name,Wood,Bois
 ,=== TOOLS ===,
 tool.wooden_axe.name,Wooden axe,Hache en bois
 tool.wooden_pickaxe.name,Wooden pickaxe,Pioche en bois
+tool.stone_axe.name,Stone axe,Hache en pierre
+tool.stone_pickaxe.name,Stone pickaxe,Pioche en pierre
 ,,
 ,=== BUILDINGS ===,
 building.campfire.name,Campfire,Feu de camp
+building.workbench.name,Workbench,Établi
 ,,
 ,=== RECIPES ===,
 recipe.grilled_mushroom.name,Grilled mushroom,Champignon grillé
+recipe.stone_axe.name,Stone axe,Hache en pierre
+recipe.stone_pickaxe.name,Stone pickaxe,Pioche en pierre
+recipe.wooden_axe.name,Wooden axe,Hache en bois
+recipe.wooden_pickaxe.name,Wooden pickaxe,Pioche en bois

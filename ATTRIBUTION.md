@@ -26,11 +26,21 @@ Dossier : `assets/scifi/`
 
 Extérieur et intérieur du bunker.
 
+### Fantasy Props MegaKit [Standard] — Quaternius — **CC0**
+Dossier : `assets/workshop/`
+[quaternius.com](https://quaternius.com/)
+
+**Un modèle sur les 94 du pack** : `Workbench` (2,02 × 0,89 × 1,02 m), l'établi de fabrication d'outils. Les six textures de trim qui l'habillent (`T_Trim_Furniture_*`, `T_Trim_Metal_*`, en BaseColor/Normal/ORM) sont communes à tout le pack et resserviront à ce qu'on en tirera ensuite — le doc ASSETS en liste une longue file d'attente.
+
+Le dossier porte l'usage : `workshop/` = mobilier d'atelier construit par le joueur.
+
 ### Resource Bits — Kay Lousberg — **CC0**
 Dossier : `assets/props/`
 [kaylousberg.itch.io/resource-bits](https://kaylousberg.itch.io/resource-bits)
 
-Feu de camp. Même famille visuelle low poly stylisée que les packs Quaternius, retenu faute d'équivalent chez Quaternius.
+Feu de camp, `Wood_Log_B` (le rondin lâché à l'abattage) et `Pallet_Wood` (support de stockage), plus leur texture d'atlas commune. Même famille visuelle low poly stylisée que les packs Quaternius, retenu faute d'équivalent chez Quaternius.
+
+> Crédit facultatif selon la licence, fait ici quand même. `Wood_Log_B` et sa texture vivaient sous `assets/nature/props/` ; remis au 07/09 dans le dossier que cette table leur donnait déjà.
 
 ### Forest Free Pack — Ami Polygon — **licence propre à l'auteur**
 Dossier : `assets/deadwood/`

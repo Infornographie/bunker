@@ -1,8 +1,6 @@
 extends WorldPanel
-class_name CookingPanel
+class_name RecipePanel
 
-## Destination : entities/interactable/panel/cooking_panel.gd
-##
 ## Panneau d'un site de transformation, posé devant son bâtiment.
 ##
 ## Disposition :
@@ -10,9 +8,15 @@ class_name CookingPanel
 ##                        [ progression ]                          [ jauge ]
 ##
 ## Il ne calcule rien : la recette active, l'avancement, ce qui manque et le
-## combustible restant appartiennent à TransformationSite et à l'hôte. Tout
-## dépôt repart par Campfire.receive_resource(), le même point d'entrée que
+## combustible restant appartiennent à `TransformationSite` et à l'hôte. Tout
+## dépôt repart par `receive_resource()` de l'hôte, le même point d'entrée que
 ## le E en jeu — le panneau n'ouvre pas un second chemin de livraison.
+##
+## **Le panneau ne cite aucun bâtiment.** Il découvre son hôte en duck typing,
+## comme `TransformationSite` le fait déjà : un hôte qui expose `refuel_resource`
+## et `get_fuel_ratio()` obtient sa colonne de combustible, les autres ne
+## l'affichent pas. C'est ce qui laisse un établi — qui ne brûle rien — employer
+## le même panneau qu'un feu de camp sans une ligne de plus.
 
 ## Identifiants de zone, portés par le payload des cases.
 enum Zone { RECIPE, INPUT, FUEL }
@@ -21,7 +25,10 @@ const RECIPE_COLUMN: float = -2.6
 const FUEL_COLUMN: float = 2.6
 const GAUGE_HEIGHT: float = 0.03
 
-var _host: Campfire
+var _host: Node
+## Vrai si l'hôte consomme un combustible ; faux pour un établi, une table de
+## découpe, tout ce qui transforme sans brûler.
+var _has_fuel: bool = false
 var _transformation: TransformationSite
 
 var _recipe_slots: Array[PanelSlot] = []
@@ -34,11 +41,12 @@ var _fuel_gauge: PanelGauge
 var _inputs_built_for: RecipeDef
 
 
-## Branche le panneau sur un feu. Appelé avant l'ouverture, qui passe elle
-## par UIPanelController.
-func bind(campfire: Campfire) -> void:
-	_host = campfire
-	_transformation = campfire.transformation
+## Branche le panneau sur son bâtiment. Appelé avant l'ouverture, qui passe
+## elle par `UIPanelController`.
+func bind(host: Node) -> void:
+	_host = host
+	_has_fuel = host.get("refuel_resource") != null and host.has_method("get_fuel_ratio")
+	_transformation = host.get("transformation")
 	if _transformation and not _transformation.state_changed.is_connected(refresh):
 		_transformation.state_changed.connect(refresh)
 
@@ -67,12 +75,13 @@ func _build_content() -> void:
 		slot.position = grid_position(RECIPE_COLUMN, i - 1.0)
 		_recipe_slots.append(slot)
 
-	_fuel_slot = make_slot({"zone": Zone.FUEL, "index": 0})
-	_fuel_slot.position = grid_position(FUEL_COLUMN, 0.0)
-	_fuel_slot.set_ghost(_host.refuel_resource)
+	if _has_fuel:
+		_fuel_slot = make_slot({"zone": Zone.FUEL, "index": 0})
+		_fuel_slot.position = grid_position(FUEL_COLUMN, 0.0)
+		_fuel_slot.set_ghost(_host.get("refuel_resource"))
 
-	_fuel_gauge = _make_gauge(slot_size, Color(1.0, 0.5, 0.1, 0.9))
-	_fuel_gauge.position = grid_position(FUEL_COLUMN, 0.75)
+		_fuel_gauge = _make_gauge(slot_size, Color(1.0, 0.5, 0.1, 0.9))
+		_fuel_gauge.position = grid_position(FUEL_COLUMN, 0.75)
 
 	_progress = _make_gauge(slot_size * 3.0 + slot_gap * 2.0, Color(0.4, 0.8, 1.0, 0.9))
 	_progress.position = grid_position(0.0, 0.75)
@@ -122,7 +131,9 @@ func refresh() -> void:
 		_rebuild_input_slots(active)
 	_refresh_input_contents(active)
 
-	_fuel_slot.set_content(_host.refuel_resource if _host.is_active() else null)
+	if _fuel_slot:
+		var lit: bool = _host.has_method("is_active") and _host.call("is_active")
+		_fuel_slot.set_content(_host.get("refuel_resource") if lit else null)
 	_update_gauges()
 
 
@@ -153,7 +164,8 @@ func _refresh_input_contents(recipe: RecipeDef) -> void:
 
 
 func _update_gauges() -> void:
-	_fuel_gauge.set_ratio(_host.get_fuel_ratio())
+	if _fuel_gauge:
+		_fuel_gauge.set_ratio(_host.call("get_fuel_ratio"))
 	_progress.set_ratio(_transformation.get_progress())
 	_progress.visible = _transformation.is_running()
 
@@ -192,7 +204,7 @@ func slot_accepts(slot: PanelSlot, resource: ResourceDef) -> bool:
 	var payload: Dictionary = slot.payload
 	match int(payload["zone"]):
 		Zone.FUEL:
-			return resource == _host.refuel_resource
+			return resource == _host.get("refuel_resource")
 		Zone.INPUT:
 			return _transformation.accepts(resource)
 	return false
@@ -202,7 +214,7 @@ func slot_put(slot: PanelSlot, resource: ResourceDef) -> bool:
 	if not slot_accepts(slot, resource):
 		return false
 	# Un seul chemin de livraison, celui du E en jeu.
-	if not _host.receive_resource(resource, 1):
+	if not _host.call("receive_resource", resource, 1):
 		return false
 	refresh()
 	return true

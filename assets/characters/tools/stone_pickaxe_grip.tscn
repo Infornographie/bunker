@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/characters/tools/Stone Pickaxe.fbx" id="1_model"]
+
+[node name="Grip" type="Node3D"]
+
+[node name="Stone Pickaxe" parent="." instance=ExtResource("1_model")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+
+[editable path="Stone Pickaxe"]

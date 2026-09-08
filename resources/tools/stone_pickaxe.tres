@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ToolDef" format=3]
+
+[ext_resource type="Script" path="res://resources/tool_def.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/characters/tools/stone_pickaxe_grip.tscn" id="2_grip"]
+
+[resource]
+script = ExtResource("1_script")
+id = &"stone_pickaxe"
+name_key = "tool.stone_pickaxe.name"
+tool_type = 1
+mesh_scene = ExtResource("2_grip")
+damage = 2
+swing_duration = 0.4
+hand_position = Vector3(0.41, -0.565, -0.47)
+hand_rotation_degrees = Vector3(0, -96, 15)

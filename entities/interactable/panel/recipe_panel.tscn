@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://c02f83x6ksx1n"]
+
+[ext_resource type="Script" path="res://entities/interactable/panel/recipe_panel.gd" id="1"]
+
+[node name="RecipePanel" type="Node3D" unique_id=1583164824]
+script = ExtResource("1")
+close_distance = 4.0
+anchor_offset = Vector3(0, 1.6, 0)
+slot_size = 0.26

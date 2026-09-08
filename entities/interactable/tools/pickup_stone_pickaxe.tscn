@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://entities/interactable/resource_pickup.gd" id="1_script"]
+[ext_resource type="Resource" path="res://resources/resources/stone_pickaxe.tres" id="2_res"]
+[ext_resource type="PackedScene" path="res://assets/characters/tools/stone_pickaxe_grip.tscn" id="3_model"]
+
+[sub_resource type="BoxShape3D" id="Shape"]
+size = Vector3(0.3, 0.3, 0.9)
+
+[node name="Pickup_stone_pickaxe" type="RigidBody3D"]
+can_sleep = false
+continuous_cd = true
+script = ExtResource("1_script")
+resource_def = ExtResource("2_res")
+
+[node name="Model" parent="." instance=ExtResource("3_model")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape")

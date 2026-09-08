@@ -227,7 +227,7 @@ devient une différence lisible à l'œil plutôt qu'un chiffre dans un `.tres`.
 Pack de ressources industrielles/minières, 76 modèles. **Rien n'est encore
 importé dans `assets/`, sauf `Wood_Log_B`** — le rondin lâché par
 `Choppable` en vient réellement (corrigé ici : il n'est pas de Quaternius,
-malgré son emplacement historique dans `assets/nature/props/`).
+malgré son emplacement historique, corrigé le 07/09 : il vit désormais dans `assets/props/`, comme l'annonçait déjà ATTRIBUTION).
 
 | Famille | Modèles | Emploi potentiel |
 |---|---|---|
@@ -237,9 +237,9 @@ malgré son emplacement historique dans `assets/nature/props/`).
 | `Wood_Plank_*`, `Wood_Log_Stack` | 6 | réserve — matériaux de construction transformés (bois scié, low-tech) |
 | `Parts_Cog`, `Parts_Pile_*` | 4 | à trancher — pièces mécaniques, cohérent seulement si trouvées **dans le bunker** (seule trace du monde d'avant), pas dispersées en scavenging |
 | `Fuel_A/B/C` (baril, baril sale, barils, jerrican, ×4 chacun) | 12 | à trancher — même réserve : hors sujet en scavenging extérieur, éventuellement une réserve de carburant dans le bunker lui-même |
-| `Pallet_Wood*` | 3 | probablement hors sujet — palette industrielle, signal trop "entrepôt du monde d'avant" |
+| `Pallet_Wood` | 1 | **intégré** (`assets/props/`) — support de stockage. Le jugement « trop entrepôt » d'origine est levé : une palette récupérée est un objet low-tech crédible, et c'est le support de pile le plus lisible du lot. `Pallet_Wood_Covered_A`/`B` restent dehors — leur contenu est modelé en dur, donc inutilisable pour une pile qui se remplit |
 | `Wood_Log_A` | 1 | libre |
-| `Wood_Log_B` | 1 | **intégré** (`Choppable`, rondin) — actuellement mal rangé sous `assets/nature/props/` |
+| `Wood_Log_B` | 1 | **intégré** (`Harvestable`, rondin), `assets/props/` |
 
 **Deluxe/Pro (lecture d'image, non vérifiée).** Le Standard ci-dessus couvre
 les 76 modèles. Le Pro ("Extra Only") ajoute des familles neuves, pas

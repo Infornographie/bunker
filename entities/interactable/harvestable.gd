@@ -103,8 +103,14 @@ func interact(interactor: Node) -> void:
 	if not leftovers.is_empty():
 		var kept := drops
 		drops = leftovers
-		_spawn_drops(Vector3.ZERO, global_position)
+		var spawned := _spawn_drops(Vector3.ZERO, global_position)
 		drops = kept
+		# Ce que l'inventaire refuse suit le même repli que le ramassage d'un
+		# pickup au sol — poches, puis sac, puis **la main**. Le laisser tomber
+		# obligeait à le ramasser aussitôt, ce que personne n'a demandé.
+		var carry := _get_carry_controller(interactor)
+		if carry != null and carry.can_carry() and not spawned.is_empty():
+			carry.carry(spawned[0])
 	queue_free()
 
 
@@ -142,11 +148,15 @@ func receive_tool_hit(tool: ToolDef, hit_origin: Vector3 = Vector3.ZERO) -> void
 func _deplete(spawn_position: Vector3, hit_origin: Vector3) -> void:
 	_is_depleted = true
 	depleted.emit()
-	_spawn_drops(hit_origin, spawn_position)
+	# Le retour ne sert qu'à la cueillette (repli en main) ; à l'outil, le
+	# butin tombe et reste au sol. Assigné plutôt qu'ignoré : le projet traite
+	# les avertissements en erreurs.
+	var _dropped := _spawn_drops(hit_origin, spawn_position)
 	queue_free()
 
 
-func _spawn_drops(hit_origin: Vector3, spawn_position: Vector3) -> void:
+## Sème le butin et retourne les nœuds créés, dans l'ordre des lignes de butin.
+func _spawn_drops(hit_origin: Vector3, spawn_position: Vector3) -> Array[Node3D]:
 	var fall_direction := Vector3.ZERO
 	if hit_origin != Vector3.ZERO:
 		fall_direction = spawn_position - hit_origin
@@ -156,12 +166,13 @@ func _spawn_drops(hit_origin: Vector3, spawn_position: Vector3) -> void:
 	# Une pile par ligne de butin, réparties en cercle autour du point de chute.
 	# Les lignes valides se comptent d'abord : c'est leur nombre qui donne
 	# l'angle, et une ligne unique ne doit pas se retrouver décalée pour rien.
+	var spawned: Array[Node3D] = []
 	var lines: Array[ResourceDrop] = []
 	for drop in drops:
 		if drop != null and drop.resource != null:
 			lines.append(drop)
 	if lines.is_empty():
-		return
+		return spawned
 
 	var parent := get_parent()
 	for index in lines.size():
@@ -181,6 +192,8 @@ func _spawn_drops(hit_origin: Vector3, spawn_position: Vector3) -> void:
 			if pickup.has_method("set_fall_direction"):
 				pickup.set_fall_direction(fall_direction)
 			parent.add_child(pickup)
+			spawned.append(pickup)
+	return spawned
 
 
 func _get_tool_controller(interactor: Node) -> ToolController:

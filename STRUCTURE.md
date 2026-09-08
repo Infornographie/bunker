@@ -11,7 +11,7 @@ Carte de repérage technique : où vit quoi, et qui dépend de quoi. Pas un suiv
 - `world/` = scènes qui assemblent des entités dans un lieu, et le code qui fabrique ce lieu.
 - `resources/` = définitions data-driven. Un sous-dossier par type de def (`resources/`, `tools/`, `buildings/`, `recipes/`, `terrain/`, `foliage/`, `sky/`, futur `techs/`), à côté des scripts de définition correspondants.
 - `assets/` = ressources brutes tierces. **Le nom d'un dossier dit à quoi la ressource sert dans le jeu, jamais de quel pack elle vient** : la provenance vit dans ATTRIBUTION.md.
-- Un même item peut avoir trois fichiers homonymes dans trois dossiers, un par rôle : sa définition (`resources/resources/x.tres`), sa recette (`resources/recipes/x.tres`), sa scène de pickup (`entities/interactable/.../x.tscn`). C'est le cas de `grilled_mushroom`.
+- Un même item peut avoir trois fichiers homonymes dans trois dossiers, un par rôle : sa définition (`resources/resources/x.tres`), sa recette (`resources/recipes/x.tres`), sa scène de pickup (`entities/interactable/.../x.tscn`). C'est le cas de `grilled_mushroom` et des quatre outils — qui en ont un quatrième, leur `ToolDef` dans `resources/tools/`, le `ResourceDef` n'étant que ce qui les rend produisibles et ramassables.
 - **Aucun texte affichable dans le code ni dans les `.tres`** : uniquement des clés de traduction. Voir § Flux de localisation. Une seule exception, nommée en tête de son fichier : `sky_debug_panel.gd`, outil de dev qui ne se localise pas.
 ## Autoloads
  
@@ -47,7 +47,10 @@ res://
 │   │   └── meshes/                     — une scène par modèle ; c'est de là que le scatter extrait les meshes
 │   ├── sci_fi/                         — Quaternius Modular SciFi MegaKit
 │   ├── survival/                       — KayKit Resource Bits (survival) : sac à dos, feu de camp
-│   ├── characters/tools/                — KayKit, dix outils en bois (un seul câblé, voir ASSETS.md)
+│   ├── characters/tools/                — Low Poly Primitive Tools : onze outils en bois, hache et pioche en pierre, leurs grips (voir ASSETS.md)
+│   ├── workshop/                        — Fantasy Props MegaKit : l'établi et ses textures de trim
+│   ├── props/                           — Resource Bits : feu de camp, rondin, palette
+│   ├── deadwood/                        — Ami Polygon : branches, troncs couchés, souches
 │   ├── ground/textures/                — textures de sol PBR stylisées, un dossier par matériau (couleur, normal_gl, roughness, height, AO)
 │   ├── sky/                            — Godot Skies : main.gdshader + textures/clouds_0X.tres
 │   └── sounds/                         — non inventorié (contenu à documenter)
@@ -66,8 +69,9 @@ res://
 │   │   │   ├── panel_slot.gd / .tscn   — case, hérite Interactable
 │   │   │   ├── panel_gauge.gd
 │   │   │   ├── backpack_panel.gd / .tscn
-│   │   │   └── cooking_panel.gd / .tscn
+│   │   │   └── recipe_panel.gd / .tscn      — panneau d'un site de transformation. Ne cite aucun bâtiment : hôte en duck typing, colonne de combustible seulement si l'hôte en expose un
 │   │   ├── buildings/
+│   │   │   ├── workbench.gd / .tscn        — établi. Ne fait presque rien : cible du raycast, ouvre le panneau, route les dépôts vers son TransformationSite
 │   │   │   ├── campfire.gd / .tscn
 │   │   │   ├── transformation_site.gd
 │   │   │   └── flame_light_flicker.gd
@@ -107,9 +111,9 @@ res://
 │   ├── biome_stratum.gd                — (@tool) Resource : ce qu'un biome fait pousser dans une strate (layer_id, patches, entries)
 │   │   → la couleur, le port et l'emploi de chaque famille du pack sont dans ASSETS.md
 │   ├── resources/                      — instances ResourceDef (wood, branch, pebble, stone_block, mushroom, grilled_mushroom)
-│   ├── recipes/                        — instances RecipeDef
-│   ├── tools/wooden_axe.tres
-│   ├── buildings/                      — campfire.tres, campfire_shape.tres
+│   ├── recipes/                        — instances RecipeDef (grilled_mushroom, les quatre outils)
+│   ├── tools/                          — wooden_axe, wooden_pickaxe, stone_axe, stone_pickaxe
+│   ├── buildings/                      — campfire.tres, campfire_shape.tres, workbench.tres
 │   ├── sky/                            — instances SkyProfile : clear_day, cold_clear, warm_haze, overcast
 │   ├── terrain/default_terrain.tres    — instance TerrainGenConfig ; porte en sous-ressources les FastNoiseLite, le ShaderMaterial du sol et le matériau de l'eau
 │   ├── foliage/                        — instances FoliageDef, une par essence

@@ -176,12 +176,23 @@
 - [x] Clairière `quarry` avec ses propres `quarry_block` en `Rock_Big`, sans contrainte de pente — les rochers de versant s'y refusaient.
 - [x] Enfoncement à plat corrigé sur les 26 essences dotées d'un corps, déclaré explicitement partout.
 
+### Passe E — établi et fabrication d'outils ✅
+- [x] `CookingPanel` → `RecipePanel`, découplé de `Campfire` : colonne de combustible conditionnelle, hôte en duck typing. Le feu de camp est inchangé.
+- [x] `Workbench` (`assets/workshop/`, Fantasy Props MegaKit CC0) : `StaticBody3D` + `TransformationSite` + `RecipePanel`. Posé à la main dans la scène de test.
+- [x] `ToolDef` **hache et pioche en pierre** (moitié pierre du pack Primitive Tools, jamais importée), dégâts 2 contre 1 pour le bois.
+- [x] Quatre `ResourceDef` de type TOOL et leurs scènes de pickup — un outil produit par une recette est un `ResourcePickup`, pas un `ToolPickup`.
+- [x] Quatre recettes : bois pour 3 branches (6 s), pierre pour 2 branches + 1 bloc (10 s). **La pierre a un usage.**
+- [x] `BuildingDef` de l'établi (4 bois), prêt pour le jour où le mode construction saura choisir un bâtiment.
+- [x] Cueillette : le repli est poches → sac → **main**, comme le ramassage d'un pickup, et non plus « au sol ».
+
 ### Dette Jalon 4.5
 - **Le semis crée une `CylinderShape3D` par corps** (~4 000 ressources), parce que l'échelle est tirée par instance. Partager une forme par essence demanderait d'arrondir l'échelle par paliers. À mesurer avant de s'en occuper : rien n'indique aujourd'hui que ça coûte.
 - **`scree` ne contient plus que `grass_wispy_rock`** depuis que les rochers en sont sortis : un éboulis réduit à de l'herbe rase. Les neuf `pebble_square` orphelins depuis la passe B3 sont les candidats pour le regarnir — ils avaient été retirés délibérément, donc à trancher plutôt qu'à faire.
 - **La strate `gatherable` pose ~1 900 corps de plus** (5 913 au total, 715 ms de semis contre 523). Toujours acceptable, mais c'est le poste qui a le plus grossi : si le semis devient gênant, c'est son `spacing` (6 m) qu'on monte en premier.
 - **Deux `.tres` par espèce de champignon** (`mushroom_common` décoratif, `gathered_mushroom_common` récoltable) : la même espèce sert de décor de sous-bois et de ressource de bosquet. Acceptable à deux espèces, à revoir si le catalogue grossit — la sortie propre serait un champ « récoltable » sur l'essence plutôt qu'un doublon.
 - **Seulement ~70 rochers par carte** (`min_slope_degrees = 14` les réserve aux versants), concentrés sur la colline. Suffisant pour tester, à revoir si le minage devient une activité de pawn courante — leviers : l'espacement de la strate ou le seuil de pente.
+- **L'établi n'est pas constructible en jeu.** `BuildModeController` n'expose qu'un seul `building_def` ; c'est la dette Jalon 3 (« pas de menu de sélection de bâtiment ») qui devient bloquante avec un second bâtiment. En attendant, l'établi est posé à la main dans `blockout_test.tscn`.
+- **Deux représentations d'un outil au sol** : `ToolPickup`, créé au vol quand on lâche un outil de la ceinture, et `ResourcePickup` de type TOOL, produit par une recette. Les deux se ramassent en ceinture. Unifier demande de retrouver un `ResourceDef` depuis un `ToolDef` — donc un registre inverse ; à faire quand la casse d'outil imposera de toucher à cette zone.
 - **Le dossier `entities/interactable/forest/` contient désormais la pierre.** Nom devenu faux ; le renommer touche des UID, à faire au prochain remaniement de ce dossier.
 - **`hotbar.gd` redéclare `BELT_COUNT` et `HOTBAR_SIZE`.** Même vérité à deux endroits depuis qu'`Inventory` les porte. Le rangement demande de choisir si le HUD a le droit de citer `Inventory` — probablement oui, il l'affiche déjà.
 - **`ActionStateMachine` reste couplée au `ToolController`** : elle se connecte à son signal et lui demande `can_swing()`. La découpler maintenant reviendrait à inventer une interface « chose qui sait frapper » avec un seul client. À traiter au Jalon 5, avec le premier pawn qui frappe — c'est lui qui dira quelle forme elle doit prendre.

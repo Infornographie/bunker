@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://resources/resource_cost.gd" id="cost_script"]
+[ext_resource type="Script" path="res://resources/recipe_def.gd" id="recipe_script"]
+[ext_resource type="Resource" path="res://resources/resources/stone_axe.tres" id="out"]
+[ext_resource type="Resource" path="res://resources/resources/branch.tres" id="in_branch"]
+[ext_resource type="Resource" path="res://resources/resources/stone_block.tres" id="in_stone_block"]
+
+[sub_resource type="Resource" id="Cost_branch"]
+script = ExtResource("cost_script")
+resource = ExtResource("in_branch")
+amount = 2
+
+[sub_resource type="Resource" id="Cost_stone_block"]
+script = ExtResource("cost_script")
+resource = ExtResource("in_stone_block")
+amount = 1
+
+[resource]
+script = ExtResource("recipe_script")
+id = "stone_axe"
+name_key = "recipe.stone_axe.name"
+inputs = Array[ExtResource("cost_script")]([SubResource("Cost_branch"), SubResource("Cost_stone_block")])
+output = ExtResource("out")
+duration = 10.0
+requires_host_active = false

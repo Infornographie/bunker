@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ResourceDef" format=3]
+
+[ext_resource type="Script" path="res://resources/resource_def.gd" id="1_def"]
+[ext_resource type="Resource" path="res://resources/tools/wooden_pickaxe.tres" id="2_tool"]
+
+[resource]
+script = ExtResource("1_def")
+id = "wooden_pickaxe"
+name_key = "tool.wooden_pickaxe.name"
+carry_type = 2
+tool_def = ExtResource("2_tool")

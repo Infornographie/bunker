@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RecipeDef" format=3]
+
+[ext_resource type="Script" path="res://resources/resource_cost.gd" id="cost_script"]
+[ext_resource type="Script" path="res://resources/recipe_def.gd" id="recipe_script"]
+[ext_resource type="Resource" path="res://resources/resources/wooden_axe.tres" id="out"]
+[ext_resource type="Resource" path="res://resources/resources/branch.tres" id="in_branch"]
+
+[sub_resource type="Resource" id="Cost_branch"]
+script = ExtResource("cost_script")
+resource = ExtResource("in_branch")
+amount = 3
+
+[resource]
+script = ExtResource("recipe_script")
+id = "wooden_axe"
+name_key = "recipe.wooden_axe.name"
+inputs = Array[ExtResource("cost_script")]([SubResource("Cost_branch")])
+output = ExtResource("out")
+duration = 6.0
+requires_host_active = false

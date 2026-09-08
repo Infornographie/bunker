@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="BuildingDef" format=3]
+
+[ext_resource type="Script" path="res://resources/building_def.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://entities/interactable/buildings/workbench.tscn" id="2_scene"]
+[ext_resource type="Script" path="res://resources/resource_cost.gd" id="3_cost"]
+[ext_resource type="Resource" path="res://resources/resources/wood.tres" id="4_wood"]
+
+[sub_resource type="BoxShape3D" id="Shape"]
+size = Vector3(2.02, 0.89, 1.02)
+
+[sub_resource type="Resource" id="Cost_wood"]
+script = ExtResource("3_cost")
+resource = ExtResource("4_wood")
+amount = 4
+
+[resource]
+script = ExtResource("1_def")
+id = &"workbench"
+name_key = "building.workbench.name"
+ghost_scene = ExtResource("2_scene")
+built_scene = ExtResource("2_scene")
+collision_shape = SubResource("Shape")
+collision_shape_position = Vector3(0, 0.445, 0)
+costs = Array[ExtResource("3_cost")]([SubResource("Cost_wood")])

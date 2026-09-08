@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://entities/interactable/buildings/workbench.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/workshop/Workbench.gltf" id="2_model"]
+[ext_resource type="Script" path="res://entities/interactable/buildings/transformation_site.gd" id="3_site"]
+[ext_resource type="PackedScene" path="res://entities/interactable/panel/recipe_panel.tscn" id="4_panel"]
+[ext_resource type="Script" path="res://resources/recipe_def.gd" id="5_recipe"]
+[ext_resource type="Resource" path="res://resources/recipes/wooden_axe.tres" id="r_wa"]
+[ext_resource type="Resource" path="res://resources/recipes/wooden_pickaxe.tres" id="r_wp"]
+[ext_resource type="Resource" path="res://resources/recipes/stone_axe.tres" id="r_sa"]
+[ext_resource type="Resource" path="res://resources/recipes/stone_pickaxe.tres" id="r_sp"]
+
+[sub_resource type="BoxShape3D" id="Shape"]
+size = Vector3(2.02, 0.89, 1.02)
+
+[node name="Workbench" type="StaticBody3D" node_paths=PackedStringArray("transformation")]
+collision_layer = 5
+script = ExtResource("1_script")
+transformation = NodePath("TransformationSite")
+panel_scene = ExtResource("4_panel")
+prompt_key = "building.workbench.name"
+
+[node name="Model" parent="." instance=ExtResource("2_model")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.445, 0)
+shape = SubResource("Shape")
+
+[node name="TransformationSite" type="Node" parent="."]
+script = ExtResource("3_site")
+recipes = Array[ExtResource("5_recipe")]([ExtResource("r_wa"), ExtResource("r_wp"), ExtResource("r_sa"), ExtResource("r_sp")])
+output_spawn_offset = Vector3(0, 1.1, 0.8)
